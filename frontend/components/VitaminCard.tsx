@@ -97,7 +97,7 @@ export default function VitaminCard() {
         <Ionicons name="notifications" size={20} color={Colors.white} />
         <Text style={styles.remindersButtonText}>{t('reminders')}</Text>
       </TouchableOpacity>
-    </View>
+    </TouchableOpacity>
   );
 }
 
