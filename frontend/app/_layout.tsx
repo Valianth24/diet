@@ -11,13 +11,13 @@ function RootLayoutNav() {
   useEffect(() => {
     if (isLoading) return;
 
-    const inAuthGroup = segments[0] === 'auth';
+    const inAuthGroup = segments[0] === '(auth)';
     const inTabsGroup = segments[0] === '(tabs)';
 
     if (!isAuthenticated && !inAuthGroup) {
-      router.replace('/auth/login');
+      router.replace('/(auth)/login');
     } else if (isAuthenticated && needsOnboarding && segments[1] !== 'onboarding') {
-      router.replace('/auth/onboarding');
+      router.replace('/(auth)/onboarding');
     } else if (isAuthenticated && !needsOnboarding && !inTabsGroup) {
       router.replace('/(tabs)');
     }
@@ -25,7 +25,7 @@ function RootLayoutNav() {
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="auth" />
+      <Stack.Screen name="(auth)" />
       <Stack.Screen name="(tabs)" />
     </Stack>
   );
