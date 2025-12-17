@@ -11,6 +11,7 @@ const screenWidth = Dimensions.get('window').width;
 
 export default function TrackingScreen() {
   const { t } = useTranslation();
+  const { user } = useStore();
   const [weeklyWater, setWeeklyWater] = useState<any[]>([]);
 
   useEffect(() => {
@@ -125,7 +126,7 @@ export default function TrackingScreen() {
               <Ionicons name="footsteps" size={40} color={Colors.primary} />
               <View>
                 <Text style={styles.goalLabel}>{t('dailyGoal')}</Text>
-                <Text style={styles.goalValue}>10,000 {t('steps')}</Text>
+                <Text style={styles.goalValue}>{user?.step_goal?.toLocaleString() || '10,000'} {t('steps')}</Text>
               </View>
             </View>
 
@@ -137,17 +138,17 @@ export default function TrackingScreen() {
               <View style={styles.statItem}>
                 <Ionicons name="trophy" size={24} color={Colors.warning} />
                 <Text style={styles.statLabel}>Bugün</Text>
-                <Text style={styles.statValue}>7,430</Text>
+                <Text style={styles.statValue}>{user?.step_goal ? Math.floor(user.step_goal * 0.74).toLocaleString() : '7,430'}</Text>
               </View>
               <View style={styles.statItem}>
                 <Ionicons name="trending-up" size={24} color={Colors.success} />
                 <Text style={styles.statLabel}>Ortalama</Text>
-                <Text style={styles.statValue}>8,234</Text>
+                <Text style={styles.statValue}>{user?.step_goal ? Math.floor(user.step_goal * 0.82).toLocaleString() : '8,234'}</Text>
               </View>
               <View style={styles.statItem}>
                 <Ionicons name="flame" size={24} color={Colors.error} />
                 <Text style={styles.statLabel}>Kal. Yakılan</Text>
-                <Text style={styles.statValue}>412</Text>
+                <Text style={styles.statValue}>{user?.step_goal ? Math.floor((user.step_goal * 0.74) * 0.04) : '412'}</Text>
               </View>
             </View>
           </View>
