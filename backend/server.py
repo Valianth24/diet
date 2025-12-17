@@ -771,18 +771,31 @@ async def toggle_vitamin(
 
 @api_router.get("/vitamins/today", response_model=List[UserVitamin])
 async def get_today_vitamins(current_user: Optional[User] = Depends(get_current_user)):
-    """Get today's vitamin status"""
+    """Get today's vitamin status - auto resets daily"""
     if not current_user:
         raise HTTPException(status_code=401, detail="Not authenticated")
     
     today = datetime.now(timezone.utc).date().isoformat()
     
-    vitamins = await db.user_vitamins.find({
-        "user_id": current_user.user_id,
-        "date": today
+    # Get all user vitamins
+    all_vitamins = await db.user_vitamins.find({
+        "user_id": current_user.user_id
     }, {"_id": 0}).to_list(1000)
     
-    return [UserVitamin(**vit) for vit in vitamins]
+    # Reset vitamins if date changed
+    result_vitamins = []
+    for vitamin in all_vitamins:
+        if vitamin.get("date") != today:
+            # Reset for new day
+            await db.user_vitamins.update_one(
+                {"vitamin_id": vitamin["vitamin_id"], "user_id": current_user.user_id},
+                {"$set": {"is_taken": False, "date": today}}
+            )
+            vitamin["is_taken"] = False
+            vitamin["date"] = today
+        result_vitamins.append(vitamin)
+    
+    return [UserVitamin(**vit) for vit in result_vitamins]
 
 # Include the router in the main app
 app.include_router(api_router)
