@@ -132,7 +132,7 @@ const resources = {
       weeklyAverage: 'Haftalık Ortalama',
       
       // Auth
-      welcome: 'CalorieDiet\'e Hoş Geldiniz',
+      welcome: 'CalorieDiet Uygulamasına Hoş Geldiniz',
       loginWithGoogle: 'Google ile Giriş Yap',
       setupProfile: 'Profilini Oluştur',
     }
