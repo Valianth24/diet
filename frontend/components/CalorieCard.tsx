@@ -15,6 +15,7 @@ interface CalorieCardProps {
 
 export default function CalorieCard({ current, goal, protein, carbs, fat }: CalorieCardProps) {
   const { t } = useTranslation();
+  const router = useRouter();
   const percentage = goal > 0 ? Math.min((current / goal) * 100, 100) : 0;
   const remaining = Math.max(goal - current, 0);
 
@@ -24,7 +25,11 @@ export default function CalorieCard({ current, goal, protein, carbs, fat }: Calo
   const strokeDashoffset = circumference - (percentage / 100) * circumference;
 
   return (
-    <View style={styles.container}>
+    <TouchableOpacity 
+      style={styles.container}
+      onPress={() => router.push('/(tabs)/nutrition')}
+      activeOpacity={0.9}
+    >
       <Text style={styles.title}>{t('dailyCalories')}</Text>
 
       <View style={styles.progressContainer}>
