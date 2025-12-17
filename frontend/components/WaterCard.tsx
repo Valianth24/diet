@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { addWater } from '../utils/api';
 import { useStore } from '../store/useStore';
+import { useRouter } from 'expo-router';
 
 interface WaterCardProps {
   current: number;
@@ -13,6 +14,7 @@ interface WaterCardProps {
 
 export default function WaterCard({ current, goal }: WaterCardProps) {
   const { t } = useTranslation();
+  const router = useRouter();
   const { triggerRefresh } = useStore();
   const [loading, setLoading] = React.useState(false);
 
@@ -31,7 +33,11 @@ export default function WaterCard({ current, goal }: WaterCardProps) {
   const percentage = goal > 0 ? Math.min((current / goal) * 100, 100) : 0;
 
   return (
-    <View style={styles.container}>
+    <TouchableOpacity 
+      style={styles.container}
+      onPress={() => router.push('/(tabs)/water-detail')}
+      activeOpacity={0.9}
+    >
       <Text style={styles.title}>{t('waterTracking')}</Text>
 
       <View style={styles.bottleContainer}>
@@ -45,12 +51,15 @@ export default function WaterCard({ current, goal }: WaterCardProps) {
 
       <TouchableOpacity
         style={[styles.addButton, loading && styles.addButtonDisabled]}
-        onPress={handleAddWater}
+        onPress={(e) => {
+          e.stopPropagation();
+          handleAddWater();
+        }}
         disabled={loading}
       >
         <Text style={styles.addButtonText}>{t('addWater')}</Text>
       </TouchableOpacity>
-    </View>
+    </TouchableOpacity>
   );
 }
 
