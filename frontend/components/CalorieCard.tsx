@@ -1,9 +1,10 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Colors } from '../constants/Colors';
 import { useTranslation } from 'react-i18next';
-import Svg, { Circle } from 'react-native-svg';
 import { Ionicons } from '@expo/vector-icons';
+import Svg, { Circle } from 'react-native-svg';
+import { useRouter } from 'expo-router';
 
 interface CalorieCardProps {
   current: number;
@@ -19,8 +20,8 @@ export default function CalorieCard({ current, goal, protein, carbs, fat }: Calo
   const percentage = goal > 0 ? Math.min((current / goal) * 100, 100) : 0;
   const remaining = Math.max(goal - current, 0);
 
-  const radius = 70;
-  const strokeWidth = 12;
+  const radius = 60;
+  const strokeWidth = 10;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (percentage / 100) * circumference;
 
@@ -30,11 +31,10 @@ export default function CalorieCard({ current, goal, protein, carbs, fat }: Calo
       onPress={() => router.push('/(tabs)/nutrition')}
       activeOpacity={0.9}
     >
-      <Text style={styles.title}>{t('dailyCalories')}</Text>
+      <Text style={styles.title} numberOfLines={1}>{t('dailyCalories')}</Text>
 
       <View style={styles.progressContainer}>
         <Svg width={radius * 2 + strokeWidth} height={radius * 2 + strokeWidth}>
-          {/* Background circle */}
           <Circle
             cx={radius + strokeWidth / 2}
             cy={radius + strokeWidth / 2}
@@ -43,7 +43,6 @@ export default function CalorieCard({ current, goal, protein, carbs, fat }: Calo
             strokeWidth={strokeWidth}
             fill="none"
           />
-          {/* Progress circle */}
           <Circle
             cx={radius + strokeWidth / 2}
             cy={radius + strokeWidth / 2}
@@ -59,26 +58,25 @@ export default function CalorieCard({ current, goal, protein, carbs, fat }: Calo
         </Svg>
         <View style={styles.progressText}>
           <Text style={styles.currentCalories}>{current}</Text>
-          <Text style={styles.goalCalories}>/ {goal} {t('kcal')}</Text>
-          <Text style={styles.remaining}>+{remaining}</Text>
+          <Text style={styles.goalCalories}>/ {goal}</Text>
         </View>
       </View>
 
       <View style={styles.macros}>
         <View style={styles.macroItem}>
-          <Ionicons name="leaf" size={16} color={Colors.primary} />
           <Text style={styles.macroValue}>{protein}g</Text>
+          <Text style={styles.macroLabel}>P</Text>
         </View>
         <View style={styles.macroItem}>
-          <Ionicons name="fast-food" size={16} color={Colors.orange} />
           <Text style={styles.macroValue}>{carbs}g</Text>
+          <Text style={styles.macroLabel}>C</Text>
         </View>
         <View style={styles.macroItem}>
-          <Ionicons name="water" size={16} color={Colors.warning} />
           <Text style={styles.macroValue}>{fat}g</Text>
+          <Text style={styles.macroLabel}>F</Text>
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 
@@ -86,54 +84,52 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: Colors.white,
     borderRadius: 20,
-    padding: 20,
+    padding: 16,
     shadowColor: Colors.cardShadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 3,
+    minHeight: 220,
+    justifyContent: 'space-between',
   },
   title: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
     color: Colors.darkText,
-    marginBottom: 16,
   },
   progressContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
+    marginVertical: 8,
   },
   progressText: {
     position: 'absolute',
     alignItems: 'center',
   },
   currentCalories: {
-    fontSize: 32,
+    fontSize: 24,
     fontWeight: 'bold',
     color: Colors.darkText,
   },
   goalCalories: {
-    fontSize: 14,
+    fontSize: 12,
     color: Colors.lightText,
-  },
-  remaining: {
-    fontSize: 16,
-    color: Colors.primary,
-    marginTop: 4,
   },
   macros: {
     flexDirection: 'row',
     justifyContent: 'space-around',
   },
   macroItem: {
-    flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
   },
   macroValue: {
     fontSize: 14,
     color: Colors.darkText,
     fontWeight: '600',
+  },
+  macroLabel: {
+    fontSize: 11,
+    color: Colors.lightText,
   },
 });
