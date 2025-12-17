@@ -26,7 +26,6 @@ export default function VitaminCard() {
       setLoading(true);
       const userVitamins = await getUserVitamins();
       
-      // If no user vitamins, create default ones
       if (userVitamins.length === 0) {
         const templates = await getVitaminTemplates();
         for (const template of templates) {
@@ -60,10 +59,10 @@ export default function VitaminCard() {
   return (
     <TouchableOpacity 
       style={styles.container}
-      onPress={() => router.push('/(tabs)/vitamins')}
+      onPress={() => router.push('/details/vitamins')}
       activeOpacity={0.9}
     >
-      <Text style={styles.title}>{t('vitaminTracking')}</Text>
+      <Text style={styles.title} numberOfLines={1}>{t('vitaminTracking')}</Text>
 
       <ScrollView style={styles.list} showsVerticalScrollIndicator={false} scrollEnabled={false}>
         {vitamins.slice(0, 3).map((vitamin) => (
@@ -74,18 +73,19 @@ export default function VitaminCard() {
           >
             <Ionicons
               name={vitamin.is_taken ? 'checkmark-circle' : 'close-circle'}
-              size={24}
+              size={20}
               color={vitamin.is_taken ? Colors.success : Colors.error}
             />
             <View style={styles.vitaminInfo}>
-              <Text style={styles.vitaminName}>{vitamin.name}</Text>
-              <Text style={styles.vitaminTime}>{vitamin.time}</Text>
+              <Text style={styles.vitaminName} numberOfLines={1}>{vitamin.name}</Text>
+              <Text style={styles.vitaminTime} numberOfLines={1}>{vitamin.time}</Text>
             </View>
             <Text
               style={[
                 styles.status,
                 { color: vitamin.is_taken ? Colors.success : Colors.lightText },
               ]}
+              numberOfLines={1}
             >
               {vitamin.is_taken ? t('taken') : t('notTaken')}
             </Text>
@@ -94,8 +94,8 @@ export default function VitaminCard() {
       </ScrollView>
 
       <TouchableOpacity style={styles.remindersButton}>
-        <Ionicons name="notifications" size={20} color={Colors.white} />
-        <Text style={styles.remindersButtonText}>{t('reminders')}</Text>
+        <Ionicons name="notifications" size={18} color={Colors.white} />
+        <Text style={styles.remindersButtonText} numberOfLines={1}>{t('reminders')}</Text>
       </TouchableOpacity>
     </TouchableOpacity>
   );
@@ -105,58 +105,59 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: Colors.white,
     borderRadius: 20,
-    padding: 20,
+    padding: 16,
     shadowColor: Colors.cardShadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 3,
+    minHeight: 220,
   },
   title: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
     color: Colors.darkText,
-    marginBottom: 16,
+    marginBottom: 12,
   },
   list: {
-    maxHeight: 150,
+    maxHeight: 120,
     marginBottom: 12,
   },
   vitaminItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 8,
-    gap: 12,
+    paddingVertical: 6,
+    gap: 8,
   },
   vitaminInfo: {
     flex: 1,
   },
   vitaminName: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
     color: Colors.darkText,
   },
   vitaminTime: {
-    fontSize: 12,
+    fontSize: 11,
     color: Colors.lightText,
   },
   status: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600',
   },
   remindersButton: {
     backgroundColor: Colors.lightGreen,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
     borderRadius: 20,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    gap: 6,
   },
   remindersButtonText: {
     color: Colors.white,
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
   },
 });

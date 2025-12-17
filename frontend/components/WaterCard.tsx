@@ -30,22 +30,32 @@ export default function WaterCard({ current, goal }: WaterCardProps) {
     }
   };
 
-  const percentage = goal > 0 ? Math.min((current / goal) * 100, 100) : 0;
+  const glassCount = Math.floor(current / 250);
+  const totalGlasses = Math.ceil(goal / 250);
 
   return (
     <TouchableOpacity 
       style={styles.container}
-      onPress={() => router.push('/(tabs)/water-detail')}
+      onPress={() => router.push('/details/water-detail')}
       activeOpacity={0.9}
     >
       <Text style={styles.title}>{t('waterTracking')}</Text>
 
-      <View style={styles.bottleContainer}>
-        <View style={[styles.waterFill, { height: `${percentage}%` }]} />
-        <Ionicons name="water" size={80} color={Colors.teal} style={styles.waterIcon} />
+      <View style={styles.glassContainer}>
+        {[...Array(Math.min(4, totalGlasses))].map((_, index) => (
+          <Ionicons
+            key={index}
+            name="water"
+            size={40}
+            color={index < glassCount ? Colors.teal : '#E0E0E0'}
+          />
+        ))}
       </View>
 
       <Text style={styles.amount}>
+        {glassCount} / {totalGlasses} Bardak
+      </Text>
+      <Text style={styles.amountMl}>
         {(current / 1000).toFixed(1)} / {(goal / 1000).toFixed(1)} L
       </Text>
 
@@ -67,52 +77,42 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: Colors.white,
     borderRadius: 20,
-    padding: 20,
+    padding: 16,
     shadowColor: Colors.cardShadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 3,
     alignItems: 'center',
+    minHeight: 220,
   },
   title: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: Colors.darkText,
+    marginBottom: 12,
+    alignSelf: 'flex-start',
+  },
+  glassContainer: {
+    flexDirection: 'row',
+    gap: 8,
+    marginVertical: 16,
+  },
+  amount: {
     fontSize: 18,
     fontWeight: 'bold',
     color: Colors.darkText,
-    marginBottom: 16,
-    alignSelf: 'flex-start',
+    marginBottom: 4,
   },
-  bottleContainer: {
-    position: 'relative',
-    width: 80,
-    height: 120,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16,
-    overflow: 'hidden',
-    borderRadius: 40,
-  },
-  waterFill: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: Colors.teal,
-    opacity: 0.3,
-  },
-  waterIcon: {
-    zIndex: 10,
-  },
-  amount: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: Colors.darkText,
+  amountMl: {
+    fontSize: 14,
+    color: Colors.lightText,
     marginBottom: 12,
   },
   addButton: {
     backgroundColor: Colors.teal,
-    paddingHorizontal: 24,
-    paddingVertical: 10,
+    paddingHorizontal: 20,
+    paddingVertical: 8,
     borderRadius: 20,
   },
   addButtonDisabled: {
@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
   },
   addButtonText: {
     color: Colors.white,
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
   },
 });
