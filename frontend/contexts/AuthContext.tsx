@@ -157,11 +157,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } catch (error) {
       console.error('Error during logout:', error);
     } finally {
+      // Clear local session
       await AsyncStorage.removeItem('session_token');
       setAuthToken(null);
       setUser(null);
       setIsAuthenticated(false);
       setNeedsOnboarding(false);
+      
+      // Redirect to Gmail logout
+      const gmailLogoutUrl = 'https://mail.google.com/mail/u/0/?logout&hl=en';
+      if (Platform.OS === 'web') {
+        window.open(gmailLogoutUrl, '_blank');
+      } else {
+        await WebBrowser.openBrowserAsync(gmailLogoutUrl);
+      }
     }
   };
 

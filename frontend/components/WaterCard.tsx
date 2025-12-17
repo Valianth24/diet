@@ -41,8 +41,8 @@ export default function WaterCard({ current, goal }: WaterCardProps) {
       <Text style={styles.title}>{t('waterTracking')}</Text>
 
       <View style={styles.bottleContainer}>
-        <Ionicons name="water" size={80} color={Colors.teal} />
-        <View style={styles.waterFill} style={{ height: `${percentage}%` }} />
+        <View style={[styles.waterFill, { height: `${percentage}%` }]} />
+        <Ionicons name="water" size={80} color={Colors.teal} style={styles.waterIcon} />
       </View>
 
       <Text style={styles.amount}>
@@ -87,16 +87,21 @@ const styles = StyleSheet.create({
     width: 80,
     height: 120,
     alignItems: 'center',
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
     marginBottom: 16,
+    overflow: 'hidden',
+    borderRadius: 40,
   },
   waterFill: {
     position: 'absolute',
     bottom: 0,
-    width: '100%',
+    left: 0,
+    right: 0,
     backgroundColor: Colors.teal,
     opacity: 0.3,
-    borderRadius: 40,
+  },
+  waterIcon: {
+    zIndex: 10,
   },
   amount: {
     fontSize: 20,
