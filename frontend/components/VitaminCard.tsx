@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { getVitaminTemplates, getUserVitamins, addVitamin, toggleVitamin } from '../utils/api';
 import { useStore } from '../store/useStore';
+import { useRouter } from 'expo-router';
 
 interface Vitamin {
   vitamin_id: string;
@@ -15,6 +16,7 @@ interface Vitamin {
 
 export default function VitaminCard() {
   const { t } = useTranslation();
+  const router = useRouter();
   const { refreshData } = useStore();
   const [vitamins, setVitamins] = useState<Vitamin[]>([]);
   const [loading, setLoading] = useState(true);
@@ -56,10 +58,14 @@ export default function VitaminCard() {
   };
 
   return (
-    <View style={styles.container}>
+    <TouchableOpacity 
+      style={styles.container}
+      onPress={() => router.push('/(tabs)/vitamins')}
+      activeOpacity={0.9}
+    >
       <Text style={styles.title}>{t('vitaminTracking')}</Text>
 
-      <ScrollView style={styles.list} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.list} showsVerticalScrollIndicator={false} scrollEnabled={false}>
         {vitamins.slice(0, 3).map((vitamin) => (
           <TouchableOpacity
             key={vitamin.vitamin_id}
