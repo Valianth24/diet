@@ -1,217 +1,222 @@
-diff --git a/backend/server.py b/backend/server.py
-index 5eb4780..2483a6d 100644
---- a/backend/server.py
-+++ b/backend/server.py
-@@ -503,17 +503,6 @@ async def get_today_meals(current_user: Optional[User] = Depends(get_current_use
-     
-     return [Meal(**meal) for meal in meals]
- 
--@api_router.get("/food/daily-summary", response_model=DailySummary)
--async def get_daily_summary(current_user: Optional[User] = Depends(get_current_user)):
--    """Get daily nutrition summary"""
--    if not current_user:
--        raise HTTPException(status_code=401, detail="Not authenticated")
--    
--    meals = await get_today_meals(current_user)
--    
--    total_calories = sum(meal.calories for meal in meals)
--    total_protein = sum(meal.protein for meal in meals)
--
- # FOOD DATABASE - Uygulama sahipleri tarafından eklenen yemekler
- FOOD_DATABASE = [
-     {"food_id": "food_001", "name": "Tavuk Göğsü (100g)", "calories": 165, "protein": 31, "carbs": 0, "fat": 3.6, "name_en": "Chicken Breast (100g)"},
-@@ -533,20 +522,16 @@ FOOD_DATABASE = [
-     {"food_id": "food_015", "name": "Elma (1 Adet)", "calories": 95, "protein": 0.5, "carbs": 25, "fat": 0.3, "name_en": "Apple (1 Piece)"},
- ]
- 
--@api_router.get("/food/database")
--async def get_food_database(lang: str = "tr", current_user: Optional[User] = Depends(get_current_user)):
--    """Get food database for manual entry"""
-+@api_router.get("/food/daily-summary", response_model=DailySummary)
-+async def get_daily_summary(current_user: Optional[User] = Depends(get_current_user)):
-+    """Get daily nutrition summary"""
-     if not current_user:
-         raise HTTPException(status_code=401, detail="Not authenticated")
-     
--    # Return localized food names
--    if lang == "en":
--        return [{"food_id": f["food_id"], "name": f["name_en"], "calories": f["calories"], 
--                 "protein": f["protein"], "carbs": f["carbs"], "fat": f["fat"]} for f in FOOD_DATABASE]
--    else:
--        return [{"food_id": f["food_id"], "name": f["name"], "calories": f["calories"], 
--                 "protein": f["protein"], "carbs": f["carbs"], "fat": f["fat"]} for f in FOOD_DATABASE]
--
-+    meals = await get_today_meals(current_user)
-+    
-+    total_calories = sum(meal.calories for meal in meals)
-+    total_protein = sum(meal.protein for meal in meals)
-     total_carbs = sum(meal.carbs for meal in meals)
-     total_fat = sum(meal.fat for meal in meals)
-     
-@@ -559,6 +544,20 @@ async def get_food_database(lang: str = "tr", current_user: Optional[User] = Dep
-         meals=meals
-     )
- 
-+@api_router.get("/food/database")
-+async def get_food_database(lang: str = "tr", current_user: Optional[User] = Depends(get_current_user)):
-+    """Get food database for manual entry"""
-+    if not current_user:
-+        raise HTTPException(status_code=401, detail="Not authenticated")
-+    
-+    # Return localized food names
-+    if lang == "en":
-+        return [{"food_id": f["food_id"], "name": f["name_en"], "calories": f["calories"], 
-+                 "protein": f["protein"], "carbs": f["carbs"], "fat": f["fat"]} for f in FOOD_DATABASE]
-+    else:
-+        return [{"food_id": f["food_id"], "name": f["name"], "calories": f["calories"], 
-+                 "protein": f["protein"], "carbs": f["carbs"], "fat": f["fat"]} for f in FOOD_DATABASE]
-+
- # ==================== WATER ENDPOINTS ====================
- 
- @api_router.post("/water/add")
-@@ -738,12 +737,7 @@ async def get_vitamin_templates():
-     """Get default vitamin templates"""
-     return [VitaminTemplate(**vit) for vit in DEFAULT_VITAMINS]
- 
--@api_router.get("/food/database")
--async def get_food_database(current_user: Optional[User] = Depends(get_current_user)):
--    """Get food database for manual entry"""
--    if not current_user:
--        raise HTTPException(status_code=401, detail="Not authenticated")
--    return FOOD_DATABASE
-+# Duplicate endpoint removed - using the one with localization support above
- 
- @api_router.get("/vitamins/user", response_model=List[UserVitamin])
- async def get_user_vitamins(current_user: Optional[User] = Depends(get_current_user)):
-diff --git a/test_result.md b/test_result.md
-index 187cba4..ab0aa7a 100644
---- a/test_result.md
-+++ b/test_result.md
-@@ -100,4 +100,124 @@
- 
- #====================================================================================================
- # Testing Data - Main Agent and testing sub agent both should log testing data below this section
--#====================================================================================================
-\ No newline at end of file
-+#====================================================================================================
-+
-+user_problem_statement: "CalorieDiet App Backend API Testing - Test all endpoints for authentication, user management, food tracking, water tracking, steps tracking, and vitamins management"
-+
-+backend:
-+  - task: "Auth Endpoints"
-+    implemented: true
-+    working: true
-+    file: "server.py"
-+    stuck_count: 0
-+    priority: "high"
-+    needs_retesting: false
-+    status_history:
-+        - working: true
-+          agent: "testing"
-+          comment: "All auth endpoints (GET /auth/me, PUT /auth/profile, POST /auth/logout) working correctly with proper session management and calorie goal calculation"
-+
-+  - task: "User Profile Management"
-+    implemented: true
-+    working: true
-+    file: "server.py"
-+    stuck_count: 0
-+    priority: "high"
-+    needs_retesting: false
-+    status_history:
-+        - working: true
-+          agent: "testing"
-+          comment: "User profile retrieval and goals update working correctly"
-+
-+  - task: "Food Analysis AI Integration"
-+    implemented: true
-+    working: false
-+    file: "server.py"
-+    stuck_count: 1
-+    priority: "high"
-+    needs_retesting: false
-+    status_history:
-+        - working: false
-+          agent: "testing"
-+          comment: "LLM API integration failing with 'Invalid base64 image_url' error. Image format appears correct with data:image/jpeg;base64 prefix but LiteLLM/GPT-4o integration has issues. Requires websearch investigation or alternative approach."
-+
-+  - task: "Food Meal Management"
-+    implemented: true
-+    working: true
-+    file: "server.py"
-+    stuck_count: 0
-+    priority: "high"
-+    needs_retesting: false
-+    status_history:
-+        - working: true
-+          agent: "testing"
-+          comment: "Add meal, get today's meals, and daily summary all working correctly. Fixed critical bug in daily summary function structure during testing."
-+
-+  - task: "Food Database Localization"
-+    implemented: true
-+    working: true
-+    file: "server.py"
-+    stuck_count: 0
-+    priority: "medium"
-+    needs_retesting: false
-+    status_history:
-+        - working: true
-+          agent: "testing"
-+          comment: "Food database endpoint working with Turkish/English localization support. 15 food items available in both languages"
-+
-+  - task: "Water Tracking"
-+    implemented: true
-+    working: true
-+    file: "server.py"
-+    stuck_count: 0
-+    priority: "medium"
-+    needs_retesting: false
-+    status_history:
-+        - working: true
-+          agent: "testing"
-+          comment: "All water endpoints working: add water, get today's intake, get weekly data with 7-day history"
-+
-+  - task: "Steps Tracking"
-+    implemented: true
-+    working: true
-+    file: "server.py"
-+    stuck_count: 0
-+    priority: "medium"
-+    needs_retesting: false
-+    status_history:
-+        - working: true
-+          agent: "testing"
-+          comment: "All steps endpoints working: sync from health apps, manual entry, and today's steps retrieval"
-+
-+  - task: "Vitamins Management"
-+    implemented: true
-+    working: true
-+    file: "server.py"
-+    stuck_count: 0
-+    priority: "medium"
-+    needs_retesting: false
-+    status_history:
-+        - working: true
-+          agent: "testing"
-+          comment: "Vitamin templates, user vitamins, add custom vitamins, toggle status, and daily reset logic all working correctly"
-+
-+frontend:
-+  # No frontend testing performed as per instructions
-+
-+metadata:
-+  created_by: "testing_agent"
-+  version: "1.0"
-+  test_sequence: 1
-+  run_ui: false
-+
-+test_plan:
-+  current_focus:
-+    - "Food Analysis AI Integration"
-+  stuck_tasks:
-+    - "Food Analysis AI Integration"
-+  test_all: false
-+  test_priority: "high_first"
-+
-+agent_communication:
-+    - agent: "testing"
-+      message: "Completed comprehensive backend API testing. Found 1 critical issue with LLM integration for food analysis. All other endpoints (17/18) working correctly. Fixed daily summary bug during testing. Food analysis needs LLM API investigation or alternative approach."
-\ No newline at end of file
+diff --git a/model.patch b/model.patch
+index 39cd80a..e69de29 100644
+--- a/model.patch
++++ b/model.patch
+@@ -1,217 +0,0 @@
+-diff --git a/backend/server.py b/backend/server.py
+-index 5eb4780..2483a6d 100644
+---- a/backend/server.py
+-+++ b/backend/server.py
+-@@ -503,17 +503,6 @@ async def get_today_meals(current_user: Optional[User] = Depends(get_current_use
+-     
+-     return [Meal(**meal) for meal in meals]
+- 
+--@api_router.get("/food/daily-summary", response_model=DailySummary)
+--async def get_daily_summary(current_user: Optional[User] = Depends(get_current_user)):
+--    """Get daily nutrition summary"""
+--    if not current_user:
+--        raise HTTPException(status_code=401, detail="Not authenticated")
+--    
+--    meals = await get_today_meals(current_user)
+--    
+--    total_calories = sum(meal.calories for meal in meals)
+--    total_protein = sum(meal.protein for meal in meals)
+--
+- # FOOD DATABASE - Uygulama sahipleri tarafından eklenen yemekler
+- FOOD_DATABASE = [
+-     {"food_id": "food_001", "name": "Tavuk Göğsü (100g)", "calories": 165, "protein": 31, "carbs": 0, "fat": 3.6, "name_en": "Chicken Breast (100g)"},
+-@@ -533,20 +522,16 @@ FOOD_DATABASE = [
+-     {"food_id": "food_015", "name": "Elma (1 Adet)", "calories": 95, "protein": 0.5, "carbs": 25, "fat": 0.3, "name_en": "Apple (1 Piece)"},
+- ]
+- 
+--@api_router.get("/food/database")
+--async def get_food_database(lang: str = "tr", current_user: Optional[User] = Depends(get_current_user)):
+--    """Get food database for manual entry"""
+-+@api_router.get("/food/daily-summary", response_model=DailySummary)
+-+async def get_daily_summary(current_user: Optional[User] = Depends(get_current_user)):
+-+    """Get daily nutrition summary"""
+-     if not current_user:
+-         raise HTTPException(status_code=401, detail="Not authenticated")
+-     
+--    # Return localized food names
+--    if lang == "en":
+--        return [{"food_id": f["food_id"], "name": f["name_en"], "calories": f["calories"], 
+--                 "protein": f["protein"], "carbs": f["carbs"], "fat": f["fat"]} for f in FOOD_DATABASE]
+--    else:
+--        return [{"food_id": f["food_id"], "name": f["name"], "calories": f["calories"], 
+--                 "protein": f["protein"], "carbs": f["carbs"], "fat": f["fat"]} for f in FOOD_DATABASE]
+--
+-+    meals = await get_today_meals(current_user)
+-+    
+-+    total_calories = sum(meal.calories for meal in meals)
+-+    total_protein = sum(meal.protein for meal in meals)
+-     total_carbs = sum(meal.carbs for meal in meals)
+-     total_fat = sum(meal.fat for meal in meals)
+-     
+-@@ -559,6 +544,20 @@ async def get_food_database(lang: str = "tr", current_user: Optional[User] = Dep
+-         meals=meals
+-     )
+- 
+-+@api_router.get("/food/database")
+-+async def get_food_database(lang: str = "tr", current_user: Optional[User] = Depends(get_current_user)):
+-+    """Get food database for manual entry"""
+-+    if not current_user:
+-+        raise HTTPException(status_code=401, detail="Not authenticated")
+-+    
+-+    # Return localized food names
+-+    if lang == "en":
+-+        return [{"food_id": f["food_id"], "name": f["name_en"], "calories": f["calories"], 
+-+                 "protein": f["protein"], "carbs": f["carbs"], "fat": f["fat"]} for f in FOOD_DATABASE]
+-+    else:
+-+        return [{"food_id": f["food_id"], "name": f["name"], "calories": f["calories"], 
+-+                 "protein": f["protein"], "carbs": f["carbs"], "fat": f["fat"]} for f in FOOD_DATABASE]
+-+
+- # ==================== WATER ENDPOINTS ====================
+- 
+- @api_router.post("/water/add")
+-@@ -738,12 +737,7 @@ async def get_vitamin_templates():
+-     """Get default vitamin templates"""
+-     return [VitaminTemplate(**vit) for vit in DEFAULT_VITAMINS]
+- 
+--@api_router.get("/food/database")
+--async def get_food_database(current_user: Optional[User] = Depends(get_current_user)):
+--    """Get food database for manual entry"""
+--    if not current_user:
+--        raise HTTPException(status_code=401, detail="Not authenticated")
+--    return FOOD_DATABASE
+-+# Duplicate endpoint removed - using the one with localization support above
+- 
+- @api_router.get("/vitamins/user", response_model=List[UserVitamin])
+- async def get_user_vitamins(current_user: Optional[User] = Depends(get_current_user)):
+-diff --git a/test_result.md b/test_result.md
+-index 187cba4..ab0aa7a 100644
+---- a/test_result.md
+-+++ b/test_result.md
+-@@ -100,4 +100,124 @@
+- 
+- #====================================================================================================
+- # Testing Data - Main Agent and testing sub agent both should log testing data below this section
+--#====================================================================================================
+-\ No newline at end of file
+-+#====================================================================================================
+-+
+-+user_problem_statement: "CalorieDiet App Backend API Testing - Test all endpoints for authentication, user management, food tracking, water tracking, steps tracking, and vitamins management"
+-+
+-+backend:
+-+  - task: "Auth Endpoints"
+-+    implemented: true
+-+    working: true
+-+    file: "server.py"
+-+    stuck_count: 0
+-+    priority: "high"
+-+    needs_retesting: false
+-+    status_history:
+-+        - working: true
+-+          agent: "testing"
+-+          comment: "All auth endpoints (GET /auth/me, PUT /auth/profile, POST /auth/logout) working correctly with proper session management and calorie goal calculation"
+-+
+-+  - task: "User Profile Management"
+-+    implemented: true
+-+    working: true
+-+    file: "server.py"
+-+    stuck_count: 0
+-+    priority: "high"
+-+    needs_retesting: false
+-+    status_history:
+-+        - working: true
+-+          agent: "testing"
+-+          comment: "User profile retrieval and goals update working correctly"
+-+
+-+  - task: "Food Analysis AI Integration"
+-+    implemented: true
+-+    working: false
+-+    file: "server.py"
+-+    stuck_count: 1
+-+    priority: "high"
+-+    needs_retesting: false
+-+    status_history:
+-+        - working: false
+-+          agent: "testing"
+-+          comment: "LLM API integration failing with 'Invalid base64 image_url' error. Image format appears correct with data:image/jpeg;base64 prefix but LiteLLM/GPT-4o integration has issues. Requires websearch investigation or alternative approach."
+-+
+-+  - task: "Food Meal Management"
+-+    implemented: true
+-+    working: true
+-+    file: "server.py"
+-+    stuck_count: 0
+-+    priority: "high"
+-+    needs_retesting: false
+-+    status_history:
+-+        - working: true
+-+          agent: "testing"
+-+          comment: "Add meal, get today's meals, and daily summary all working correctly. Fixed critical bug in daily summary function structure during testing."
+-+
+-+  - task: "Food Database Localization"
+-+    implemented: true
+-+    working: true
+-+    file: "server.py"
+-+    stuck_count: 0
+-+    priority: "medium"
+-+    needs_retesting: false
+-+    status_history:
+-+        - working: true
+-+          agent: "testing"
+-+          comment: "Food database endpoint working with Turkish/English localization support. 15 food items available in both languages"
+-+
+-+  - task: "Water Tracking"
+-+    implemented: true
+-+    working: true
+-+    file: "server.py"
+-+    stuck_count: 0
+-+    priority: "medium"
+-+    needs_retesting: false
+-+    status_history:
+-+        - working: true
+-+          agent: "testing"
+-+          comment: "All water endpoints working: add water, get today's intake, get weekly data with 7-day history"
+-+
+-+  - task: "Steps Tracking"
+-+    implemented: true
+-+    working: true
+-+    file: "server.py"
+-+    stuck_count: 0
+-+    priority: "medium"
+-+    needs_retesting: false
+-+    status_history:
+-+        - working: true
+-+          agent: "testing"
+-+          comment: "All steps endpoints working: sync from health apps, manual entry, and today's steps retrieval"
+-+
+-+  - task: "Vitamins Management"
+-+    implemented: true
+-+    working: true
+-+    file: "server.py"
+-+    stuck_count: 0
+-+    priority: "medium"
+-+    needs_retesting: false
+-+    status_history:
+-+        - working: true
+-+          agent: "testing"
+-+          comment: "Vitamin templates, user vitamins, add custom vitamins, toggle status, and daily reset logic all working correctly"
+-+
+-+frontend:
+-+  # No frontend testing performed as per instructions
+-+
+-+metadata:
+-+  created_by: "testing_agent"
+-+  version: "1.0"
+-+  test_sequence: 1
+-+  run_ui: false
+-+
+-+test_plan:
+-+  current_focus:
+-+    - "Food Analysis AI Integration"
+-+  stuck_tasks:
+-+    - "Food Analysis AI Integration"
+-+  test_all: false
+-+  test_priority: "high_first"
+-+
+-+agent_communication:
+-+    - agent: "testing"
+-+      message: "Completed comprehensive backend API testing. Found 1 critical issue with LLM integration for food analysis. All other endpoints (17/18) working correctly. Fixed daily summary bug during testing. Food analysis needs LLM API investigation or alternative approach."
+-\ No newline at end of file
