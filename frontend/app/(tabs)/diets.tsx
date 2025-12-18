@@ -225,42 +225,12 @@ export default function DietsScreen() {
         </View>
       </ScrollView>
 
-      {/* Custom Diet Modal */}
-      <Modal visible={showCustomModal} transparent animationType="slide">
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Yeni Diyet Oluştur</Text>
-              <TouchableOpacity onPress={() => setShowCustomModal(false)}>
-                <Ionicons name="close" size={28} color={Colors.darkText} />
-              </TouchableOpacity>
-            </View>
-
-            <TextInput
-              style={styles.input}
-              placeholder="Diyet Adı"
-              value={customDietName}
-              onChangeText={setCustomDietName}
-            />
-
-            <TextInput
-              style={[styles.input, styles.textArea]}
-              placeholder="Açıklama (opsiyonel)"
-              value={customDietDesc}
-              onChangeText={setCustomDietDesc}
-              multiline
-              numberOfLines={4}
-            />
-
-            <TouchableOpacity
-              style={styles.createButton}
-              onPress={handleCreateCustomDiet}
-            >
-              <Text style={styles.createButtonText}>Oluştur</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+      {/* Advanced Diet Form */}
+      <AdvancedDietForm
+        visible={showAdvancedForm}
+        onClose={() => setShowAdvancedForm(false)}
+        onSubmit={handleCreateCustomDiet}
+      />
 
       {/* Premium Paywall */}
       <PremiumPaywall
