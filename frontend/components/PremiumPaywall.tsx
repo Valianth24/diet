@@ -66,21 +66,25 @@ a Geç</Text>
           </View>
 
           {/* Subscribe Button */}
-          <TouchableOpacity style={styles.subscribeButton} onPress={onSubscribe}>
+          <TouchableOpacity 
+            style={styles.subscribeButton} 
+            onPress={onSubscribe}
+            data-testid="premium-subscribe-button"
+          >
             <LinearGradient
-              colors={[Colors.primary, Colors.secondary]}
+              colors={['#7C3AED', '#EC4899']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.gradient}
             >
-              <Ionicons name="rocket" size={24} color={Colors.white} />
-              <Text style={styles.subscribeText}>Premium'ı Başlat</Text>
+              <Ionicons name="rocket" size={24} color="#FFFFFF" />
+              <Text style={styles.subscribeText}>🎉 ÜCRETSİZ ABONE OL</Text>
             </LinearGradient>
           </TouchableOpacity>
 
           {/* Terms */}
           <Text style={styles.terms}>
-            Google Play Store üzerinden ödeme alınacaktır. İstediğiniz zaman iptal edebilirsiniz.
+            Şu an için tamamen ücretsiz! Ödeme alınmadan premium özelliklerini kullanabilirsiniz.
           </Text>
         </View>
       </View>
