@@ -8,6 +8,8 @@ import WaterCard from '../../components/WaterCard';
 import StepCard from '../../components/StepCard';
 import VitaminCard from '../../components/VitaminCard';
 import FoodPhotoCard from '../../components/FoodPhotoCard';
+import PremiumPromoButton from '../../components/PremiumPromoButton';
+import PremiumPaywall from '../../components/PremiumPaywall';
 import { Colors } from '../../constants/Colors';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
