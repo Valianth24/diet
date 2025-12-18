@@ -11,6 +11,7 @@ import FoodPhotoCard from '../../components/FoodPhotoCard';
 import { Colors } from '../../constants/Colors';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import i18n from '../../utils/i18n';
 
 export default function DashboardScreen() {
