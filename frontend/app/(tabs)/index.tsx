@@ -151,7 +151,12 @@ export default function DashboardScreen() {
               <Text style={styles.question}>{t('howAreYouToday')}</Text>
             </View>
           </View>
-          <Ionicons name="notifications-outline" size={28} color={Colors.darkText} />
+          <View style={styles.headerRight}>
+            {!user?.is_premium && (
+              <PremiumPromoButton onPress={() => setShowPremiumModal(true)} />
+            )}
+            <Ionicons name="notifications-outline" size={28} color={Colors.darkText} style={{ marginLeft: 12 }} />
+          </View>
         </View>
 
         {/* Summary Bar */}
