@@ -139,6 +139,9 @@ class SyncStepsRequest(BaseModel):
 class ManualStepsRequest(BaseModel):
     steps: int
 
+class WatchAdRequest(BaseModel):
+    ad_count: int = 1  # Number of ads watched
+
 class VitaminTemplate(BaseModel):
     vitamin_id: str
     name: str
