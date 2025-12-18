@@ -72,62 +72,19 @@ export default function VideoRewardModal({ visible, onClose, targetTheme }: Vide
     setIsLoading(true);
     setAdLoaded(false);
 
-    // Web platformunda mock reklam
-    if (Platform.OS === 'web') {
-      setTimeout(() => {
-        setAdLoaded(true);
-        setIsLoading(false);
-      }, 1000);
-      return;
-    }
+    // *** MOCK MODE - TÜM PLATFORMLARDA MOCK REKLAM ***
+    // Gerçek reklam yerine mock kullan (test için)
+    setTimeout(() => {
+      setAdLoaded(true);
+      setIsLoading(false);
+    }, 500);
+    return;
 
-    const rewardedAd = RewardedAd.createForAdRequest(REWARDED_AD_ID, {
-      requestNonPersonalizedAdsOnly: false,
-    });
-
-    // Ad yüklendiğinde
-    const loadedListener = rewardedAd.addAdEventListener(
-      RewardedAdEventType.LOADED,
-      () => {
-        setAdLoaded(true);
-        setIsLoading(false);
-        console.log('Rewarded ad loaded');
-      }
-    );
-
-    // Ödül kazanıldığında
-    const earnedListener = rewardedAd.addAdEventListener(
-      RewardedAdEventType.EARNED_REWARD,
-      async (reward) => {
-        console.log('User earned reward:', reward);
-        await handleAdWatched();
-      }
-    );
-
-    // Reklam kapandığında
-    const dismissedListener = rewardedAd.addAdEventListener(
-      RewardedAdEventType.CLOSED,
-      () => {
-        console.log('Ad closed');
-        if (!showReward) {
-          // Ödül alınmadan kapandıysa
-          onClose();
-        }
-      }
-    );
-
-    // Hata oluştuğunda
-    const errorListener = rewardedAd.addAdEventListener(
-      RewardedAdEventType.ERROR,
-      (error) => {
-        console.error('Ad error:', error);
-        setIsLoading(false);
-        alert('Reklam yüklenemedi. Lütfen internet bağlantınızı kontrol edin.');
-      }
-    );
-
-    setRewarded(rewardedAd);
-    rewardedAd.load();
+    // *** AŞAĞIDAKİ KOD ŞU AN KULLANILMIYOR - GERÇEK REKLAM İÇİN ***
+    // const rewardedAd = RewardedAd.createForAdRequest(REWARDED_AD_ID, {
+    //   requestNonPersonalizedAdsOnly: false,
+    // });
+    // ... (gerçek reklam kodu)
   };
 
   const showAd = () => {
