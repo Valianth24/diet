@@ -991,6 +991,354 @@ const ProfilePage = () => {
   );
 };
 
+// Vitamins Page
+const VitaminsPage = () => {
+  const { colors } = useTheme();
+  const navigate = useNavigate();
+  const [vitamins, setVitamins] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showReminderModal, setShowReminderModal] = useState(false);
+  const [newVitaminName, setNewVitaminName] = useState('');
+  const [newVitaminTime, setNewVitaminTime] = useState('Her Sabah');
+  const [reminderEnabled, setReminderEnabled] = useState(false);
+  const [reminderTimes, setReminderTimes] = useState(['09:00', '21:00']);
+  const [alarmStyle, setAlarmStyle] = useState(false);
+  const [newReminderTime, setNewReminderTime] = useState('');
+
+  useEffect(() => { loadVitamins(); loadReminderSettings(); }, []);
+
+  const loadVitamins = async () => {
+    try { const data = await api.getTodayVitamins(); setVitamins(data); } catch (error) {} finally { setLoading(false); }
+  };
+
+  const loadReminderSettings = () => {
+    try {
+      const enabled = localStorage.getItem('vitamin_reminder_enabled');
+      const times = localStorage.getItem('vitamin_reminder_times');
+      const alarm = localStorage.getItem('vitamin_alarm_style');
+      if (enabled) setReminderEnabled(enabled === 'true');
+      if (times) setReminderTimes(JSON.parse(times));
+      if (alarm) setAlarmStyle(alarm === 'true');
+    } catch (e) {}
+  };
+
+  const handleToggle = async (vitaminId) => {
+    try { await api.toggleVitamin(vitaminId); setVitamins(prev => prev.map(v => v.vitamin_id === vitaminId ? { ...v, is_taken: !v.is_taken } : v)); } catch (error) {}
+  };
+
+  const handleAddVitamin = async () => {
+    if (!newVitaminName) return;
+    try { await api.addVitamin(newVitaminName, newVitaminTime); await loadVitamins(); setShowAddModal(false); setNewVitaminName(''); } catch (error) {}
+  };
+
+  const handleDeleteVitamin = async (vitaminId) => {
+    if (window.confirm('Bu vitamini silmek istediğinize emin misiniz?')) {
+      try { await api.deleteVitamin(vitaminId); await loadVitamins(); } catch (error) { alert('Silinemedi.'); }
+    }
+  };
+
+  const saveReminderSettings = () => {
+    try {
+      localStorage.setItem('vitamin_reminder_enabled', String(reminderEnabled));
+      localStorage.setItem('vitamin_reminder_times', JSON.stringify(reminderTimes));
+      localStorage.setItem('vitamin_alarm_style', String(alarmStyle));
+      alert(reminderEnabled ? 'Hatırlatıcı ayarları kaydedildi!' : 'Hatırlatıcılar kapatıldı.');
+      setShowReminderModal(false);
+    } catch (e) {}
+  };
+
+  const addReminderTime = () => {
+    if (newReminderTime && /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(newReminderTime) && !reminderTimes.includes(newReminderTime)) {
+      setReminderTimes([...reminderTimes, newReminderTime].sort());
+      setNewReminderTime('');
+    }
+  };
+
+  const takenCount = vitamins.filter(v => v.is_taken).length;
+
+  if (loading) return <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: colors.background }}><div className="animate-spin rounded-full h-12 w-12 border-4 border-t-transparent" style={{ borderColor: colors.primary, borderTopColor: 'transparent' }}></div></div>;
+
+  return (
+    <div className="min-h-screen pb-24" style={{ backgroundColor: colors.background }}>
+      <div className="p-4 shadow-sm flex items-center justify-between" style={{ backgroundColor: colors.cardBg }}>
+        <div className="flex items-center gap-2">
+          <button onClick={() => navigate('/')} className="p-2" style={{ color: colors.text }}>←</button>
+          <h1 className="text-xl font-bold" style={{ color: colors.text }}>Vitamin Takibi</h1>
+        </div>
+        <button onClick={() => setShowReminderModal(true)} className="p-2 rounded-full" style={{ backgroundColor: colors.primary + '20' }}>
+          <span className="text-xl">🔔</span>
+          {reminderEnabled && <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full" style={{ backgroundColor: colors.primary }}></span>}
+        </button>
+      </div>
+
+      <div className="p-4 space-y-4">
+        <div className="rounded-2xl p-4 text-center shadow-sm" style={{ backgroundColor: colors.cardBg }}>
+          <p className="text-2xl font-bold" style={{ color: colors.text }}>{takenCount} / {vitamins.length}</p>
+          <p style={{ color: colors.textLight }}>Vitamin Alındı</p>
+        </div>
+
+        <div className="space-y-3">
+          {vitamins.map(vitamin => (
+            <div key={vitamin.vitamin_id} className="rounded-2xl p-4 shadow-sm flex items-center justify-between" style={{ backgroundColor: colors.cardBg }}>
+              <div className="flex items-center gap-3 flex-1" onClick={() => handleToggle(vitamin.vitamin_id)}>
+                <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: colors.primary + '20' }}>
+                  <span className="text-2xl">💊</span>
+                </div>
+                <div>
+                  <p className="font-bold" style={{ color: colors.text }}>{vitamin.name}</p>
+                  <p className="text-sm" style={{ color: colors.textLight }}>{vitamin.time}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button onClick={() => handleToggle(vitamin.vitamin_id)} className="w-10 h-10 rounded-full flex items-center justify-center text-white" style={{ backgroundColor: vitamin.is_taken ? colors.primary : '#D1D5DB' }}>
+                  {vitamin.is_taken && '✓'}
+                </button>
+                <button onClick={() => handleDeleteVitamin(vitamin.vitamin_id)} className="w-10 h-10 rounded-full flex items-center justify-center bg-red-50 text-red-500">🗑</button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <button onClick={() => setShowReminderModal(true)} className="w-full rounded-2xl p-4 flex items-center justify-center gap-2 text-white font-bold" style={{ backgroundColor: colors.primary }}>
+          <span>🔔</span> Hatırlatıcıları Ayarla
+        </button>
+      </div>
+
+      <button onClick={() => setShowAddModal(true)} className="fixed bottom-24 right-4 w-14 h-14 rounded-full flex items-center justify-center text-white text-2xl shadow-lg" style={{ backgroundColor: colors.primary }}>+</button>
+
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowAddModal(false)}>
+          <div className="rounded-3xl p-6 w-full max-w-md" style={{ backgroundColor: colors.cardBg }} onClick={e => e.stopPropagation()}>
+            <h2 className="text-xl font-bold mb-4" style={{ color: colors.text }}>Yeni Vitamin Ekle</h2>
+            <input className="input-field mb-4 w-full" placeholder="Vitamin Adı" value={newVitaminName} onChange={e => setNewVitaminName(e.target.value)} />
+            <input className="input-field mb-4 w-full" placeholder="Zaman (örn: Her Sabah)" value={newVitaminTime} onChange={e => setNewVitaminTime(e.target.value)} />
+            <div className="flex gap-2">
+              <button onClick={() => setShowAddModal(false)} className="flex-1 py-3 rounded-xl font-bold" style={{ backgroundColor: colors.background, color: colors.text }}>İptal</button>
+              <button onClick={handleAddVitamin} className="flex-1 py-3 rounded-xl font-bold text-white" style={{ backgroundColor: colors.primary }}>Ekle</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showReminderModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowReminderModal(false)}>
+          <div className="rounded-3xl p-6 w-full max-w-md max-h-[80vh] overflow-y-auto" style={{ backgroundColor: colors.cardBg }} onClick={e => e.stopPropagation()}>
+            <h2 className="text-xl font-bold mb-4" style={{ color: colors.text }}>Hatırlatıcı Ayarları</h2>
+            
+            <div className="flex items-center justify-between mb-4">
+              <span style={{ color: colors.text }}>Hatırlatıcıları Aç</span>
+              <button onClick={() => setReminderEnabled(!reminderEnabled)} className={`w-12 h-6 rounded-full transition-all ${reminderEnabled ? '' : 'bg-gray-300'}`} style={{ backgroundColor: reminderEnabled ? colors.primary : undefined }}>
+                <div className={`w-5 h-5 rounded-full bg-white shadow transition-transform ${reminderEnabled ? 'translate-x-6' : 'translate-x-1'}`}></div>
+              </button>
+            </div>
+
+            {reminderEnabled && (
+              <>
+                <p className="font-medium mb-2" style={{ color: colors.text }}>Hatırlatma Saatleri</p>
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {reminderTimes.map(time => (
+                    <div key={time} className="px-3 py-2 rounded-full flex items-center gap-2" style={{ backgroundColor: colors.primary + '20' }}>
+                      <span style={{ color: colors.primary }}>{time}</span>
+                      <button onClick={() => setReminderTimes(reminderTimes.filter(t => t !== time))} style={{ color: colors.primary }}>✕</button>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex gap-2 mb-4">
+                  <input className="input-field flex-1" placeholder="HH:MM" value={newReminderTime} onChange={e => setNewReminderTime(e.target.value)} />
+                  <button onClick={addReminderTime} className="px-4 py-2 rounded-xl text-white" style={{ backgroundColor: colors.primary }}>Ekle</button>
+                </div>
+
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <p style={{ color: colors.text }}>Alarm Tarzı Bildirim</p>
+                    <p className="text-sm" style={{ color: colors.textLight }}>Maksimum ses ve titreşim</p>
+                  </div>
+                  <button onClick={() => setAlarmStyle(!alarmStyle)} className={`w-12 h-6 rounded-full transition-all ${alarmStyle ? '' : 'bg-gray-300'}`} style={{ backgroundColor: alarmStyle ? colors.primary : undefined }}>
+                    <div className={`w-5 h-5 rounded-full bg-white shadow transition-transform ${alarmStyle ? 'translate-x-6' : 'translate-x-1'}`}></div>
+                  </button>
+                </div>
+              </>
+            )}
+
+            <button onClick={saveReminderSettings} className="w-full py-3 rounded-xl font-bold text-white" style={{ backgroundColor: colors.primary }}>Kaydet</button>
+          </div>
+        </div>
+      )}
+
+      <BottomNav />
+    </div>
+  );
+};
+
+// Water Detail Page
+const WaterDetailPage = () => {
+  const { user } = useAuth();
+  const { colors } = useTheme();
+  const navigate = useNavigate();
+  const [weeklyWater, setWeeklyWater] = useState([]);
+  const [todayWater, setTodayWater] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [showReminderModal, setShowReminderModal] = useState(false);
+  const [reminderEnabled, setReminderEnabled] = useState(false);
+  const [reminderTimes, setReminderTimes] = useState(['09:00', '12:00', '15:00', '18:00', '21:00']);
+  const [newReminderTime, setNewReminderTime] = useState('');
+
+  useEffect(() => { loadData(); loadReminderSettings(); }, []);
+
+  const loadData = async () => {
+    try {
+      const [weekly, today] = await Promise.all([api.getWeeklyWater(), api.getTodayWater()]);
+      setWeeklyWater(weekly);
+      setTodayWater(today.total_amount || 0);
+    } catch (error) {} finally { setLoading(false); }
+  };
+
+  const loadReminderSettings = () => {
+    try {
+      const enabled = localStorage.getItem('water_reminder_enabled');
+      const times = localStorage.getItem('water_reminder_times');
+      if (enabled) setReminderEnabled(enabled === 'true');
+      if (times) setReminderTimes(JSON.parse(times));
+    } catch (e) {}
+  };
+
+  const handleAddWater = async (amount) => {
+    try { await api.addWater(amount); setTodayWater(prev => prev + amount); } catch (error) {}
+  };
+
+  const saveReminderSettings = () => {
+    try {
+      localStorage.setItem('water_reminder_enabled', String(reminderEnabled));
+      localStorage.setItem('water_reminder_times', JSON.stringify(reminderTimes));
+      alert(reminderEnabled ? 'Hatırlatıcı ayarları kaydedildi!' : 'Hatırlatıcılar kapatıldı.');
+      setShowReminderModal(false);
+    } catch (e) {}
+  };
+
+  const addReminderTime = () => {
+    if (newReminderTime && /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(newReminderTime) && !reminderTimes.includes(newReminderTime)) {
+      setReminderTimes([...reminderTimes, newReminderTime].sort());
+      setNewReminderTime('');
+    }
+  };
+
+  const waterGoal = user?.water_goal || 2500;
+  const glassCount = Math.floor(todayWater / 250);
+  const totalGlasses = Math.ceil(waterGoal / 250);
+  const avgWater = weeklyWater.length > 0 ? weeklyWater.reduce((sum, d) => sum + d.amount, 0) / weeklyWater.length / 1000 : 0;
+
+  if (loading) return <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: colors.background }}><div className="animate-spin rounded-full h-12 w-12 border-4 border-t-transparent" style={{ borderColor: colors.secondary, borderTopColor: 'transparent' }}></div></div>;
+
+  return (
+    <div className="min-h-screen pb-24" style={{ backgroundColor: colors.background }}>
+      <div className="p-4 shadow-sm flex items-center justify-between" style={{ backgroundColor: colors.cardBg }}>
+        <div className="flex items-center gap-2">
+          <button onClick={() => navigate('/')} className="p-2" style={{ color: colors.text }}>←</button>
+          <h1 className="text-xl font-bold" style={{ color: colors.text }}>Su Takibi</h1>
+        </div>
+        <button onClick={() => setShowReminderModal(true)} className="p-2 rounded-full" style={{ backgroundColor: colors.secondary + '20' }}>
+          <span className="text-xl">🔔</span>
+        </button>
+      </div>
+
+      <div className="p-4 space-y-4">
+        <div className="rounded-2xl p-6 text-center shadow-sm" style={{ backgroundColor: colors.cardBg }}>
+          <p style={{ color: colors.textLight }}>Bugünkü Hedefiniz</p>
+          <div className="my-4 flex justify-center">
+            <div className="relative">
+              <ProgressRing progress={Math.min((todayWater / waterGoal) * 100, 100)} size={150} strokeWidth={12} color={colors.secondary} />
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className="text-3xl">💧</span>
+                <span className="text-2xl font-bold" style={{ color: colors.text }}>{(todayWater / 1000).toFixed(1)}L</span>
+                <span className="text-sm" style={{ color: colors.textLight }}>/ {(waterGoal / 1000).toFixed(1)}L</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-2xl p-4 shadow-sm" style={{ backgroundColor: colors.cardBg }}>
+          <div className="flex flex-wrap justify-center gap-2 mb-3">
+            {[...Array(Math.min(8, totalGlasses))].map((_, i) => (
+              <span key={i} className="text-3xl">{i < glassCount ? '💧' : '⚪'}</span>
+            ))}
+          </div>
+          <p className="text-center" style={{ color: colors.textLight }}>{glassCount} / {totalGlasses} Bardak</p>
+        </div>
+
+        <div className="grid grid-cols-3 gap-3">
+          {[250, 500, 1000].map(amount => (
+            <button key={amount} onClick={() => handleAddWater(amount)} className="rounded-2xl p-4 text-center font-bold text-white shadow-sm" style={{ backgroundColor: colors.secondary }}>
+              +{amount >= 1000 ? `${amount / 1000}L` : `${amount}ml`}
+            </button>
+          ))}
+        </div>
+
+        <div className="rounded-2xl p-4 text-center shadow-sm" style={{ backgroundColor: colors.cardBg }}>
+          <p style={{ color: colors.textLight }}>Haftalık Ortalama</p>
+          <p className="text-2xl font-bold" style={{ color: colors.text }}>{avgWater.toFixed(1)}L</p>
+        </div>
+
+        <div className="rounded-2xl p-4 shadow-sm" style={{ backgroundColor: colors.cardBg }}>
+          <h3 className="font-bold mb-4" style={{ color: colors.text }}>Haftalık Su Tüketimi</h3>
+          <div className="flex items-end justify-between h-40 gap-2">
+            {weeklyWater.map((day) => {
+              const maxAmount = Math.max(...weeklyWater.map(d => d.amount), 1);
+              const height = (day.amount / maxAmount) * 100;
+              const dayNames = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
+              const dayIndex = new Date(day.date).getDay();
+              return (
+                <div key={day.date} className="flex-1 flex flex-col items-center gap-1">
+                  <div className="w-full rounded-t-lg" style={{ height: `${Math.max(height, 5)}%`, backgroundColor: colors.secondary }}></div>
+                  <span className="text-xs" style={{ color: colors.textLight }}>{dayNames[dayIndex === 0 ? 6 : dayIndex - 1]}</span>
+                  <span className="text-xs font-medium" style={{ color: colors.text }}>{(day.amount / 1000).toFixed(1)}L</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {showReminderModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowReminderModal(false)}>
+          <div className="rounded-3xl p-6 w-full max-w-md max-h-[80vh] overflow-y-auto" style={{ backgroundColor: colors.cardBg }} onClick={e => e.stopPropagation()}>
+            <h2 className="text-xl font-bold mb-4" style={{ color: colors.text }}>Su Hatırlatıcısı</h2>
+            
+            <div className="flex items-center justify-between mb-4">
+              <span style={{ color: colors.text }}>Hatırlatıcıyı Aç</span>
+              <button onClick={() => setReminderEnabled(!reminderEnabled)} className={`w-12 h-6 rounded-full transition-all ${reminderEnabled ? '' : 'bg-gray-300'}`} style={{ backgroundColor: reminderEnabled ? colors.secondary : undefined }}>
+                <div className={`w-5 h-5 rounded-full bg-white shadow transition-transform ${reminderEnabled ? 'translate-x-6' : 'translate-x-1'}`}></div>
+              </button>
+            </div>
+
+            {reminderEnabled && (
+              <>
+                <p className="font-medium mb-2" style={{ color: colors.text }}>Hatırlatma Saatleri</p>
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {reminderTimes.map(time => (
+                    <div key={time} className="px-3 py-2 rounded-full flex items-center gap-2" style={{ backgroundColor: colors.secondary + '20' }}>
+                      <span style={{ color: colors.secondary }}>{time}</span>
+                      <button onClick={() => setReminderTimes(reminderTimes.filter(t => t !== time))} style={{ color: colors.secondary }}>✕</button>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex gap-2 mb-4">
+                  <input className="input-field flex-1" placeholder="HH:MM (örn: 14:30)" value={newReminderTime} onChange={e => setNewReminderTime(e.target.value)} />
+                  <button onClick={addReminderTime} className="px-4 py-2 rounded-xl text-white" style={{ backgroundColor: colors.secondary }}>Ekle</button>
+                </div>
+              </>
+            )}
+
+            <button onClick={saveReminderSettings} className="w-full py-3 rounded-xl font-bold text-white" style={{ backgroundColor: colors.secondary }}>Kaydet</button>
+          </div>
+        </div>
+      )}
+
+      <BottomNav />
+    </div>
+  );
+};
+
 // Tracking Page
 const TrackingPage = () => {
   const { user } = useAuth();
@@ -1013,6 +1361,8 @@ const TrackingPage = () => {
   };
 
   const stepGoal = user?.step_goal || 10000;
+  const caloriesBurned = Math.floor(stepData.steps * 0.04);
+  const distance = (stepData.steps * 0.0008).toFixed(2);
 
   if (loading) return <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: colors.background }}><div className="animate-spin rounded-full h-12 w-12 border-4 border-t-transparent" style={{ borderColor: colors.primary, borderTopColor: 'transparent' }}></div></div>;
 
@@ -1020,19 +1370,48 @@ const TrackingPage = () => {
     <div className="min-h-screen pb-24" style={{ backgroundColor: colors.background }}>
       <div className="p-4 shadow-sm flex items-center gap-2" style={{ backgroundColor: colors.cardBg }}>
         <button onClick={() => navigate('/')} className="p-2" style={{ color: colors.text }}>←</button>
-        <h1 className="text-xl font-bold" style={{ color: colors.text }}>Takip</h1>
+        <h1 className="text-xl font-bold" style={{ color: colors.text }}>Adım Takibi</h1>
       </div>
 
       <div className="p-4 space-y-4">
         <div className="rounded-2xl p-4 shadow-sm" style={{ backgroundColor: colors.cardBg }}>
-          <div className="flex items-center gap-2 mb-4"><span className="text-3xl">👣</span><h2 className="text-xl font-bold" style={{ color: colors.text }}>Adım Sayacı</h2></div>
+          <p className="text-center mb-4" style={{ color: colors.textLight }}>Günlük Hedef: {stepGoal.toLocaleString()} Adım</p>
           <div className="flex justify-center mb-6">
             <div className="relative">
-              <ProgressRing progress={Math.min((stepData.steps / stepGoal) * 100, 100)} size={160} strokeWidth={12} color={colors.primary} />
+              <ProgressRing progress={Math.min((stepData.steps / stepGoal) * 100, 100)} size={180} strokeWidth={14} color={colors.primary} />
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-3xl font-bold" style={{ color: colors.text }}>{stepData.steps.toLocaleString()}</span>
-                <span className="text-sm" style={{ color: colors.textLight }}>/ {stepGoal.toLocaleString()}</span>
+                <span className="text-4xl font-bold" style={{ color: colors.text }}>{stepData.steps.toLocaleString()}</span>
+                <span className="text-sm" style={{ color: colors.textLight }}>adım</span>
+                <span className="text-lg font-bold" style={{ color: colors.primary }}>{Math.round((stepData.steps / stepGoal) * 100)}%</span>
               </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-3">
+          <div className="rounded-2xl p-4 text-center shadow-sm" style={{ backgroundColor: colors.cardBg }}>
+            <span className="text-2xl">🔥</span>
+            <p className="text-xl font-bold mt-2" style={{ color: colors.text }}>{caloriesBurned}</p>
+            <p className="text-sm" style={{ color: colors.textLight }}>Kalori</p>
+          </div>
+          <div className="rounded-2xl p-4 text-center shadow-sm" style={{ backgroundColor: colors.cardBg }}>
+            <span className="text-2xl">📍</span>
+            <p className="text-xl font-bold mt-2" style={{ color: colors.text }}>{distance}</p>
+            <p className="text-sm" style={{ color: colors.textLight }}>km</p>
+          </div>
+          <div className="rounded-2xl p-4 text-center shadow-sm" style={{ backgroundColor: colors.cardBg }}>
+            <span className="text-2xl">⏱️</span>
+            <p className="text-xl font-bold mt-2" style={{ color: colors.text }}>{Math.floor(stepData.steps / 100)}</p>
+            <p className="text-sm" style={{ color: colors.textLight }}>dakika</p>
+          </div>
+        </div>
+
+        <div className="rounded-2xl p-4 shadow-sm" style={{ backgroundColor: colors.cardBg }}>
+          <div className="flex items-center gap-3 mb-3">
+            <span className="text-2xl">📱</span>
+            <div>
+              <p className="font-bold" style={{ color: colors.text }}>Telefon Pedometresi</p>
+              <p className="text-sm" style={{ color: colors.textLight }}>Otomatik adım sayımı için mobil uygulamayı kullanın</p>
             </div>
           </div>
           <div className="flex gap-2">
