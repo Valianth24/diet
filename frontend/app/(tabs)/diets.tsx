@@ -115,6 +115,20 @@ export default function DietsScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
+      {/* Back Button Header */}
+      <View style={styles.topHeader}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <Ionicons name="chevron-back" size={28} color={Colors.darkText} />
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={styles.premiumButton}
+          onPress={() => setShowPaywall(true)}
+        >
+          <Ionicons name="diamond" size={20} color={Colors.white} />
+          <Text style={styles.premiumButtonText}>Premium</Text>
+        </TouchableOpacity>
+      </View>
+
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Header */}
         <View style={styles.header}>
@@ -122,13 +136,6 @@ export default function DietsScreen() {
             <Text style={styles.title}>Diyetler</Text>
             <Text style={styles.subtitle}>Size özel beslenme planları</Text>
           </View>
-          <TouchableOpacity 
-            style={styles.premiumButton}
-            onPress={() => setShowPaywall(true)}
-          >
-            <Ionicons name="diamond" size={20} color={Colors.white} />
-            <Text style={styles.premiumButtonText}>Premium</Text>
-          </TouchableOpacity>
         </View>
 
         {/* Premium Badge if user has premium */}
