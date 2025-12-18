@@ -692,12 +692,103 @@ const DashboardPage = () => {
             <input type="text" className="input-field mb-4" placeholder="Yemek ara..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
             <div className="space-y-2 max-h-60 overflow-y-auto">
               {foodDatabase.filter(f => f.name.toLowerCase().includes(searchQuery.toLowerCase())).map(food => (
-                <div key={food.food_id} onClick={() => handleAddMeal(food)} className="p-3 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100">
-                  <p className="font-medium">{food.name}</p>
-                  <p className="text-sm text-gray-500">{food.calories} kcal • P: {food.protein}g • K: {food.carbs}g • Y: {food.fat}g</p>
+                <div key={food.food_id} onClick={() => handleSelectFood(food)} className="p-3 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 flex items-center justify-between">
+                  <div>
+                    <p className="font-medium">{food.name}</p>
+                    <p className="text-sm text-gray-500">{food.calories} kcal • P: {food.protein}g • K: {food.carbs}g • Y: {food.fat}g</p>
+                    <p className="text-xs text-gray-400">100g başına</p>
+                  </div>
+                  <span className="text-gray-400">→</span>
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Gram Input Modal */}
+      {showGramModal && selectedFood && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowGramModal(false)}>
+          <div className="bg-white rounded-3xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold">Miktar Gir</h2>
+              <button onClick={() => setShowGramModal(false)} className="text-gray-500 text-2xl">✕</button>
+            </div>
+
+            {/* Food Info */}
+            <div className="bg-gray-50 rounded-2xl p-4 mb-4">
+              <h3 className="font-bold text-lg text-gray-800">{selectedFood.name}</h3>
+              <p className="text-sm text-gray-500">100g başına değerler</p>
+              <div className="grid grid-cols-4 gap-2 mt-3">
+                <div className="text-center p-2 bg-white rounded-xl">
+                  <p className="text-xs text-gray-500">Kalori</p>
+                  <p className="font-bold text-orange-500">{selectedFood.calories}</p>
+                </div>
+                <div className="text-center p-2 bg-white rounded-xl">
+                  <p className="text-xs text-gray-500">Protein</p>
+                  <p className="font-bold text-red-500">{selectedFood.protein}g</p>
+                </div>
+                <div className="text-center p-2 bg-white rounded-xl">
+                  <p className="text-xs text-gray-500">Karb</p>
+                  <p className="font-bold text-blue-500">{selectedFood.carbs}g</p>
+                </div>
+                <div className="text-center p-2 bg-white rounded-xl">
+                  <p className="text-xs text-gray-500">Yağ</p>
+                  <p className="font-bold text-yellow-500">{selectedFood.fat}g</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Gram Input */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Miktar (gram)</label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  className="input-field text-center text-2xl font-bold flex-1"
+                  value={gramAmount}
+                  onChange={e => setGramAmount(e.target.value)}
+                  min="1"
+                  autoFocus
+                />
+                <span className="text-xl text-gray-500">g</span>
+              </div>
+            </div>
+
+            {/* Quick Buttons */}
+            <div className="flex gap-2 mb-4">
+              {['50', '100', '150', '200', '250'].map(g => (
+                <button
+                  key={g}
+                  onClick={() => setGramAmount(g)}
+                  className={`flex-1 py-2 rounded-xl text-sm font-medium transition-all ${gramAmount === g ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                >
+                  {g}g
+                </button>
+              ))}
+            </div>
+
+            {/* Calculated Values */}
+            <div className="bg-green-50 rounded-2xl p-4 mb-4">
+              <p className="text-sm text-green-700 font-medium mb-2">Hesaplanan Değerler ({gramAmount || 0}g için):</p>
+              <div className="flex justify-between text-sm">
+                <span>🔥 {Math.round(selectedFood.calories * (parseFloat(gramAmount) || 0) / 100)} kcal</span>
+                <span>🥩 {Math.round(selectedFood.protein * (parseFloat(gramAmount) || 0) / 100 * 10) / 10}g protein</span>
+              </div>
+              <div className="flex justify-between text-sm mt-1">
+                <span>🍞 {Math.round(selectedFood.carbs * (parseFloat(gramAmount) || 0) / 100 * 10) / 10}g karb</span>
+                <span>🧈 {Math.round(selectedFood.fat * (parseFloat(gramAmount) || 0) / 100 * 10) / 10}g yağ</span>
+              </div>
+            </div>
+
+            {/* Add Button */}
+            <button
+              onClick={handleAddMealWithGram}
+              className="w-full py-4 rounded-2xl font-bold text-white text-lg"
+              style={{ backgroundColor: colors.primary }}
+            >
+              ✓ {selectedFood.name} Ekle
+            </button>
           </div>
         </div>
       )}
