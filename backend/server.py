@@ -149,6 +149,30 @@ class UserVitamin(BaseModel):
     is_taken: bool
     date: str
 
+class DietPlan(BaseModel):
+    diet_id: str
+    name: str
+    description: str
+    duration_days: int
+    daily_calories: int
+    meals: List[Dict[str, Any]]  # List of meals per day
+    is_premium: bool
+    category: str  # "weight_loss", "muscle_gain", "balanced", "keto", etc.
+    image_url: Optional[str] = None
+
+class UserDiet(BaseModel):
+    user_diet_id: str
+    user_id: str
+    diet_id: Optional[str] = None  # None if custom
+    name: str
+    description: str
+    start_date: str
+    end_date: Optional[str] = None
+    is_active: bool
+    is_custom: bool
+    meals: List[Dict[str, Any]]
+    created_at: datetime
+
 class AddVitaminRequest(BaseModel):
     name: str
     time: str
