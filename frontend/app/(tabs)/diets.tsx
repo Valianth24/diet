@@ -13,10 +13,8 @@ export default function DietsScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { user } = useStore();
-  const [showCustomModal, setShowCustomModal] = useState(false);
+  const [showAdvancedForm, setShowAdvancedForm] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
-  const [customDietName, setCustomDietName] = useState('');
-  const [customDietDesc, setCustomDietDesc] = useState('');
 
   // Mock premium status - gerçek uygulamada backend'den gelecek
   const isPremium = user?.is_premium || false;
