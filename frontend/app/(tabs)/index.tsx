@@ -195,6 +195,35 @@ export default function DashboardScreen() {
           <View style={styles.gridItemFull}>
             <FoodPhotoCard />
           </View>
+
+          {/* Personal Diets Section */}
+          <View style={styles.personalDietsSection}>
+            <View style={styles.personalDietsHeader}>
+              <Ionicons name="heart" size={24} color={Colors.error} />
+              <Text style={styles.personalDietsTitle}>Kişisel Diyetlerim</Text>
+            </View>
+            <Text style={styles.personalDietsSubtitle}>
+              Aktif diyet planlarınız ve özel beslenme programlarınız
+            </Text>
+            
+            {/* No diets placeholder */}
+            <TouchableOpacity
+              style={styles.noDietsCard}
+              onPress={() => router.push('/(tabs)/diets')}
+            >
+              <View style={styles.noDietsIcon}>
+                <Ionicons name="add-circle-outline" size={48} color={Colors.primary} />
+              </View>
+              <Text style={styles.noDietsText}>Henüz bir diyet planınız yok</Text>
+              <Text style={styles.noDietsSubtext}>
+                Hazır diyetlerimize göz atın veya kendi diyetinizi oluşturun
+              </Text>
+              <View style={styles.noDietsButton}>
+                <Text style={styles.noDietsButtonText}>Diyetlere Git</Text>
+                <Ionicons name="arrow-forward" size={20} color={Colors.primary} />
+              </View>
+            </TouchableOpacity>
+          </View>
         </View>
       </ScrollView>
 
