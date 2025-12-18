@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ScrollView, View, Text, StyleSheet, TouchableOpacity, Dimensions, Modal, TextInput, Switch, Platform } from 'react-native';
+import { ScrollView, View, Text, StyleSheet, TouchableOpacity, Dimensions, Modal, TextInput, Switch, Platform, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getWeeklyWater, getTodayWater, addWater } from '../../utils/api';
 import { Colors } from '../../constants/Colors';
@@ -8,18 +8,24 @@ import { Ionicons } from '@expo/vector-icons';
 import { LineChart, BarChart } from 'react-native-gifted-charts';
 import { useRouter } from 'expo-router';
 import { useStore } from '../../store/useStore';
-import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const screenWidth = Dimensions.get('window').width;
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-  }),
-});
+// Expo Notifications - Sadece production build'de çalışır
+let Notifications: any = null;
+try {
+  Notifications = require('expo-notifications');
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: true,
+      shouldSetBadge: true,
+    }),
+  });
+} catch (error) {
+  console.log('Notifications not available in Expo Go');
+}
 
 export default function WaterDetailScreen() {
   const { t } = useTranslation();
