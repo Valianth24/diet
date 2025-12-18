@@ -210,7 +210,7 @@ export default function DietsScreen() {
           
           <TouchableOpacity
             style={[styles.customDietCard, !isPremium && styles.customDietCardLocked]}
-            onPress={() => isPremium ? setShowCustomModal(true) : setShowPaywall(true)}
+            onPress={() => isPremium ? setShowAdvancedForm(true) : setShowPaywall(true)}
           >
             <View style={styles.customDietContent}>
               <View style={styles.iconCircle}>
