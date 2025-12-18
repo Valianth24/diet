@@ -349,6 +349,26 @@ export default function DashboardScreen() {
         </View>
       </Modal>
 
+      {/* Premium Paywall */}
+      <PremiumPaywall
+        visible={showPremiumModal}
+        onClose={() => setShowPremiumModal(false)}
+        onSubscribe={async () => {
+          try {
+            // Mock activation for prototype
+            alert('🎉 Premium aktif oldu! Sayfa yenileniyor...');
+            setShowPremiumModal(false);
+            setTimeout(() => {
+              if (typeof window !== 'undefined') {
+                window.location.reload();
+              }
+            }, 1000);
+          } catch (error) {
+            alert('Hata oluştu.');
+          }
+        }}
+      />
+
       {/* Floating Action Button */}
       <TouchableOpacity
         style={styles.fab}
