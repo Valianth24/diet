@@ -137,7 +137,21 @@ const ProgressRing = ({ progress, size = 80, strokeWidth = 8, color = '#4CAF50' 
 
 // Login Page
 const LoginPage = () => {
-  const { login } = useAuth();
+  const { login, isLoading, isAuthenticated } = useAuth();
+
+  // If loading, show spinner
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-white border-t-transparent"></div>
+      </div>
+    );
+  }
+
+  // If already authenticated, redirect (handled by App routes)
+  if (isAuthenticated) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center p-4">
