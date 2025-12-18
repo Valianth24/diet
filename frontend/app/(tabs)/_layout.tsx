@@ -74,10 +74,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="diets"
         options={{
-          title: 'Diyetler',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="nutrition" size={size} color={color} />
-          ),
+          href: null,
         }}
       />
       <Tabs.Screen
