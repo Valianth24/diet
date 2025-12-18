@@ -63,9 +63,14 @@ export default function VitaminsScreen() {
   }, [refreshData]);
 
   const requestPermissions = async () => {
-    const { status } = await Notifications.requestPermissionsAsync();
-    if (status !== 'granted') {
-      alert('Bildirim izni verilmedi. Ayarlardan açabilirsiniz.');
+    if (!Notifications) return; // Expo Go'da çalışmaz
+    try {
+      const { status } = await Notifications.requestPermissionsAsync();
+      if (status !== 'granted') {
+        alert('Bildirim izni verilmedi. Ayarlardan açabilirsiniz.');
+      }
+    } catch (error) {
+      console.log('Notifications not available');
     }
   };
 
