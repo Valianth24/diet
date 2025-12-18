@@ -5,13 +5,20 @@ import { Colors } from '../../constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
+import { useStore } from '../../store/useStore';
+import PremiumPaywall from '../../components/PremiumPaywall';
 
 export default function DietsScreen() {
   const { t } = useTranslation();
   const router = useRouter();
+  const { user } = useStore();
   const [showCustomModal, setShowCustomModal] = useState(false);
+  const [showPaywall, setShowPaywall] = useState(false);
   const [customDietName, setCustomDietName] = useState('');
   const [customDietDesc, setCustomDietDesc] = useState('');
+
+  // Mock premium status - gerçek uygulamada backend'den gelecek
+  const isPremium = user?.is_premium || false;
 
   const premiumDiets = [
     {
@@ -56,13 +63,37 @@ export default function DietsScreen() {
     },
   ];
 
+  const handleDietClick = (diet: any) => {
+    if (diet.isPremium && !isPremium) {
+      setShowPaywall(true);
+    } else {
+      router.push({
+        pathname: '/details/diet-detail',
+        params: { dietId: diet.id }
+      });
+    }
+  };
+
   const handleCreateCustomDiet = () => {
+    if (!isPremium) {
+      setShowPaywall(true);
+      return;
+    }
+
     if (customDietName.trim()) {
       // Burada custom diet oluşturma işlemi yapılacak
       setShowCustomModal(false);
       setCustomDietName('');
       setCustomDietDesc('');
+      alert('Kişisel diyet oluşturuldu!');
     }
+  };
+
+  const handleSubscribe = () => {
+    // Google Play Billing integration will go here
+    alert('Google Play Store açılıyor... (Mock)');
+    setShowPaywall(false);
+    // TODO: Implement Google Play Billing
   };
 
   return (
@@ -70,15 +101,39 @@ export default function DietsScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>Diyetler</Text>
-          <Text style={styles.subtitle}>Size özel beslenme planları</Text>
+          <View>
+            <Text style={styles.title}>Diyetler</Text>
+            <Text style={styles.subtitle}>Size özel beslenme planları</Text>
+          </View>
+          {!isPremium && (
+            <TouchableOpacity 
+              style={styles.premiumButton}
+              onPress={() => setShowPaywall(true)}
+            >
+              <Ionicons name="diamond" size={20} color={Colors.white} />
+              <Text style={styles.premiumButtonText}>Premium</Text>
+            </TouchableOpacity>
+          )}
         </View>
+
+        {/* Premium Badge if user has premium */}
+        {isPremium && (
+          <View style={styles.premiumBanner}>
+            <Ionicons name="checkmark-circle" size={24} color={Colors.success} />
+            <Text style={styles.premiumBannerText}>Premium üyesiniz! Tüm özelliklere erişime sahipsiniz.</Text>
+          </View>
+        )}
 
         {/* Premium Diets Section */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Ionicons name="star" size={24} color={Colors.warning} />
             <Text style={styles.sectionTitle}>Hazır Diyetler</Text>
+            {!isPremium && (
+              <View style={styles.lockBadge}>
+                <Ionicons name="lock-closed" size={14} color={Colors.white} />
+              </View>
+            )}
           </View>
           <Text style={styles.sectionSubtitle}>Uzman diyetisyenler tarafından hazırlanmış</Text>
           
@@ -86,19 +141,18 @@ export default function DietsScreen() {
             {premiumDiets.map((diet) => (
               <TouchableOpacity
                 key={diet.id}
-                style={styles.dietCard}
-                onPress={() => {
-                  // Navigate to diet detail
-                  router.push({
-                    pathname: '/details/diet-detail',
-                    params: { dietId: diet.id }
-                  });
-                }}
+                style={[styles.dietCard, !isPremium && styles.dietCardLocked]}
+                onPress={() => handleDietClick(diet)}
               >
                 <Image
                   source={{ uri: diet.image }}
                   style={styles.dietImage}
                 />
+                {!isPremium && (
+                  <View style={styles.lockOverlay}>
+                    <Ionicons name="lock-closed" size={32} color={Colors.white} />
+                  </View>
+                )}
                 <View style={styles.premiumBadge}>
                   <Ionicons name="star" size={12} color={Colors.white} />
                   <Text style={styles.premiumText}>Premium</Text>
@@ -129,20 +183,25 @@ export default function DietsScreen() {
           <View style={styles.sectionHeader}>
             <Ionicons name="create" size={24} color={Colors.primary} />
             <Text style={styles.sectionTitle}>Kişisel Diyet Oluştur</Text>
+            {!isPremium && (
+              <View style={styles.lockBadge}>
+                <Ionicons name="lock-closed" size={14} color={Colors.white} />
+              </View>
+            )}
           </View>
           <Text style={styles.sectionSubtitle}>Kendi beslenme planınızı oluşturun</Text>
           
           <TouchableOpacity
-            style={styles.customDietCard}
-            onPress={() => setShowCustomModal(true)}
+            style={[styles.customDietCard, !isPremium && styles.customDietCardLocked]}
+            onPress={() => isPremium ? setShowCustomModal(true) : setShowPaywall(true)}
           >
             <View style={styles.customDietContent}>
               <View style={styles.iconCircle}>
-                <Ionicons name="add" size={32} color={Colors.primary} />
+                <Ionicons name={isPremium ? 'add' : 'lock-closed'} size={32} color={isPremium ? Colors.primary : Colors.lightText} />
               </View>
               <Text style={styles.customDietTitle}>Yeni Diyet Planı</Text>
               <Text style={styles.customDietSubtitle}>
-                Kendi öğünlerinizi ve hedeflerinizi belirleyin
+                {isPremium ? 'Kendi öğünlerinizi ve hedeflerinizi belirleyin' : 'Premium ile kilidi açın'}
               </Text>
             </View>
           </TouchableOpacity>
@@ -185,6 +244,13 @@ export default function DietsScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* Premium Paywall */}
+      <PremiumPaywall
+        visible={showPaywall}
+        onClose={() => setShowPaywall(false)}
+        onSubscribe={handleSubscribe}
+      />
     </SafeAreaView>
   );
 }
@@ -198,7 +264,10 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   header: {
-    marginBottom: 24,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
   },
   title: {
     fontSize: 32,
@@ -209,6 +278,35 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 16,
     color: Colors.lightText,
+  },
+  premiumButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.warning,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    gap: 6,
+  },
+  premiumButtonText: {
+    color: Colors.white,
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  premiumBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.success + '20',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 24,
+    gap: 12,
+  },
+  premiumBannerText: {
+    flex: 1,
+    fontSize: 14,
+    color: Colors.success,
+    fontWeight: '600',
   },
   section: {
     marginBottom: 32,
@@ -223,6 +321,15 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     color: Colors.darkText,
+    flex: 1,
+  },
+  lockBadge: {
+    backgroundColor: Colors.lightText,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   sectionSubtitle: {
     fontSize: 14,
@@ -242,10 +349,24 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 3,
   },
+  dietCardLocked: {
+    opacity: 0.7,
+  },
   dietImage: {
     width: '100%',
     height: 180,
     resizeMode: 'cover',
+  },
+  lockOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1,
   },
   premiumBadge: {
     position: 'absolute',
@@ -258,6 +379,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+    zIndex: 2,
   },
   premiumText: {
     color: Colors.white,
@@ -298,6 +420,10 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: Colors.primary,
     borderStyle: 'dashed',
+  },
+  customDietCardLocked: {
+    borderColor: Colors.lightText,
+    opacity: 0.7,
   },
   customDietContent: {
     alignItems: 'center',
