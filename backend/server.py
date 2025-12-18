@@ -704,6 +704,13 @@ async def get_vitamin_templates():
     """Get default vitamin templates"""
     return [VitaminTemplate(**vit) for vit in DEFAULT_VITAMINS]
 
+@api_router.get("/food/database")
+async def get_food_database(current_user: Optional[User] = Depends(get_current_user)):
+    """Get food database for manual entry"""
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    return FOOD_DATABASE
+
 @api_router.get("/vitamins/user", response_model=List[UserVitamin])
 async def get_user_vitamins(current_user: Optional[User] = Depends(get_current_user)):
     """Get user's vitamins"""
