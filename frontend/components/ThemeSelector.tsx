@@ -7,7 +7,7 @@ import { themes, themeMetadata, ThemeName } from '../constants/Themes';
 import VideoRewardModal from './VideoRewardModal';
 
 export default function ThemeSelector() {
-  const { currentTheme, setTheme, watchedVideos, unlockedThemes } = useTheme();
+  const { currentTheme, setTheme, watchedAds, unlockedThemes, isThemeAvailable } = useTheme();
   const [showVideoModal, setShowVideoModal] = useState(false);
   const [selectedLockedTheme, setSelectedLockedTheme] = useState<ThemeName | null>(null);
 
