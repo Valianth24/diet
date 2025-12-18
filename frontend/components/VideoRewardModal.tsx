@@ -11,11 +11,16 @@ let RewardedAd: any = null;
 let RewardedAdEventType: any = null;
 let TestIds: any = null;
 
+// Web platformunda AdMob'u yükleme, hata verir
 if (Platform.OS !== 'web') {
-  const AdMob = require('react-native-google-mobile-ads');
-  RewardedAd = AdMob.RewardedAd;
-  RewardedAdEventType = AdMob.RewardedAdEventType;
-  TestIds = AdMob.TestIds;
+  try {
+    const AdMob = require('react-native-google-mobile-ads');
+    RewardedAd = AdMob.RewardedAd;
+    RewardedAdEventType = AdMob.RewardedAdEventType;
+    TestIds = AdMob.TestIds;
+  } catch (error) {
+    console.log('AdMob not available on this platform');
+  }
 }
 
 interface VideoRewardModalProps {
