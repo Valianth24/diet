@@ -6,6 +6,7 @@ import { Colors } from '../../constants/Colors';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { LineChart, BarChart } from 'react-native-gifted-charts';
+import { useStore } from '../../store/useStore';
 
 const screenWidth = Dimensions.get('window').width;
 
