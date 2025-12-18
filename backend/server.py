@@ -98,6 +98,24 @@ class AddMealRequest(BaseModel):
     fat: float
     image_base64: str
     meal_type: str  # "breakfast", "lunch", "dinner", "snack"
+    
+    @validator('name')
+    def validate_name(cls, v):
+        if len(v) > 200:
+            raise ValueError('Name too long')
+        return v
+    
+    @validator('calories')
+    def validate_calories(cls, v):
+        if v < 0 or v > 10000:
+            raise ValueError('Invalid calorie value')
+        return v
+    
+    @validator('meal_type')
+    def validate_meal_type(cls, v):
+        if v not in ['breakfast', 'lunch', 'dinner', 'snack']:
+            raise ValueError('Invalid meal type')
+        return v
 
 class Meal(BaseModel):
     meal_id: str
