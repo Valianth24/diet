@@ -1496,6 +1496,8 @@ function App() {
             <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
             <Route path="/tracking" element={<ProtectedRoute><TrackingPage /></ProtectedRoute>} />
             <Route path="/diets" element={<ProtectedRoute><DietsPage /></ProtectedRoute>} />
+            <Route path="/vitamins" element={<ProtectedRoute><VitaminsPage /></ProtectedRoute>} />
+            <Route path="/water" element={<ProtectedRoute><WaterDetailPage /></ProtectedRoute>} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </Router>
