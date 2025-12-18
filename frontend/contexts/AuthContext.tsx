@@ -67,6 +67,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     checkExistingSession();
     
+    // Handle web platform - check URL for session_id
+    if (Platform.OS === 'web') {
+      const currentUrl = window.location.href;
+      if (currentUrl.includes('session_id=')) {
+        handleAuthRedirect(currentUrl);
+      }
+    }
+    
     // Handle deep links (cold start)
     Linking.getInitialURL().then((url) => {
       if (url) {
