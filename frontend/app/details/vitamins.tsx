@@ -119,6 +119,15 @@ export default function VitaminsScreen() {
     }
   };
 
+  const handleDeleteVitamin = async (vitaminId: string) => {
+    try {
+      await deleteVitamin(vitaminId);
+      await loadVitamins();
+    } catch (error) {
+      console.error('Error deleting vitamin:', error);
+    }
+  };
+
   const handleAddVitamin = async () => {
     if (!newVitaminName) return;
     try {
