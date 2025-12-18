@@ -25,6 +25,10 @@ export default function DetailsLayout() {
         name="steps" 
         options={{ title: 'Steps' }}
       />
+      <Stack.Screen 
+        name="diet-detail" 
+        options={{ title: 'Diet Detail' }}
+      />
     </Stack>
   );
 }
