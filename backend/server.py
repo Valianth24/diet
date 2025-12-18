@@ -503,17 +503,6 @@ async def get_today_meals(current_user: Optional[User] = Depends(get_current_use
     
     return [Meal(**meal) for meal in meals]
 
-@api_router.get("/food/daily-summary", response_model=DailySummary)
-async def get_daily_summary(current_user: Optional[User] = Depends(get_current_user)):
-    """Get daily nutrition summary"""
-    if not current_user:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    
-    meals = await get_today_meals(current_user)
-    
-    total_calories = sum(meal.calories for meal in meals)
-    total_protein = sum(meal.protein for meal in meals)
-
 # FOOD DATABASE - Uygulama sahipleri tarafından eklenen yemekler
 FOOD_DATABASE = [
     {"food_id": "food_001", "name": "Tavuk Göğsü (100g)", "calories": 165, "protein": 31, "carbs": 0, "fat": 3.6, "name_en": "Chicken Breast (100g)"},
@@ -533,6 +522,28 @@ FOOD_DATABASE = [
     {"food_id": "food_015", "name": "Elma (1 Adet)", "calories": 95, "protein": 0.5, "carbs": 25, "fat": 0.3, "name_en": "Apple (1 Piece)"},
 ]
 
+@api_router.get("/food/daily-summary", response_model=DailySummary)
+async def get_daily_summary(current_user: Optional[User] = Depends(get_current_user)):
+    """Get daily nutrition summary"""
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    meals = await get_today_meals(current_user)
+    
+    total_calories = sum(meal.calories for meal in meals)
+    total_protein = sum(meal.protein for meal in meals)
+    total_carbs = sum(meal.carbs for meal in meals)
+    total_fat = sum(meal.fat for meal in meals)
+    
+    return DailySummary(
+        date=datetime.now(timezone.utc).date().isoformat(),
+        total_calories=total_calories,
+        total_protein=total_protein,
+        total_carbs=total_carbs,
+        total_fat=total_fat,
+        meals=meals
+    )
+
 @api_router.get("/food/database")
 async def get_food_database(lang: str = "tr", current_user: Optional[User] = Depends(get_current_user)):
     """Get food database for manual entry"""
@@ -546,18 +557,6 @@ async def get_food_database(lang: str = "tr", current_user: Optional[User] = Dep
     else:
         return [{"food_id": f["food_id"], "name": f["name"], "calories": f["calories"], 
                  "protein": f["protein"], "carbs": f["carbs"], "fat": f["fat"]} for f in FOOD_DATABASE]
-
-    total_carbs = sum(meal.carbs for meal in meals)
-    total_fat = sum(meal.fat for meal in meals)
-    
-    return DailySummary(
-        date=datetime.now(timezone.utc).date().isoformat(),
-        total_calories=total_calories,
-        total_protein=total_protein,
-        total_carbs=total_carbs,
-        total_fat=total_fat,
-        meals=meals
-    )
 
 # ==================== WATER ENDPOINTS ====================
 
