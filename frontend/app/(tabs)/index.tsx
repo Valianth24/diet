@@ -353,16 +353,14 @@ export default function DashboardScreen() {
         onClose={() => setShowPremiumModal(false)}
         onSubscribe={async () => {
           try {
-            // Mock activation for prototype
-            alert('🎉 Premium aktif oldu! Sayfa yenileniyor...');
+            const { activatePremium } = require('../../utils/api');
+            const result = await activatePremium();
+            alert('🎉 Premium aktif oldu! Tüm özellikler açıldı!');
             setShowPremiumModal(false);
-            setTimeout(() => {
-              if (typeof window !== 'undefined') {
-                window.location.reload();
-              }
-            }, 1000);
+            await loadData(); // Refresh user data
           } catch (error) {
-            alert('Hata oluştu.');
+            console.error('Premium activation error:', error);
+            alert('Hata oluştu. Lütfen tekrar deneyin.');
           }
         }}
       />
