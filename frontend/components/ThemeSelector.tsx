@@ -140,13 +140,13 @@ export default function ThemeSelector() {
       <View style={styles.progressCard}>
         <View style={styles.progressHeader}>
           <Ionicons name="trophy" size={20} color="#F59E0B" />
-          <Text style={styles.progressTitle}>İzlenen Videolar</Text>
+          <Text style={styles.progressTitle}>İzlenen Reklamlar</Text>
         </View>
         <View style={styles.progressBar}>
-          <View style={[styles.progressFill, { width: `${(watchedVideos / 9) * 100}%` }]} />
+          <View style={[styles.progressFill, { width: `${(watchedAds / 9) * 100}%` }]} />
         </View>
-        <Text style={styles.progressText}>{watchedVideos} / 9 video</Text>
-        <Text style={styles.progressSubtext}>Her 3 videoda yeni tema aç! 🎉</Text>
+        <Text style={styles.progressText}>{watchedAds} / 9 reklam</Text>
+        <Text style={styles.progressSubtext}>Her 3 reklamda yeni tema aç! 🎉</Text>
       </View>
 
       <View style={styles.themesGrid}>
