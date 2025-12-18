@@ -373,21 +373,23 @@ const VideoRewardModal = ({ visible, onClose, targetTheme, onReward }) => {
   );
 };
 
-// Theme Selector Component
+// Theme Selector Component - Günlük sistem
 const ThemeSelector = () => {
-  const { currentTheme, setTheme, watchedAds, isThemeAvailable, themes } = useTheme();
+  const { currentTheme, setTheme, todayWatchedAds, isThemeAvailable, getTimeRemaining, getVideosNeededForTheme, themes } = useTheme();
   const { user } = useAuth();
   const [showVideoModal, setShowVideoModal] = useState(false);
   const [selectedTheme, setSelectedTheme] = useState(null);
 
   const handleThemeClick = (themeName) => {
-    if (isThemeAvailable(themeName) || user?.is_premium) {
+    if (isThemeAvailable(themeName, user?.is_premium)) {
       setTheme(themeName);
     } else {
       setSelectedTheme(themeName);
       setShowVideoModal(true);
     }
   };
+
+  const videosNeeded = getVideosNeededForTheme();
 
   return (
     <div className="mb-6">
@@ -396,24 +398,30 @@ const ThemeSelector = () => {
         <h3 className="text-xl font-bold text-gray-800">Temalar</h3>
       </div>
 
-      {/* Progress Card */}
-      <div className="bg-white rounded-2xl p-4 mb-4 shadow-sm">
+      {/* Daily Progress Card */}
+      <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl p-4 mb-4 text-white">
         <div className="flex items-center gap-2 mb-2">
-          <span className="text-xl">🏆</span>
-          <span className="font-semibold">İzlenen Reklamlar</span>
+          <span className="text-xl">📹</span>
+          <span className="font-semibold">Bugünkü Reklamlar</span>
         </div>
-        <div className="h-2 bg-gray-200 rounded-full overflow-hidden mb-2">
-          <div className="h-full bg-purple-500 transition-all" style={{ width: `${(watchedAds / 9) * 100}%` }}></div>
+        <div className="h-3 bg-white/30 rounded-full overflow-hidden mb-2">
+          <div className="h-full bg-white transition-all" style={{ width: `${(todayWatchedAds / 3) * 100}%` }}></div>
         </div>
-        <p className="text-sm text-purple-600 font-semibold">{watchedAds} / 9 reklam</p>
-        <p className="text-xs text-gray-500">Her 3 reklamda yeni tema aç! 🎉</p>
+        <p className="font-bold">{todayWatchedAds} / 3 video izlendi</p>
+        {videosNeeded > 0 ? (
+          <p className="text-sm text-white/80">{videosNeeded} video daha izle ve tema aç! 🎉</p>
+        ) : (
+          <p className="text-sm text-white/80">✅ Bugün tema açabilirsin!</p>
+        )}
+        <p className="text-xs text-white/60 mt-2">⏰ Her gün 3 video = 24 saat tema kullanımı</p>
       </div>
 
       {/* Theme Grid */}
       <div className="grid grid-cols-2 gap-3">
         {Object.entries(themes).map(([key, theme]) => {
-          const isUnlocked = isThemeAvailable(key) || user?.is_premium;
+          const isUnlocked = isThemeAvailable(key, user?.is_premium);
           const isActive = currentTheme === key;
+          const timeRemaining = getTimeRemaining(key);
           
           return (
             <button
@@ -421,7 +429,9 @@ const ThemeSelector = () => {
               onClick={() => handleThemeClick(key)}
               className={`p-4 rounded-2xl text-center transition-all relative ${
                 isActive ? 'ring-2 ring-purple-500' : ''
-              } ${key === 'pinkStar' && isUnlocked ? 'bg-gradient-to-br from-pink-500 to-pink-300 text-white' : 'bg-white'} ${
+              } ${key === 'pinkStar' && isUnlocked ? 'bg-gradient-to-br from-pink-500 to-pink-300 text-white' : 
+                key === 'ocean' && isUnlocked ? 'bg-gradient-to-br from-blue-400 to-cyan-300 text-white' :
+                key === 'sunset' && isUnlocked ? 'bg-gradient-to-br from-orange-400 to-yellow-300 text-white' : 'bg-white'} ${
                 !isUnlocked ? 'opacity-60' : ''
               }`}
             >
@@ -432,10 +442,22 @@ const ThemeSelector = () => {
                 <div className="absolute top-2 right-2 w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center text-white text-xs">✓</div>
               )}
               <div className="text-4xl mb-2">{theme.icon}</div>
-              <p className={`font-bold ${key === 'pinkStar' && isUnlocked ? 'text-white' : 'text-gray-800'}`}>{theme.name}</p>
+              <p className={`font-bold ${(key !== 'default' && isUnlocked) ? 'text-white' : 'text-gray-800'}`}>{theme.name}</p>
+              
+              {/* Time remaining badge */}
+              {isUnlocked && key !== 'default' && !user?.is_premium && timeRemaining && (
+                <p className="text-xs bg-white/30 px-2 py-1 rounded-lg mt-2">⏳ {timeRemaining}</p>
+              )}
+              
+              {/* Premium badge */}
+              {user?.is_premium && key !== 'default' && (
+                <p className="text-xs bg-yellow-400 text-yellow-900 px-2 py-1 rounded-lg mt-2">♾️ Sınırsız</p>
+              )}
+              
+              {/* Locked - need videos */}
               {!isUnlocked && (
                 <p className="text-xs text-yellow-600 bg-yellow-100 px-2 py-1 rounded-lg mt-2">
-                  {theme.requiredAds - watchedAds} video daha
+                  {videosNeeded > 0 ? `${videosNeeded} video izle` : 'Açmak için tıkla'}
                 </p>
               )}
             </button>
