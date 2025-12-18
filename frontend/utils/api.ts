@@ -213,3 +213,32 @@ export const getTodayVitamins = async () => {
   if (!response.ok) throw new Error('Failed to get today vitamins');
   return response.json();
 };
+
+// Premium
+export const activatePremium = async () => {
+  const response = await fetch(`${API_URL}/premium/activate`, {
+    method: 'POST',
+    headers: getHeaders(),
+  });
+  if (!response.ok) throw new Error('Failed to activate premium');
+  return response.json();
+};
+
+export const getPremiumStatus = async () => {
+  const response = await fetch(`${API_URL}/premium/status`, {
+    headers: getHeaders(),
+  });
+  if (!response.ok) throw new Error('Failed to get premium status');
+  return response.json();
+};
+
+// Ads
+export const watchAd = async (adCount: number = 1) => {
+  const response = await fetch(`${API_URL}/ads/watch`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify({ ad_count: adCount }),
+  });
+  if (!response.ok) throw new Error('Failed to record ad watch');
+  return response.json();
+};
