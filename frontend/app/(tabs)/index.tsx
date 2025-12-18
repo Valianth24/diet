@@ -16,6 +16,7 @@ import i18n from '../../utils/i18n';
 
 export default function DashboardScreen() {
   const { t } = useTranslation();
+  const router = useRouter();
   const { user, dailySummary, waterData, stepData, setDailySummary, setWaterData, setStepData, refreshData, triggerRefresh } = useStore();
   const [refreshing, setRefreshing] = useState(false);
   const [recentMeals, setRecentMeals] = useState<any[]>([]);
