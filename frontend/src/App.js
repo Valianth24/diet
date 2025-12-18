@@ -105,52 +105,137 @@ const AuthProvider = ({ children }) => {
   );
 };
 
-// Theme Provider
+// Theme Provider - Günlük sistem (her gün 3 video ile 24 saat açık)
 const ThemeProvider = ({ children }) => {
   const [currentTheme, setCurrentTheme] = useState('default');
-  const [watchedAds, setWatchedAds] = useState(0);
+  const [todayWatchedAds, setTodayWatchedAds] = useState(0);
   const [unlockedThemes, setUnlockedThemes] = useState(['default']);
+  const [unlockExpiry, setUnlockExpiry] = useState({});
 
   useEffect(() => {
-    const saved = localStorage.getItem('theme_data');
-    if (saved) {
-      const data = JSON.parse(saved);
-      setCurrentTheme(data.currentTheme || 'default');
-      setWatchedAds(data.watchedAds || 0);
-      setUnlockedThemes(data.unlockedThemes || ['default']);
-    }
+    loadThemeData();
   }, []);
 
-  const saveThemeData = (theme, ads, unlocked) => {
-    localStorage.setItem('theme_data', JSON.stringify({ currentTheme: theme, watchedAds: ads, unlockedThemes: unlocked }));
+  const loadThemeData = () => {
+    const saved = localStorage.getItem('theme_data_v2');
+    if (saved) {
+      const data = JSON.parse(saved);
+      const today = new Date().toDateString();
+      
+      // Bugünkü izlenen reklamları kontrol et
+      if (data.lastWatchDate === today) {
+        setTodayWatchedAds(data.todayWatchedAds || 0);
+      } else {
+        // Yeni gün - sıfırla
+        setTodayWatchedAds(0);
+      }
+      
+      // Süresi dolmamış temaları kontrol et
+      const now = Date.now();
+      const validThemes = ['default'];
+      const newExpiry = {};
+      
+      if (data.unlockExpiry) {
+        Object.entries(data.unlockExpiry).forEach(([theme, expiry]) => {
+          if (expiry > now) {
+            validThemes.push(theme);
+            newExpiry[theme] = expiry;
+          }
+        });
+      }
+      
+      setUnlockedThemes(validThemes);
+      setUnlockExpiry(newExpiry);
+      
+      // Aktif tema süresi dolduysa varsayılana dön
+      if (data.currentTheme && validThemes.includes(data.currentTheme)) {
+        setCurrentTheme(data.currentTheme);
+      } else {
+        setCurrentTheme('default');
+      }
+    }
+  };
+
+  const saveThemeData = (theme, ads, unlocked, expiry) => {
+    localStorage.setItem('theme_data_v2', JSON.stringify({ 
+      currentTheme: theme, 
+      todayWatchedAds: ads, 
+      unlockedThemes: unlocked,
+      unlockExpiry: expiry,
+      lastWatchDate: new Date().toDateString()
+    }));
   };
 
   const setTheme = (themeName) => {
     setCurrentTheme(themeName);
-    saveThemeData(themeName, watchedAds, unlockedThemes);
+    saveThemeData(themeName, todayWatchedAds, unlockedThemes, unlockExpiry);
   };
 
-  const incrementWatchedAds = async () => {
-    const newCount = watchedAds + 1;
-    const newUnlocked = [...unlockedThemes];
+  const incrementWatchedAds = async (targetTheme) => {
+    const newCount = todayWatchedAds + 1;
+    setTodayWatchedAds(newCount);
     
-    if (newCount >= 3 && !newUnlocked.includes('pinkStar')) newUnlocked.push('pinkStar');
-    if (newCount >= 6 && !newUnlocked.includes('ocean')) newUnlocked.push('ocean');
-    if (newCount >= 9 && !newUnlocked.includes('sunset')) newUnlocked.push('sunset');
+    let newUnlocked = [...unlockedThemes];
+    let newExpiry = { ...unlockExpiry };
+    let themeJustUnlocked = null;
 
-    setWatchedAds(newCount);
+    // Her 3 videoda bir tema aç (24 saat süreyle)
+    if (newCount >= 3 && targetTheme) {
+      const expiryTime = Date.now() + (24 * 60 * 60 * 1000); // 24 saat
+      if (!newUnlocked.includes(targetTheme)) {
+        newUnlocked.push(targetTheme);
+        themeJustUnlocked = targetTheme;
+      }
+      newExpiry[targetTheme] = expiryTime;
+    }
+
     setUnlockedThemes(newUnlocked);
-    saveThemeData(currentTheme, newCount, newUnlocked);
+    setUnlockExpiry(newExpiry);
+    saveThemeData(currentTheme, newCount, newUnlocked, newExpiry);
 
     try { await api.watchAd(1); } catch (error) {}
     
-    return newUnlocked.length > unlockedThemes.length;
+    return themeJustUnlocked;
   };
 
-  const isThemeAvailable = (themeName) => unlockedThemes.includes(themeName);
+  const isThemeAvailable = (themeName, isPremium = false) => {
+    if (themeName === 'default') return true;
+    if (isPremium) return true;
+    
+    const expiry = unlockExpiry[themeName];
+    if (expiry && expiry > Date.now()) {
+      return true;
+    }
+    return false;
+  };
+
+  const getTimeRemaining = (themeName) => {
+    const expiry = unlockExpiry[themeName];
+    if (!expiry) return null;
+    const remaining = expiry - Date.now();
+    if (remaining <= 0) return null;
+    const hours = Math.floor(remaining / (1000 * 60 * 60));
+    const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+    return `${hours}s ${minutes}dk`;
+  };
+
+  const getVideosNeededForTheme = () => {
+    return Math.max(0, 3 - todayWatchedAds);
+  };
 
   return (
-    <ThemeContext.Provider value={{ currentTheme, colors: themes[currentTheme], setTheme, watchedAds, incrementWatchedAds, unlockedThemes, isThemeAvailable, themes }}>
+    <ThemeContext.Provider value={{ 
+      currentTheme, 
+      colors: themes[currentTheme], 
+      setTheme, 
+      todayWatchedAds, 
+      incrementWatchedAds, 
+      unlockedThemes, 
+      isThemeAvailable, 
+      getTimeRemaining,
+      getVideosNeededForTheme,
+      themes 
+    }}>
       {children}
     </ThemeContext.Provider>
   );
