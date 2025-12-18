@@ -1,0 +1,66 @@
+.card {
+  @apply bg-white rounded-2xl shadow-md p-4 transition-all duration-200;
+}
+
+.card:hover {
+  @apply shadow-lg;
+}
+
+.btn-primary {
+  @apply bg-primary text-white px-6 py-3 rounded-full font-semibold transition-all duration-200;
+}
+
+.btn-primary:hover {
+  @apply bg-green-600 shadow-lg;
+}
+
+.btn-secondary {
+  @apply bg-gray-100 text-dark-text px-6 py-3 rounded-full font-semibold transition-all duration-200;
+}
+
+.btn-secondary:hover {
+  @apply bg-gray-200;
+}
+
+.input-field {
+  @apply w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all;
+}
+
+.progress-ring {
+  transform: rotate(-90deg);
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.nav-item {
+  @apply flex flex-col items-center gap-1 p-2 rounded-xl transition-all duration-200;
+}
+
+.nav-item.active {
+  @apply bg-primary/10 text-primary;
+}
+
+.nav-item:not(.active) {
+  @apply text-light-text hover:bg-gray-100;
+}
+
+.modal-overlay {
+  @apply fixed inset-0 bg-black/50 flex items-center justify-center z-50;
+}
+
+.modal-content {
+  @apply bg-white rounded-2xl p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto;
+}
