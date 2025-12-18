@@ -223,37 +223,44 @@ export default function VitaminsScreen() {
         {/* Vitamin List */}
         <View style={styles.vitaminList}>
           {vitamins.map((vitamin) => (
-            <TouchableOpacity
-              key={vitamin.vitamin_id}
-              style={styles.vitaminItem}
-              onPress={() => handleToggle(vitamin.vitamin_id)}
-              activeOpacity={0.7}
-            >
-              <View style={styles.vitaminLeft}>
-                <View style={styles.vitaminIcon}>
-                  <Ionicons name="medical" size={24} color={Colors.primary} />
+            <View key={vitamin.vitamin_id} style={styles.vitaminItemContainer}>
+              <TouchableOpacity
+                style={styles.vitaminItem}
+                onPress={() => handleToggle(vitamin.vitamin_id)}
+                activeOpacity={0.7}
+              >
+                <View style={styles.vitaminLeft}>
+                  <View style={styles.vitaminIcon}>
+                    <Ionicons name="medical" size={24} color={Colors.primary} />
+                  </View>
+                  <View style={styles.vitaminInfo}>
+                    <Text style={styles.vitaminName}>{vitamin.name}</Text>
+                    <Text style={styles.vitaminTime}>{vitamin.time}</Text>
+                  </View>
                 </View>
-                <View style={styles.vitaminInfo}>
-                  <Text style={styles.vitaminName}>{vitamin.name}</Text>
-                  <Text style={styles.vitaminTime}>{vitamin.time}</Text>
+                <View style={styles.vitaminRight}>
+                  <Ionicons
+                    name={vitamin.is_taken ? 'checkmark-circle' : 'close-circle'}
+                    size={32}
+                    color={vitamin.is_taken ? Colors.success : Colors.error}
+                  />
+                  <Text
+                    style={[
+                      styles.vitaminStatus,
+                      { color: vitamin.is_taken ? Colors.success : Colors.lightText },
+                    ]}
+                  >
+                    {vitamin.is_taken ? 'Alındı' : 'Alınmadı'}
+                  </Text>
                 </View>
-              </View>
-              <View style={styles.vitaminRight}>
-                <Ionicons
-                  name={vitamin.is_taken ? 'checkmark-circle' : 'close-circle'}
-                  size={32}
-                  color={vitamin.is_taken ? Colors.success : Colors.error}
-                />
-                <Text
-                  style={[
-                    styles.vitaminStatus,
-                    { color: vitamin.is_taken ? Colors.success : Colors.lightText },
-                  ]}
-                >
-                  {vitamin.is_taken ? 'Alındı' : 'Alınmadı'}
-                </Text>
-              </View>
-            </TouchableOpacity>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.deleteButton}
+                onPress={() => handleDeleteVitamin(vitamin.vitamin_id)}
+              >
+                <Ionicons name="trash-outline" size={20} color={Colors.error} />
+              </TouchableOpacity>
+            </View>
           ))}
         </View>
 
