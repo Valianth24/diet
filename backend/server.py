@@ -58,6 +58,7 @@ class User(BaseModel):
     # Premium
     is_premium: Optional[bool] = False
     premium_expires_at: Optional[datetime] = None
+    ads_watched: Optional[int] = 0
 
 class SessionDataResponse(BaseModel):
     user_id: str
