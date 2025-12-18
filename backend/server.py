@@ -954,13 +954,9 @@ async def activate_diet(
 
 @api_router.post("/premium/activate")
 async def activate_premium(
-    purchase_token: str,  # Google Play purchase token
     current_user: User = Depends(get_current_user)
 ):
-    """Activate premium subscription (mock for now)"""
-    # TODO: Verify purchase with Google Play Billing API
-    # For now, we'll mock the activation
-    
+    """Activate premium subscription - FREE (no payment required)"""
     # Set premium expiry to 30 days from now
     expires_at = datetime.now(timezone.utc) + timedelta(days=30)
     
@@ -976,6 +972,58 @@ async def activate_premium(
         "message": "Premium activated successfully",
         "expires_at": expires_at.isoformat()
     }
+
+@api_router.post("/ads/watch")
+async def watch_ad(
+    ad_data: WatchAdRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """User watched an ad - grant 24 hour premium for every 3 ads"""
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    # Get current ad count from user
+    user_doc = await db.users.find_one({"user_id": current_user.user_id})
+    current_ad_count = user_doc.get("ads_watched", 0)
+    new_ad_count = current_ad_count + ad_data.ad_count
+    
+    # Check if user should get premium (every 3 ads = 24 hours)
+    ads_for_premium = 3
+    if new_ad_count >= ads_for_premium and current_ad_count < ads_for_premium:
+        # Grant 24 hour premium
+        expires_at = datetime.now(timezone.utc) + timedelta(hours=24)
+        
+        await db.users.update_one(
+            {"user_id": current_user.user_id},
+            {"$set": {
+                "is_premium": True,
+                "premium_expires_at": expires_at,
+                "ads_watched": new_ad_count
+            }}
+        )
+        
+        return {
+            "message": "Congratulations! You've earned 24 hours of premium",
+            "is_premium": True,
+            "premium_expires_at": expires_at.isoformat(),
+            "ads_watched": new_ad_count,
+            "ads_needed_for_next": ads_for_premium
+        }
+    else:
+        # Update ad count only
+        await db.users.update_one(
+            {"user_id": current_user.user_id},
+            {"$set": {"ads_watched": new_ad_count}}
+        )
+        
+        ads_remaining = ads_for_premium - (new_ad_count % ads_for_premium)
+        
+        return {
+            "message": "Ad watched successfully",
+            "is_premium": user_doc.get("is_premium", False),
+            "ads_watched": new_ad_count,
+            "ads_needed_for_next": ads_remaining
+        }
 
 @api_router.get("/premium/status")
 async def get_premium_status(current_user: User = Depends(get_current_user)):
