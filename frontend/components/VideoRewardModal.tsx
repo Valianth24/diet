@@ -23,7 +23,6 @@ export default function VideoRewardModal({ visible, onClose, targetTheme }: Vide
   const [adLoaded, setAdLoaded] = useState(false);
   const [showReward, setShowReward] = useState(false);
   const [newlyUnlocked, setNewlyUnlocked] = useState<ThemeName | null>(null);
-  const [rewarded, setRewarded] = useState<RewardedAd | null>(null);
   
   const scaleAnim = new Animated.Value(0);
   const rotateAnim = new Animated.Value(0);
