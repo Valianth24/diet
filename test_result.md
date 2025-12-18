@@ -258,7 +258,10 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Food Analysis AI Integration"
+    - "Water Tracking Navigation"
+    - "Vitamin Tracking Navigation"
+    - "Meal Adding with Gram Input"
+    - "Dashboard Main Interface"
   stuck_tasks:
     - "Food Analysis AI Integration"
   test_all: false
@@ -267,3 +270,5 @@ test_plan:
 agent_communication:
     - agent: "testing"
       message: "Completed comprehensive backend API testing. Found 1 critical issue with LLM integration for food analysis. All other endpoints (17/18) working correctly. Fixed daily summary bug during testing. Food analysis needs LLM API investigation or alternative approach."
+    - agent: "testing"
+      message: "Starting frontend UI testing for CaloriDiet app. Will test water tracking navigation, vitamin tracking navigation, meal adding with gram input, and dashboard interface. Fixed missing router import in dashboard component."
