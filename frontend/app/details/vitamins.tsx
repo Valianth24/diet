@@ -12,7 +12,7 @@ import {
   Switch,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { getVitaminTemplates, getUserVitamins, addVitamin, toggleVitamin } from '../../utils/api';
+import { getVitaminTemplates, getUserVitamins, addVitamin, toggleVitamin, deleteVitamin } from '../../utils/api';
 import { Colors } from '../../constants/Colors';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
