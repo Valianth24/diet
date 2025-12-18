@@ -17,6 +17,7 @@ import { Colors } from '../../constants/Colors';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import i18n from '../../utils/i18n';
+import ThemeSelector from '../../components/ThemeSelector';
 
 export default function ProfileScreen() {
   const { t } = useTranslation();
