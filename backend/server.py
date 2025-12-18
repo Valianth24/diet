@@ -860,6 +860,25 @@ async def toggle_vitamin(
     
     return {"message": "Vitamin status updated", "is_taken": new_status}
 
+@api_router.delete("/vitamins/{vitamin_id}")
+async def delete_vitamin(
+    vitamin_id: str,
+    current_user: Optional[User] = Depends(get_current_user)
+):
+    """Delete a vitamin"""
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    result = await db.user_vitamins.delete_one({
+        "vitamin_id": vitamin_id,
+        "user_id": current_user.user_id
+    })
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Vitamin not found")
+    
+    return {"message": "Vitamin deleted successfully"}
+
 @api_router.get("/vitamins/today", response_model=List[UserVitamin])
 async def get_today_vitamins(current_user: Optional[User] = Depends(get_current_user)):
     """Get today's vitamin status - auto resets daily"""
