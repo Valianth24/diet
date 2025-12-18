@@ -53,6 +53,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         // Check if needs onboarding
         if (!userData.height || !userData.weight || !userData.age || !userData.gender) {
           setNeedsOnboarding(true);
+        } else {
+          setNeedsOnboarding(false);
         }
       }
     } catch (error) {
