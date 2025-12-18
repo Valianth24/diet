@@ -94,6 +94,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const handleAuthRedirect = async (url: string) => {
     try {
+      // Check for error first
+      if (url.includes('error=') || url.includes('detail')) {
+        console.log('Auth error detected in URL, ignoring');
+        return;
+      }
+      
       // Parse session_id from URL
       let sessionId = null;
       
@@ -125,6 +131,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         // Check if needs onboarding
         if (!userData.height || !userData.weight || !userData.age || !userData.gender) {
           setNeedsOnboarding(true);
+        } else {
+          setNeedsOnboarding(false);
         }
         
         setIsLoading(false);
