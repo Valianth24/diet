@@ -222,7 +222,6 @@ export default function DashboardScreen() {
     if (user?.is_premium) return;
     
     try {
-      const AsyncStorage = require('@react-native-async-storage/async-storage').default;
       const lastShown = await AsyncStorage.getItem('premium_modal_last_shown');
       const today = new Date().toDateString();
       
