@@ -153,6 +153,14 @@ export default function VideoRewardModal({ visible, onClose, targetTheme }: Vide
   const handleAdWatched = async () => {
     await incrementWatchedAds();
     
+    // Also record ad watch in backend for premium tracking
+    try {
+      const { watchAd } = require('../utils/api');
+      await watchAd(1);
+    } catch (error) {
+      console.error('Error recording ad watch:', error);
+    }
+    
     // Check if theme is now unlocked
     const newWatched = watchedAds + 1;
     let unlocked: ThemeName | null = null;
