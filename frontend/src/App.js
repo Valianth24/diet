@@ -14,20 +14,17 @@ const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    // Set a maximum timeout for loading
-    const timeout = setTimeout(() => {
-      setIsLoading(false);
-    }, 3000);
-
     const init = async () => {
-      await checkExistingSession();
-      await handleAuthRedirect();
-      clearTimeout(timeout);
+      // First check for auth redirect (has priority)
+      const url = window.location.href;
+      if (url.includes('session_id=')) {
+        await handleAuthRedirect();
+      } else {
+        await checkExistingSession();
+      }
     };
     
     init();
-    
-    return () => clearTimeout(timeout);
   }, []);
 
   const checkExistingSession = async () => {
