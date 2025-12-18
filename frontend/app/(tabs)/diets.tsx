@@ -122,15 +122,13 @@ export default function DietsScreen() {
             <Text style={styles.title}>Diyetler</Text>
             <Text style={styles.subtitle}>Size özel beslenme planları</Text>
           </View>
-          {!isPremium && (
-            <TouchableOpacity 
-              style={styles.premiumButton}
-              onPress={() => setShowPaywall(true)}
-            >
-              <Ionicons name="diamond" size={20} color={Colors.white} />
-              <Text style={styles.premiumButtonText}>Premium</Text>
-            </TouchableOpacity>
-          )}
+          <TouchableOpacity 
+            style={styles.premiumButton}
+            onPress={() => setShowPaywall(true)}
+          >
+            <Ionicons name="diamond" size={20} color={Colors.white} />
+            <Text style={styles.premiumButtonText}>Premium</Text>
+          </TouchableOpacity>
         </View>
 
         {/* Premium Badge if user has premium */}
