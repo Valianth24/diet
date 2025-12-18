@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { addWater } from '../utils/api';
 import { useStore } from '../store/useStore';
 import { useRouter } from 'expo-router';
+import i18n from '../utils/i18n';
 
 interface WaterCardProps {
   current: number;
@@ -18,10 +19,16 @@ export default function WaterCard({ current, goal }: WaterCardProps) {
   const { triggerRefresh } = useStore();
   const [loading, setLoading] = React.useState(false);
 
-  const handleAddWater = async () => {
+  // TR: 200ml, EN: 250ml per glass
+  const glassSize = i18n.language === 'tr' ? 200 : 250;
+  const glassCount = Math.floor(current / glassSize);
+  const totalGlasses = Math.ceil(goal / glassSize);
+
+  const handleAddWater = async (e: any) => {
+    e?.stopPropagation?.();
     try {
       setLoading(true);
-      await addWater(250);
+      await addWater(glassSize);
       triggerRefresh();
     } catch (error) {
       console.error('Error adding water:', error);
@@ -29,9 +36,6 @@ export default function WaterCard({ current, goal }: WaterCardProps) {
       setLoading(false);
     }
   };
-
-  const glassCount = Math.floor(current / 250);
-  const totalGlasses = Math.ceil(goal / 250);
 
   return (
     <TouchableOpacity 
@@ -61,13 +65,11 @@ export default function WaterCard({ current, goal }: WaterCardProps) {
 
       <TouchableOpacity
         style={[styles.addButton, loading && styles.addButtonDisabled]}
-        onPress={(e) => {
-          e.stopPropagation();
-          handleAddWater();
-        }}
+        onPress={handleAddWater}
         disabled={loading}
       >
-        <Text style={styles.addButtonText}>{t('addWater')}</Text>
+        <Ionicons name="add" size={16} color={Colors.white} />
+        <Text style={styles.addButtonText}>1 Bardak</Text>
       </TouchableOpacity>
     </TouchableOpacity>
   );
@@ -85,35 +87,36 @@ const styles = StyleSheet.create({
     elevation: 3,
     alignItems: 'center',
     minHeight: 220,
+    justifyContent: 'space-between',
   },
   title: {
     fontSize: 16,
     fontWeight: 'bold',
     color: Colors.darkText,
-    marginBottom: 12,
     alignSelf: 'flex-start',
   },
   glassContainer: {
     flexDirection: 'row',
     gap: 8,
-    marginVertical: 16,
+    marginVertical: 8,
   },
   amount: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
     color: Colors.darkText,
-    marginBottom: 4,
   },
   amountMl: {
-    fontSize: 14,
+    fontSize: 12,
     color: Colors.lightText,
-    marginBottom: 12,
   },
   addButton: {
     backgroundColor: Colors.teal,
     paddingHorizontal: 20,
     paddingVertical: 8,
     borderRadius: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   addButtonDisabled: {
     opacity: 0.6,

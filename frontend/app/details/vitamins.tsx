@@ -9,6 +9,7 @@ import {
   Modal,
   KeyboardAvoidingView,
   Platform,
+  Switch,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getVitaminTemplates, getUserVitamins, addVitamin, toggleVitamin } from '../../utils/api';
@@ -17,6 +18,16 @@ import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { useStore } from '../../store/useStore';
 import { useRouter } from 'expo-router';
+import * as Notifications from 'expo-notifications';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+  }),
+});
 
 interface Vitamin {
   vitamin_id: string;
@@ -32,8 +43,39 @@ export default function VitaminsScreen() {
   const [vitamins, setVitamins] = useState<Vitamin[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showReminderModal, setShowReminderModal] = useState(false);
   const [newVitaminName, setNewVitaminName] = useState('');
   const [newVitaminTime, setNewVitaminTime] = useState('Her Sabah');
+  const [reminderEnabled, setReminderEnabled] = useState(false);
+  const [reminderTimes, setReminderTimes] = useState<string[]>(['09:00', '21:00']);
+  const [alarmStyle, setAlarmStyle] = useState(false);
+
+  useEffect(() => {
+    loadVitamins();
+    loadReminderSettings();
+    requestPermissions();
+  }, [refreshData]);
+
+  const requestPermissions = async () => {
+    const { status } = await Notifications.requestPermissionsAsync();
+    if (status !== 'granted') {
+      alert('Bildirim izni verilmedi. Ayarlardan açabilirsiniz.');
+    }
+  };
+
+  const loadReminderSettings = async () => {
+    try {
+      const enabled = await AsyncStorage.getItem('vitamin_reminder_enabled');
+      const times = await AsyncStorage.getItem('vitamin_reminder_times');
+      const alarm = await AsyncStorage.getItem('vitamin_alarm_style');
+      
+      if (enabled) setReminderEnabled(enabled === 'true');
+      if (times) setReminderTimes(JSON.parse(times));
+      if (alarm) setAlarmStyle(alarm === 'true');
+    } catch (error) {
+      console.error('Error loading reminder settings:', error);
+    }
+  };
 
   const loadVitamins = async () => {
     try {
@@ -57,10 +99,6 @@ export default function VitaminsScreen() {
     }
   };
 
-  useEffect(() => {
-    loadVitamins();
-  }, [refreshData]);
-
   const handleToggle = async (vitaminId: string) => {
     try {
       await toggleVitamin(vitaminId);
@@ -83,8 +121,62 @@ export default function VitaminsScreen() {
     }
   };
 
+  const handleSaveReminders = async () => {
+    try {
+      await AsyncStorage.setItem('vitamin_reminder_enabled', String(reminderEnabled));
+      await AsyncStorage.setItem('vitamin_reminder_times', JSON.stringify(reminderTimes));
+      await AsyncStorage.setItem('vitamin_alarm_style', String(alarmStyle));
+
+      // Cancel existing notifications
+      await Notifications.cancelAllScheduledNotificationsAsync();
+
+      if (reminderEnabled) {
+        // Schedule new notifications
+        for (const time of reminderTimes) {
+          const [hour, minute] = time.split(':').map(Number);
+          await Notifications.scheduleNotificationAsync({
+            content: {
+              title: alarmStyle ? '🔔 VITAMIN ZAMANI!' : 'Vitamin Hatırlatıcı',
+              body: 'Vitaminlerinizi almayı unutmayın!',
+              sound: alarmStyle ? 'default' : undefined,
+              priority: alarmStyle ? Notifications.AndroidNotificationPriority.MAX : Notifications.AndroidNotificationPriority.DEFAULT,
+            },
+            trigger: {
+              hour,
+              minute,
+              repeats: true,
+            },
+          });
+        }
+        alert('Hatırlatıcılar kaydedildi!');
+      } else {
+        alert('Hatırlatıcılar kapatıldı.');
+      }
+
+      setShowReminderModal(false);
+    } catch (error) {
+      console.error('Error saving reminders:', error);
+      alert('Hata: Hatırlatıcılar kaydedilemedi.');
+    }
+  };
+
+  const addReminderTime = () => {
+    if (reminderTimes.length < 5) {
+      setReminderTimes([...reminderTimes, '12:00']);
+    }
+  };
+
+  const removeReminderTime = (index: number) => {
+    setReminderTimes(reminderTimes.filter((_, i) => i !== index));
+  };
+
+  const updateReminderTime = (index: number, value: string) => {
+    const newTimes = [...reminderTimes];
+    newTimes[index] = value;
+    setReminderTimes(newTimes);
+  };
+
   const takenCount = vitamins.filter(v => v.is_taken).length;
-  const totalSteps = user?.step_goal || 10000;
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -92,13 +184,18 @@ export default function VitaminsScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Ionicons name="chevron-back" size={28} color={Colors.darkText} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Vitamin Takivleri</Text>
+        <Text style={styles.headerTitle}>Vitamin Takipleri</Text>
         <TouchableOpacity style={styles.menuButton}>
           <Ionicons name="ellipsis-vertical" size={24} color={Colors.darkText} />
         </TouchableOpacity>
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
+        {/* Progress */}
+        <View style={styles.progressCard}>
+          <Text style={styles.progressText}>{takenCount} / {vitamins.length} Vitamin Alındı</Text>
+        </View>
+
         {/* Vitamin List */}
         <View style={styles.vitaminList}>
           {vitamins.map((vitamin) => (
@@ -129,25 +226,21 @@ export default function VitaminsScreen() {
                     { color: vitamin.is_taken ? Colors.success : Colors.lightText },
                   ]}
                 >
-                  {vitamin.is_taken ? t('taken') : t('notTaken')}
+                  {vitamin.is_taken ? 'Alındı' : 'Alınmadı'}
                 </Text>
               </View>
             </TouchableOpacity>
           ))}
         </View>
 
-        {/* Bottom Stats */}
-        <View style={styles.bottomCard}>
-          <View style={styles.statsRow}>
-            <Ionicons name="footsteps" size={20} color={Colors.lightText} />
-            <Text style={styles.statsText}>
-              Ortalama Ömülük: {totalSteps.toLocaleString()} Adım
-            </Text>
-          </View>
-          <TouchableOpacity style={styles.moreButton}>
-            <Text style={styles.moreButtonText}>•••</Text>
-          </TouchableOpacity>
-        </View>
+        {/* Reminder Button */}
+        <TouchableOpacity
+          style={styles.reminderButton}
+          onPress={() => setShowReminderModal(true)}
+        >
+          <Ionicons name="notifications" size={24} color={Colors.white} />
+          <Text style={styles.reminderButtonText}>Hatırlatıcıları Ayarla</Text>
+        </TouchableOpacity>
       </ScrollView>
 
       {/* Add Vitamin Modal */}
@@ -185,6 +278,87 @@ export default function VitaminsScreen() {
               </TouchableOpacity>
             </View>
           </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      {/* Reminder Settings Modal */}
+      <Modal visible={showReminderModal} transparent animationType="slide">
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.modalContainer}
+        >
+          <ScrollView contentContainerStyle={styles.modalScrollContent}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Hatırlatıcı Ayarları</Text>
+              
+              <View style={styles.switchRow}>
+                <Text style={styles.switchLabel}>Hatırlatıcıları Aç</Text>
+                <Switch
+                  value={reminderEnabled}
+                  onValueChange={setReminderEnabled}
+                  trackColor={{ false: '#E0E0E0', true: Colors.primary }}
+                  thumbColor={Colors.white}
+                />
+              </View>
+
+              {reminderEnabled && (
+                <>
+                  <Text style={styles.sectionTitle}>Hatırlatma Saatleri</Text>
+                  {reminderTimes.map((time, index) => (
+                    <View key={index} style={styles.timeRow}>
+                      <TextInput
+                        style={styles.timeInput}
+                        value={time}
+                        onChangeText={(value) => updateReminderTime(index, value)}
+                        placeholder="HH:MM"
+                        keyboardType="numbers-and-punctuation"
+                      />
+                      {reminderTimes.length > 1 && (
+                        <TouchableOpacity onPress={() => removeReminderTime(index)}>
+                          <Ionicons name="trash" size={24} color={Colors.error} />
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  ))}
+                  
+                  {reminderTimes.length < 5 && (
+                    <TouchableOpacity style={styles.addTimeButton} onPress={addReminderTime}>
+                      <Ionicons name="add-circle" size={24} color={Colors.primary} />
+                      <Text style={styles.addTimeText}>Saat Ekle</Text>
+                    </TouchableOpacity>
+                  )}
+
+                  <View style={styles.switchRow}>
+                    <View>
+                      <Text style={styles.switchLabel}>Alarm Tarzı Bildirim</Text>
+                      <Text style={styles.switchSubtext}>Maksimum ses ve titreşim</Text>
+                    </View>
+                    <Switch
+                      value={alarmStyle}
+                      onValueChange={setAlarmStyle}
+                      trackColor={{ false: '#E0E0E0', true: Colors.primary }}
+                      thumbColor={Colors.white}
+                    />
+                  </View>
+                </>
+              )}
+
+              <View style={styles.modalButtons}>
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.modalButtonCancel]}
+                  onPress={() => setShowReminderModal(false)}
+                >
+                  <Text style={styles.modalButtonTextCancel}>İptal</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.modalButtonAdd]}
+                  onPress={handleSaveReminders}
+                >
+                  <Text style={styles.modalButtonText}>Kaydet</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </ScrollView>
         </KeyboardAvoidingView>
       </Modal>
 
@@ -228,8 +402,26 @@ const styles = StyleSheet.create({
   content: {
     padding: 16,
   },
+  progressCard: {
+    backgroundColor: Colors.white,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    alignItems: 'center',
+    shadowColor: Colors.cardShadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  progressText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: Colors.darkText,
+  },
   vitaminList: {
     gap: 12,
+    marginBottom: 80,
   },
   vitaminItem: {
     flexDirection: 'row',
@@ -279,35 +471,23 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
   },
-  bottomCard: {
-    backgroundColor: Colors.white,
+  reminderButton: {
+    backgroundColor: Colors.primary,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+    paddingVertical: 16,
     borderRadius: 16,
-    padding: 16,
-    marginTop: 24,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    shadowColor: Colors.cardShadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  statsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  statsText: {
-    fontSize: 14,
-    color: Colors.darkText,
-  },
-  moreButton: {
-    padding: 8,
-  },
-  moreButtonText: {
-    fontSize: 20,
-    color: Colors.lightText,
+  reminderButtonText: {
+    color: Colors.white,
+    fontSize: 16,
     fontWeight: 'bold',
   },
   addButton: {
@@ -332,11 +512,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  modalScrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    padding: 24,
+  },
   modalContent: {
     backgroundColor: Colors.white,
     borderRadius: 20,
     padding: 24,
-    width: '85%',
+    width: '100%',
     maxWidth: 400,
   },
   modalTitle: {
@@ -353,10 +538,57 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 12,
   },
+  switchRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  switchLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.darkText,
+  },
+  switchSubtext: {
+    fontSize: 12,
+    color: Colors.lightText,
+    marginTop: 4,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.darkText,
+    marginTop: 16,
+    marginBottom: 12,
+  },
+  timeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 12,
+  },
+  timeInput: {
+    flex: 1,
+    backgroundColor: Colors.background,
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 16,
+  },
+  addTimeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 12,
+  },
+  addTimeText: {
+    fontSize: 16,
+    color: Colors.primary,
+    fontWeight: '600',
+  },
   modalButtons: {
     flexDirection: 'row',
     gap: 12,
-    marginTop: 12,
+    marginTop: 20,
   },
   modalButton: {
     flex: 1,

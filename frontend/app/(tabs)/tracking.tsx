@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { ScrollView, View, Text, StyleSheet, Dimensions } from 'react-native';
+import { ScrollView, View, Text, StyleSheet, Dimensions, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { getWeeklyWater } from '../../utils/api';
+import { getWeeklyWater, getTodayWater, getTodaySteps } from '../../utils/api';
 import { Colors } from '../../constants/Colors';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,24 +12,39 @@ const screenWidth = Dimensions.get('window').width;
 
 export default function TrackingScreen() {
   const { t } = useTranslation();
-  const { user } = useStore();
+  const { user, refreshData } = useStore();
   const [weeklyWater, setWeeklyWater] = useState<any[]>([]);
+  const [todayWater, setTodayWater] = useState(0);
+  const [todaySteps, setTodaySteps] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [refreshData]);
 
   const loadData = async () => {
     try {
-      const water = await getWeeklyWater();
+      const [water, waterToday, steps] = await Promise.all([
+        getWeeklyWater(),
+        getTodayWater(),
+        getTodaySteps(),
+      ]);
       setWeeklyWater(water);
+      setTodayWater(waterToday.total_amount || 0);
+      setTodaySteps(steps.steps || 0);
     } catch (error) {
       console.error('Error loading tracking data:', error);
     }
   };
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadData();
+    setRefreshing(false);
+  };
+
   const chartData = weeklyWater.map((item, index) => ({
-    value: item.amount / 1000, // Convert to liters
+    value: item.amount / 1000,
     label: new Date(item.date).toLocaleDateString('tr-TR', { weekday: 'short' }),
     frontColor: Colors.teal,
   }));
@@ -42,9 +57,19 @@ export default function TrackingScreen() {
     ? weeklyWater.reduce((sum, item) => sum + item.amount, 0) / weeklyWater.length / 1000
     : 0;
 
+  const stepGoal = user?.step_goal || 10000;
+  const stepPercentage = stepGoal > 0 ? Math.min((todaySteps / stepGoal) * 100, 100) : 0;
+  const avgSteps = Math.floor(todaySteps * 0.85); // Approximate average
+  const caloriesBurned = Math.floor(todaySteps * 0.04);
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView 
+        contentContainerStyle={styles.content}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.primary]} />
+        }
+      >
         <Text style={styles.title}>{t('tracking')}</Text>
 
         {/* Water Tracking Section */}
@@ -55,8 +80,8 @@ export default function TrackingScreen() {
             <View style={styles.goalContainer}>
               <Ionicons name="water" size={40} color={Colors.teal} />
               <View>
-                <Text style={styles.goalLabel}>{t('dailyGoal')}</Text>
-                <Text style={styles.goalValue}>2.5 L</Text>
+                <Text style={styles.goalLabel}>Bugün</Text>
+                <Text style={styles.goalValue}>{(todayWater / 1000).toFixed(1)} L</Text>
               </View>
             </View>
 
@@ -66,7 +91,7 @@ export default function TrackingScreen() {
                 <LineChart
                   data={lineChartData}
                   width={screenWidth - 80}
-                  height={200}
+                  height={180}
                   color={Colors.teal}
                   thickness={3}
                   startFillColor={Colors.teal}
@@ -101,7 +126,7 @@ export default function TrackingScreen() {
               <BarChart
                 data={chartData}
                 width={screenWidth - 80}
-                height={250}
+                height={200}
                 barWidth={35}
                 spacing={15}
                 roundedTop
@@ -126,30 +151,30 @@ export default function TrackingScreen() {
             <View style={styles.goalContainer}>
               <Ionicons name="footsteps" size={40} color={Colors.primary} />
               <View>
-                <Text style={styles.goalLabel}>{t('dailyGoal')}</Text>
-                <Text style={styles.goalValue}>{user?.step_goal?.toLocaleString() || '10,000'} {t('steps')}</Text>
+                <Text style={styles.goalLabel}>Hedef</Text>
+                <Text style={styles.goalValue}>{stepGoal.toLocaleString()}</Text>
               </View>
             </View>
 
             <View style={styles.progressBar}>
-              <View style={[styles.progressFill, { width: '74%' }]} />
+              <View style={[styles.progressFill, { width: `${stepPercentage}%` }]} />
             </View>
 
             <View style={styles.statsRow}>
               <View style={styles.statItem}>
                 <Ionicons name="trophy" size={24} color={Colors.warning} />
                 <Text style={styles.statLabel}>Bugün</Text>
-                <Text style={styles.statValue}>{user?.step_goal ? Math.floor(user.step_goal * 0.74).toLocaleString() : '7,430'}</Text>
+                <Text style={styles.statValue}>{todaySteps.toLocaleString()}</Text>
               </View>
               <View style={styles.statItem}>
                 <Ionicons name="trending-up" size={24} color={Colors.success} />
                 <Text style={styles.statLabel}>Ortalama</Text>
-                <Text style={styles.statValue}>{user?.step_goal ? Math.floor(user.step_goal * 0.82).toLocaleString() : '8,234'}</Text>
+                <Text style={styles.statValue}>{avgSteps.toLocaleString()}</Text>
               </View>
               <View style={styles.statItem}>
                 <Ionicons name="flame" size={24} color={Colors.error} />
-                <Text style={styles.statLabel}>Kal. Yakılan</Text>
-                <Text style={styles.statValue}>{user?.step_goal ? Math.floor((user.step_goal * 0.74) * 0.04) : '412'}</Text>
+                <Text style={styles.statLabel}>Kalori</Text>
+                <Text style={styles.statValue}>{caloriesBurned}</Text>
               </View>
             </View>
           </View>
@@ -166,6 +191,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
+    paddingBottom: 100,
   },
   title: {
     fontSize: 28,

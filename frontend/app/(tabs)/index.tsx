@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { ScrollView, View, Text, StyleSheet, RefreshControl, Image } from 'react-native';
+import { ScrollView, View, Text, StyleSheet, RefreshControl, Image, Modal, TouchableOpacity, FlatList, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useStore } from '../../store/useStore';
-import { getDailySummary, getTodayWater, getTodaySteps, getTodayMeals } from '../../utils/api';
+import { getDailySummary, getTodayWater, getTodaySteps, getTodayMeals, getFoodDatabase, addMeal } from '../../utils/api';
 import CalorieCard from '../../components/CalorieCard';
 import WaterCard from '../../components/WaterCard';
 import StepCard from '../../components/StepCard';
@@ -11,12 +11,20 @@ import FoodPhotoCard from '../../components/FoodPhotoCard';
 import { Colors } from '../../constants/Colors';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
+import i18n from '../../utils/i18n';
 
 export default function DashboardScreen() {
   const { t } = useTranslation();
-  const { user, dailySummary, waterData, stepData, setDailySummary, setWaterData, setStepData, refreshData } = useStore();
+  const { user, dailySummary, waterData, stepData, setDailySummary, setWaterData, setStepData, refreshData, triggerRefresh } = useStore();
   const [refreshing, setRefreshing] = useState(false);
   const [recentMeals, setRecentMeals] = useState<any[]>([]);
+  
+  // Fast Add Modal
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [selectedMealType, setSelectedMealType] = useState('lunch');
+  const [foodDatabase, setFoodDatabase] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedFood, setSelectedFood] = useState<any>(null);
 
   const loadData = async () => {
     try {
@@ -29,9 +37,19 @@ export default function DashboardScreen() {
       setDailySummary(summary);
       setWaterData(water);
       setStepData(steps);
-      setRecentMeals(meals.slice(0, 3)); // Son 3 yemek
+      setRecentMeals(meals.slice(0, 3));
     } catch (error) {
       console.error('Error loading dashboard data:', error);
+    }
+  };
+
+  const loadFoodDatabase = async () => {
+    try {
+      const lang = i18n.language;
+      const foods = await getFoodDatabase(lang);
+      setFoodDatabase(foods);
+    } catch (error) {
+      console.error('Error loading food database:', error);
     }
   };
 
@@ -39,11 +57,45 @@ export default function DashboardScreen() {
     loadData();
   }, [refreshData]);
 
+  useEffect(() => {
+    if (showAddModal) {
+      loadFoodDatabase();
+    }
+  }, [showAddModal]);
+
   const onRefresh = async () => {
     setRefreshing(true);
     await loadData();
     setRefreshing(false);
   };
+
+  const handleQuickAdd = async () => {
+    if (!selectedFood) return;
+
+    try {
+      await addMeal({
+        name: selectedFood.name,
+        calories: selectedFood.calories,
+        protein: selectedFood.protein,
+        carbs: selectedFood.carbs,
+        fat: selectedFood.fat,
+        image_base64: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+        meal_type: selectedMealType,
+      });
+      triggerRefresh();
+      setShowAddModal(false);
+      setSelectedFood(null);
+      setSearchQuery('');
+      alert('Yemek eklendi!');
+    } catch (error) {
+      console.error('Error adding meal:', error);
+      alert('Hata: Yemek eklenemedi.');
+    }
+  };
+
+  const filteredFoods = foodDatabase.filter(food =>
+    food.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -143,6 +195,104 @@ export default function DashboardScreen() {
           </View>
         </View>
       </ScrollView>
+
+      {/* Fast Add Modal */}
+      <Modal visible={showAddModal} transparent animationType="slide">
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Hızlı Ekle</Text>
+              <TouchableOpacity onPress={() => setShowAddModal(false)}>
+                <Ionicons name="close" size={28} color={Colors.darkText} />
+              </TouchableOpacity>
+            </View>
+
+            {/* Meal Type Selection */}
+            <Text style={styles.sectionLabel}>Öğün Seç</Text>
+            <View style={styles.mealTypeRow}>
+              {[
+                { key: 'breakfast', icon: 'sunny', label: 'Kahvaltı' },
+                { key: 'lunch', icon: 'restaurant', label: 'Öğle' },
+                { key: 'dinner', icon: 'moon', label: 'Akşam' },
+                { key: 'snack', icon: 'cafe', label: 'Ara Öğün' },
+              ].map((type) => (
+                <TouchableOpacity
+                  key={type.key}
+                  style={[
+                    styles.mealTypeCard,
+                    selectedMealType === type.key && styles.mealTypeCardActive,
+                  ]}
+                  onPress={() => setSelectedMealType(type.key)}
+                >
+                  <Ionicons
+                    name={type.icon as any}
+                    size={28}
+                    color={selectedMealType === type.key ? Colors.white : Colors.primary}
+                  />
+                  <Text
+                    style={[
+                      styles.mealTypeLabel,
+                      selectedMealType === type.key && styles.mealTypeLabelActive,
+                    ]}
+                  >
+                    {type.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {/* Search */}
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Yemek ara..."
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+
+            {/* Food List */}
+            <FlatList
+              data={filteredFoods}
+              keyExtractor={(item) => item.food_id}
+              style={styles.foodList}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={[
+                    styles.foodItem,
+                    selectedFood?.food_id === item.food_id && styles.foodItemSelected,
+                  ]}
+                  onPress={() => setSelectedFood(item)}
+                >
+                  <View style={styles.foodInfo}>
+                    <Text style={styles.foodName}>{item.name}</Text>
+                    <Text style={styles.foodMacros}>
+                      {item.calories} kcal • P: {item.protein}g • K: {item.carbs}g • Y: {item.fat}g
+                    </Text>
+                  </View>
+                  {selectedFood?.food_id === item.food_id && (
+                    <Ionicons name="checkmark-circle" size={24} color={Colors.primary} />
+                  )}
+                </TouchableOpacity>
+              )}
+            />
+
+            {/* Add Button */}
+            {selectedFood && (
+              <TouchableOpacity style={styles.addButton} onPress={handleQuickAdd}>
+                <Text style={styles.addButtonText}>Ekle</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+      </Modal>
+
+      {/* Floating Action Button */}
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() => setShowAddModal(true)}
+        activeOpacity={0.8}
+      >
+        <Ionicons name="add" size={32} color={Colors.white} />
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }
@@ -262,5 +412,125 @@ const styles = StyleSheet.create({
   },
   gridItemFull: {
     width: '100%',
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 80,
+    right: 24,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: Colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: Colors.white,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    maxHeight: '90%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: Colors.darkText,
+  },
+  sectionLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.darkText,
+    marginBottom: 12,
+  },
+  mealTypeRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 20,
+  },
+  mealTypeCard: {
+    flex: 1,
+    backgroundColor: Colors.background,
+    borderRadius: 12,
+    padding: 12,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  mealTypeCardActive: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
+  },
+  mealTypeLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: Colors.darkText,
+    marginTop: 4,
+  },
+  mealTypeLabelActive: {
+    color: Colors.white,
+  },
+  searchInput: {
+    backgroundColor: Colors.background,
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 16,
+    marginBottom: 16,
+  },
+  foodList: {
+    maxHeight: 300,
+  },
+  foodItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.background,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 8,
+  },
+  foodItemSelected: {
+    backgroundColor: Colors.white,
+    borderWidth: 2,
+    borderColor: Colors.primary,
+  },
+  foodInfo: {
+    flex: 1,
+  },
+  foodName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.darkText,
+    marginBottom: 4,
+  },
+  foodMacros: {
+    fontSize: 12,
+    color: Colors.lightText,
+  },
+  addButton: {
+    backgroundColor: Colors.primary,
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  addButtonText: {
+    color: Colors.white,
+    fontSize: 18,
+    fontWeight: 'bold',
   },
 });

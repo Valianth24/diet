@@ -31,7 +31,7 @@ export default function CameraScreen() {
   const pickImage = async () => {
     const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
     if (!permissionResult.granted) {
-      alert('Permission to access camera is required!');
+      alert('Kamera izni gerekli!');
       return;
     }
 
@@ -54,7 +54,7 @@ export default function CameraScreen() {
   const pickFromGallery = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permissionResult.granted) {
-      alert('Permission to access gallery is required!');
+      alert('Galeri izni gerekli!');
       return;
     }
 
@@ -82,7 +82,7 @@ export default function CameraScreen() {
       setMealName(analysis.description);
     } catch (error) {
       console.error('Error analyzing image:', error);
-      alert('Error analyzing image. Please try again.');
+      alert('AI analiz şu an kullanılamıyor. Ana sayfadan manuel ekleme yapabilirsiniz.');
     } finally {
       setAnalyzing(false);
     }
@@ -102,77 +102,74 @@ export default function CameraScreen() {
         meal_type: mealType,
       });
       triggerRefresh();
-      alert('Meal added successfully!');
+      alert('Yemek eklendi!');
       router.push('/(tabs)');
-      // Reset
       setImage(null);
       setResult(null);
       setMealName('');
     } catch (error) {
       console.error('Error adding meal:', error);
-      alert('Error adding meal. Please try again.');
+      alert('Hata: Yemek eklenemedi.');
     }
   };
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.title}>{t('foodAnalysis')}</Text>
+        <Text style={styles.title}>Fotoğraf ile Ekle</Text>
+        <Text style={styles.subtitle}>Yemeğinizin fotoğrafını çekin veya galeriden seçin</Text>
 
         {!image ? (
           <View style={styles.emptyState}>
             <Ionicons name="camera" size={80} color={Colors.lightText} />
-            <Text style={styles.emptyText}>Take a photo or select from gallery</Text>
+            <Text style={styles.emptyText}>Fotoğraf çek veya galeriden seç</Text>
             <View style={styles.buttonContainer}>
               <TouchableOpacity style={styles.button} onPress={pickImage}>
                 <Ionicons name="camera" size={24} color={Colors.white} />
-                <Text style={styles.buttonText}>{t('takePhoto')}</Text>
+                <Text style={styles.buttonText}>Fotoğraf Çek</Text>
               </TouchableOpacity>
               <TouchableOpacity style={[styles.button, styles.buttonSecondary]} onPress={pickFromGallery}>
                 <Ionicons name="images" size={24} color={Colors.primary} />
-                <Text style={[styles.buttonText, styles.buttonTextSecondary]}>Gallery</Text>
+                <Text style={[styles.buttonText, styles.buttonTextSecondary]}>Galeri</Text>
               </TouchableOpacity>
             </View>
           </View>
         ) : (
           <View>
             <Image source={{ uri: image }} style={styles.image} />
-
             {analyzing ? (
               <View style={styles.analyzing}>
                 <ActivityIndicator size="large" color={Colors.primary} />
-                <Text style={styles.analyzingText}>{t('analyzing')}</Text>
+                <Text style={styles.analyzingText}>Analiz ediliyor...</Text>
               </View>
             ) : result ? (
               <View style={styles.result}>
                 <View style={styles.resultCard}>
-                  <Text style={styles.calories}>{result.calories} {t('kcal')}</Text>
+                  <Text style={styles.calories}>{result.calories} kcal</Text>
                   <View style={styles.macros}>
                     <View style={styles.macroItem}>
-                      <Text style={styles.macroLabel}>{t('protein')}</Text>
+                      <Text style={styles.macroLabel}>Protein</Text>
                       <Text style={styles.macroValue}>{result.protein}g</Text>
                     </View>
                     <View style={styles.macroItem}>
-                      <Text style={styles.macroLabel}>{t('carbs')}</Text>
+                      <Text style={styles.macroLabel}>Karb</Text>
                       <Text style={styles.macroValue}>{result.carbs}g</Text>
                     </View>
                     <View style={styles.macroItem}>
-                      <Text style={styles.macroLabel}>{t('fat')}</Text>
+                      <Text style={styles.macroLabel}>Yağ</Text>
                       <Text style={styles.macroValue}>{result.fat}g</Text>
                     </View>
                   </View>
                 </View>
 
                 <View style={styles.form}>
-                  <Text style={styles.label}>Meal Name</Text>
                   <TextInput
                     style={styles.input}
                     value={mealName}
                     onChangeText={setMealName}
-                    placeholder="Enter meal name"
+                    placeholder="Yemek adı"
                   />
 
-                  <Text style={styles.label}>Meal Type</Text>
                   <View style={styles.mealTypes}>
                     {['breakfast', 'lunch', 'dinner', 'snack'].map((type) => (
                       <TouchableOpacity
@@ -198,10 +195,10 @@ export default function CameraScreen() {
 
                 <View style={styles.actions}>
                   <TouchableOpacity style={styles.addButton} onPress={handleAddMeal}>
-                    <Text style={styles.addButtonText}>{t('addToMeal')}</Text>
+                    <Text style={styles.addButtonText}>Öğüne Ekle</Text>
                   </TouchableOpacity>
                   <TouchableOpacity style={styles.retakeButton} onPress={() => setImage(null)}>
-                    <Text style={styles.retakeButtonText}>{t('retake')}</Text>
+                    <Text style={styles.retakeButtonText}>Yeniden Çek</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -225,7 +222,12 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: 'bold',
     color: Colors.darkText,
-    marginBottom: 20,
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: Colors.lightText,
+    marginBottom: 24,
   },
   emptyState: {
     alignItems: 'center',
@@ -311,11 +313,6 @@ const styles = StyleSheet.create({
   },
   form: {
     gap: 12,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: Colors.darkText,
   },
   input: {
     backgroundColor: Colors.white,

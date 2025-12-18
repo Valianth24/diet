@@ -41,21 +41,33 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="meals"
+        options={{
+          title: '',
+          tabBarIcon: ({ focused }) => (
+            <View style={{
+              width: 60,
+              height: 60,
+              borderRadius: 30,
+              backgroundColor: Colors.primary,
+              justifyContent: 'center',
+              alignItems: 'center',
+              marginBottom: 30,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.3,
+              shadowRadius: 8,
+              elevation: 8,
+            }}>
+              <Ionicons name="add" size={32} color={Colors.white} />
+            </View>
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="camera"
         options={{
-          title: t('camera'),
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="camera" size={size + 10} color={Colors.white} />
-          ),
-          tabBarIconStyle: {
-            backgroundColor: Colors.primary,
-            borderRadius: 50,
-            width: 60,
-            height: 60,
-            justifyContent: 'center',
-            alignItems: 'center',
-            marginBottom: 20,
-          },
+          href: null,
         }}
       />
       <Tabs.Screen

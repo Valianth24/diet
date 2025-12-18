@@ -105,6 +105,14 @@ export const getDailySummary = async () => {
   return response.json();
 };
 
+export const getFoodDatabase = async (lang: string = 'tr') => {
+  const response = await fetch(`${API_URL}/food/database?lang=${lang}`, {
+    headers: getHeaders(),
+  });
+  if (!response.ok) throw new Error('Failed to get food database');
+  return response.json();
+};
+
 // Water
 export const addWater = async (amount: number) => {
   const response = await fetch(`${API_URL}/water/add`, {
