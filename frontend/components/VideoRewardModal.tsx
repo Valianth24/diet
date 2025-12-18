@@ -88,23 +88,13 @@ export default function VideoRewardModal({ visible, onClose, targetTheme }: Vide
   };
 
   const showAd = () => {
-    // Web platformunda mock video göster
-    if (Platform.OS === 'web') {
-      // 5 saniyelik mock video
-      let progress = 0;
-      const interval = setInterval(() => {
-        progress += 20;
-        if (progress >= 100) {
-          clearInterval(interval);
-          handleAdWatched();
-        }
-      }, 1000);
-      return;
-    }
-
-    if (rewarded && adLoaded) {
-      rewarded.show();
-    }
+    // *** MOCK MODE - HIZLI TEST İÇİN ***
+    // 2 saniyelik mock video (tüm platformlar)
+    setIsLoading(true);
+    setTimeout(() => {
+      setIsLoading(false);
+      handleAdWatched();
+    }, 2000); // 2 saniye bekle ve ödülü ver
   };
 
   const handleAdWatched = async () => {
