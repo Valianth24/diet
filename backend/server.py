@@ -139,6 +139,12 @@ class DailySummary(BaseModel):
 
 class AddWaterRequest(BaseModel):
     amount: int  # ml
+    
+    @validator('amount')
+    def validate_amount(cls, v):
+        if v < 0 or v > 5000:  # Max 5L per entry
+            raise ValueError('Invalid water amount')
+        return v
 
 class WaterLog(BaseModel):
     user_id: str
