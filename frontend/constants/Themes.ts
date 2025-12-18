@@ -16,21 +16,22 @@ export const DefaultTheme = {
 export const PinkStarTheme = {
   primary: '#FF69B4',      // Hot Pink
   secondary: '#FFB6C1',    // Light Pink
-  background: '#FFF0F5',   // Lavender Blush
+  background: '#FFE4F1',   // Soft Pink Background (daha açık pembe)
   white: '#FFFFFF',
-  darkText: '#8B3A62',     // Deep Pink Dark
-  lightText: '#DB7093',    // Pale Violet Red
-  cardShadow: '#FF69B4',
+  darkText: '#D63384',     // Vibrant Pink Dark (daha canlı)
+  lightText: '#F48FB1',    // Soft Pink Text
+  cardShadow: '#FFB6C1',   // Light Pink Shadow
   error: '#DC143C',        // Crimson
   success: '#FFB6C1',      // Light Pink
   warning: '#FFD700',      // Gold
   teal: '#FF69B4',         // Hot Pink
-  grey: '#DDA0DD',         // Plum
+  grey: '#F8BBD0',         // Light Pink Grey
   // Special pink theme colors
   star: '#FFD700',         // Gold for stars
   sparkle: '#FFC0CB',      // Pink sparkle
   gradient1: '#FF1493',    // Deep Pink
   gradient2: '#FFB6C1',    // Light Pink
+  gradient3: '#FFF0F5',    // Lavender Blush (for multi-gradient)
 };
 
 export const OceanTheme = {
