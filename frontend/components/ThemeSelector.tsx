@@ -12,9 +12,9 @@ export default function ThemeSelector() {
   const [selectedLockedTheme, setSelectedLockedTheme] = useState<ThemeName | null>(null);
 
   const handleThemePress = (themeName: ThemeName) => {
-    const isUnlocked = unlockedThemes.includes(themeName);
+    const available = isThemeAvailable(themeName);
     
-    if (isUnlocked) {
+    if (available) {
       setTheme(themeName);
       // Güzel bir feedback
       if (themeName === 'pinkStar') {
