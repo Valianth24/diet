@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ScrollView, View, Text, StyleSheet, RefreshControl, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useStore } from '../../store/useStore';
-import { getDailySummary, getTodayWater, getTodaySteps } from '../../utils/api';
+import { getDailySummary, getTodayWater, getTodaySteps, getTodayMeals } from '../../utils/api';
 import CalorieCard from '../../components/CalorieCard';
 import WaterCard from '../../components/WaterCard';
 import StepCard from '../../components/StepCard';
@@ -16,17 +16,20 @@ export default function DashboardScreen() {
   const { t } = useTranslation();
   const { user, dailySummary, waterData, stepData, setDailySummary, setWaterData, setStepData, refreshData } = useStore();
   const [refreshing, setRefreshing] = useState(false);
+  const [recentMeals, setRecentMeals] = useState<any[]>([]);
 
   const loadData = async () => {
     try {
-      const [summary, water, steps] = await Promise.all([
+      const [summary, water, steps, meals] = await Promise.all([
         getDailySummary(),
         getTodayWater(),
         getTodaySteps(),
+        getTodayMeals(),
       ]);
       setDailySummary(summary);
       setWaterData(water);
       setStepData(steps);
+      setRecentMeals(meals.slice(0, 3)); // Son 3 yemek
     } catch (error) {
       console.error('Error loading dashboard data:', error);
     }
@@ -78,13 +81,30 @@ export default function DashboardScreen() {
           </View>
           <View style={styles.summaryItem}>
             <Ionicons name="water" size={20} color={Colors.teal} />
-            <Text style={styles.summaryValue}>{((waterData?.total_amount || 0) / 1000).toFixed(1)} L su</Text>
+            <Text style={styles.summaryValue}>{((waterData?.total_amount || 0) / 1000).toFixed(1)} L</Text>
           </View>
           <View style={styles.summaryItem}>
             <Ionicons name="footsteps" size={20} color={Colors.primary} />
-            <Text style={styles.summaryValue}>{(stepData?.steps || 0).toLocaleString()} adım</Text>
+            <Text style={styles.summaryValue}>{(stepData?.steps || 0).toLocaleString()}</Text>
           </View>
         </View>
+
+        {/* Recent Meals */}
+        {recentMeals.length > 0 && (
+          <View style={styles.recentMealsSection}>
+            <Text style={styles.sectionTitle}>Son Yemekler</Text>
+            {recentMeals.map((meal) => (
+              <View key={meal.meal_id} style={styles.mealCard}>
+                <Image source={{ uri: meal.image_base64 }} style={styles.mealImage} />
+                <View style={styles.mealInfo}>
+                  <Text style={styles.mealName} numberOfLines={1}>{meal.name}</Text>
+                  <Text style={styles.mealCalories}>{meal.calories} kcal</Text>
+                </View>
+                <Ionicons name="checkmark-circle" size={20} color={Colors.success} />
+              </View>
+            ))}
+          </View>
+        )}
 
         {/* Cards Grid */}
         <View style={styles.grid}>
@@ -188,6 +208,47 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: Colors.darkText,
+  },
+  recentMealsSection: {
+    marginBottom: 20,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: Colors.darkText,
+    marginBottom: 12,
+  },
+  mealCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.white,
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 8,
+    shadowColor: Colors.cardShadow,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  mealImage: {
+    width: 50,
+    height: 50,
+    borderRadius: 8,
+  },
+  mealInfo: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  mealName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.darkText,
+  },
+  mealCalories: {
+    fontSize: 12,
+    color: Colors.lightText,
+    marginTop: 2,
   },
   grid: {
     gap: 16,
