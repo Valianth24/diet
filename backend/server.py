@@ -1052,8 +1052,11 @@ async def watch_ad(
         }
 
 @api_router.get("/premium/status")
-async def get_premium_status(current_user: User = Depends(get_current_user)):
+async def get_premium_status(current_user: Optional[User] = Depends(get_current_user)):
     """Check premium status"""
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
     user_doc = await db.users.find_one({"user_id": current_user.user_id})
     
     if not user_doc:
