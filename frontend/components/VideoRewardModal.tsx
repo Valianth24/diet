@@ -4,8 +4,19 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../contexts/ThemeContext';
 import { themeMetadata, ThemeName } from '../constants/Themes';
-import { RewardedAd, RewardedAdEventType, TestIds } from 'react-native-google-mobile-ads';
 import { useStore } from '../store/useStore';
+
+// AdMob sadece native platformlarda çalışır
+let RewardedAd: any = null;
+let RewardedAdEventType: any = null;
+let TestIds: any = null;
+
+if (Platform.OS !== 'web') {
+  const AdMob = require('react-native-google-mobile-ads');
+  RewardedAd = AdMob.RewardedAd;
+  RewardedAdEventType = AdMob.RewardedAdEventType;
+  TestIds = AdMob.TestIds;
+}
 
 interface VideoRewardModalProps {
   visible: boolean;
