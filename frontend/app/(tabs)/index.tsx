@@ -89,7 +89,127 @@ export default function DashboardScreen() {
   useEffect(() => {
     loadData();
     checkAndShowPremiumModal();
+    loadNotificationSettings();
+    requestNotificationPermissions();
   }, [refreshData]);
+
+  const requestNotificationPermissions = async () => {
+    if (!Notifications) return;
+    try {
+      const { status } = await Notifications.requestPermissionsAsync();
+      if (status !== 'granted') {
+        console.log('Notification permission not granted');
+      }
+    } catch (error) {
+      console.log('Notifications not available');
+    }
+  };
+
+  const loadNotificationSettings = async () => {
+    try {
+      const waterEnabled = await AsyncStorage.getItem('water_reminder_enabled');
+      const vitaminEnabled = await AsyncStorage.getItem('vitamin_reminder_enabled');
+      const waterTimes = await AsyncStorage.getItem('water_reminder_times');
+      const vitaminTimes = await AsyncStorage.getItem('vitamin_reminder_times');
+      const alarm = await AsyncStorage.getItem('alarm_style');
+      
+      if (waterEnabled) setWaterReminderEnabled(waterEnabled === 'true');
+      if (vitaminEnabled) setVitaminReminderEnabled(vitaminEnabled === 'true');
+      if (waterTimes) setWaterReminderTimes(JSON.parse(waterTimes));
+      if (vitaminTimes) setVitaminReminderTimes(JSON.parse(vitaminTimes));
+      if (alarm) setAlarmStyle(alarm === 'true');
+    } catch (error) {
+      console.error('Error loading notification settings:', error);
+    }
+  };
+
+  const saveNotificationSettings = async () => {
+    try {
+      await AsyncStorage.setItem('water_reminder_enabled', String(waterReminderEnabled));
+      await AsyncStorage.setItem('vitamin_reminder_enabled', String(vitaminReminderEnabled));
+      await AsyncStorage.setItem('water_reminder_times', JSON.stringify(waterReminderTimes));
+      await AsyncStorage.setItem('vitamin_reminder_times', JSON.stringify(vitaminReminderTimes));
+      await AsyncStorage.setItem('alarm_style', String(alarmStyle));
+
+      if (Notifications) {
+        // Cancel existing notifications
+        await Notifications.cancelAllScheduledNotificationsAsync();
+
+        // Schedule water reminders
+        if (waterReminderEnabled) {
+          for (const time of waterReminderTimes) {
+            const [hour, minute] = time.split(':').map(Number);
+            await Notifications.scheduleNotificationAsync({
+              content: {
+                title: alarmStyle ? '💧 SU İÇME ZAMANI!' : 'Su Hatırlatıcısı',
+                body: 'Sağlığınız için su içmeyi unutmayın!',
+                sound: alarmStyle ? 'default' : undefined,
+              },
+              trigger: {
+                hour,
+                minute,
+                repeats: true,
+              },
+            });
+          }
+        }
+
+        // Schedule vitamin reminders
+        if (vitaminReminderEnabled) {
+          for (const time of vitaminReminderTimes) {
+            const [hour, minute] = time.split(':').map(Number);
+            await Notifications.scheduleNotificationAsync({
+              content: {
+                title: alarmStyle ? '💊 VİTAMİN ZAMANI!' : 'Vitamin Hatırlatıcısı',
+                body: 'Vitaminlerinizi almayı unutmayın!',
+                sound: alarmStyle ? 'default' : undefined,
+              },
+              trigger: {
+                hour,
+                minute,
+                repeats: true,
+              },
+            });
+          }
+        }
+
+        alert('Hatırlatıcılar kaydedildi!');
+      } else {
+        alert('Hatırlatıcılar sadece production build\'de çalışır (Expo Go\'da çalışmaz)');
+      }
+
+      setShowNotificationModal(false);
+    } catch (error) {
+      console.error('Error saving notification settings:', error);
+      alert('Hata: Hatırlatıcılar kaydedilemedi.');
+    }
+  };
+
+  const addReminderTimeForType = () => {
+    if (!newReminderTime || !/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(newReminderTime)) {
+      alert('Geçerli bir saat girin (örn: 14:30)');
+      return;
+    }
+
+    if (reminderType === 'water') {
+      if (!waterReminderTimes.includes(newReminderTime) && waterReminderTimes.length < 10) {
+        setWaterReminderTimes([...waterReminderTimes, newReminderTime].sort());
+      }
+    } else {
+      if (!vitaminReminderTimes.includes(newReminderTime) && vitaminReminderTimes.length < 5) {
+        setVitaminReminderTimes([...vitaminReminderTimes, newReminderTime].sort());
+      }
+    }
+    setNewReminderTime('');
+  };
+
+  const removeReminderTimeForType = (time: string, type: 'water' | 'vitamin') => {
+    if (type === 'water') {
+      setWaterReminderTimes(waterReminderTimes.filter(t => t !== time));
+    } else {
+      setVitaminReminderTimes(vitaminReminderTimes.filter(t => t !== time));
+    }
+  };
 
   useEffect(() => {
     if (showAddModal) {
