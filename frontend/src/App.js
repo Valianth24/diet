@@ -727,21 +727,22 @@ const DashboardPage = () => {
 
         {/* Vitamins */}
         {vitamins.length > 0 && (
-          <div className="rounded-2xl p-4 shadow-sm" style={{ backgroundColor: colors.cardBg }}>
+          <div className="rounded-2xl p-4 shadow-sm cursor-pointer hover:shadow-md transition-all" style={{ backgroundColor: colors.cardBg }} onClick={() => navigate('/vitamins')}>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2"><span className="text-2xl">💊</span><h3 className="font-bold" style={{ color: colors.text }}>Vitaminler</h3></div>
               <span className="text-sm" style={{ color: colors.textLight }}>{vitamins.filter(v => v.is_taken).length}/{vitamins.length}</span>
             </div>
             <div className="space-y-2">
-              {vitamins.map(vitamin => (
+              {vitamins.slice(0, 3).map(vitamin => (
                 <div key={vitamin.vitamin_id} className="flex items-center justify-between p-3 rounded-xl" style={{ backgroundColor: vitamin.is_taken ? colors.primary + '15' : '#F3F4F6' }}>
                   <div><p className="font-medium" style={{ color: colors.text }}>{vitamin.name}</p><p className="text-xs" style={{ color: colors.textLight }}>{vitamin.time}</p></div>
-                  <button onClick={() => handleToggleVitamin(vitamin.vitamin_id)} className="w-8 h-8 rounded-full flex items-center justify-center text-white" style={{ backgroundColor: vitamin.is_taken ? colors.primary : '#D1D5DB' }}>
+                  <button onClick={(e) => { e.stopPropagation(); handleToggleVitamin(vitamin.vitamin_id); }} className="w-8 h-8 rounded-full flex items-center justify-center text-white" style={{ backgroundColor: vitamin.is_taken ? colors.primary : '#D1D5DB' }}>
                     {vitamin.is_taken && '✓'}
                   </button>
                 </div>
               ))}
             </div>
+            <p className="text-center text-sm mt-3 font-medium" style={{ color: colors.primary }}>Detaylar için dokun →</p>
           </div>
         )}
 
