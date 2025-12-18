@@ -89,11 +89,35 @@ export default function DietsScreen() {
     }
   };
 
-  const handleSubscribe = () => {
-    // Google Play Billing integration will go here
-    alert('Google Play Store açılıyor... (Mock)');
-    setShowPaywall(false);
-    // TODO: Implement Google Play Billing
+  const handleSubscribe = async () => {
+    try {
+      // Mock premium activation - prototype
+      // TODO: Real Google Play Billing integration
+      
+      // For now, directly activate premium via API
+      const response = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_URL}/api/premium/activate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user?.session_token}` // You'll need to pass this
+        },
+        body: JSON.stringify({
+          purchase_token: 'mock_token_' + Date.now()
+        })
+      });
+      
+      if (response.ok) {
+        alert('🎉 Premium aktif edildi! Tüm özelliklere erişiminiz var.');
+        setShowPaywall(false);
+        // Refresh user data to get premium status
+        window.location.reload();
+      } else {
+        alert('Bir hata oluştu. Lütfen tekrar deneyin.');
+      }
+    } catch (error) {
+      console.error('Premium activation error:', error);
+      alert('Premium aktivasyonu başarısız oldu.');
+    }
   };
 
   return (
