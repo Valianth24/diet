@@ -2,6 +2,7 @@
   "name": "frontend",
   "version": "1.0.0",
   "private": true,
+  "main": "expo-router/entry",
   "dependencies": {
     "@craco/craco": "^7.1.0",
     "@expo/vector-icons": "^15.0.3",
