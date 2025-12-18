@@ -6,30 +6,15 @@ import { useTheme } from '../contexts/ThemeContext';
 import { themeMetadata, ThemeName } from '../constants/Themes';
 import { useStore } from '../store/useStore';
 
-// AdMob MOCK MODE - Test için devre dışı
-// Web platformunda import hatası verdiği için tamamen mock
-let RewardedAd: any = null;
-let RewardedAdEventType: any = null;
-let TestIds: any = null;
+// *** MOCK MODE AKTİF ***
+// AdMob tamamen devre dışı - sadece mock reklam
+// Test için kolaylık sağlanıyor
 
 interface VideoRewardModalProps {
   visible: boolean;
   onClose: () => void;
   targetTheme: ThemeName;
 }
-
-// Production Ad Unit ID
-const AD_UNIT_ID = 'ca-app-pub-6980942787991808/4593877704';
-
-// Test ad için (geliştirme sırasında)
-const TEST_AD_UNIT_ID = Platform.select({
-  android: TestIds.REWARDED,
-  ios: TestIds.REWARDED,
-  default: TestIds.REWARDED,
-});
-
-// Production için gerçek ID kullan, test için test ID
-const REWARDED_AD_ID = __DEV__ ? TEST_AD_UNIT_ID : AD_UNIT_ID;
 
 export default function VideoRewardModal({ visible, onClose, targetTheme }: VideoRewardModalProps) {
   const { incrementWatchedAds, watchedAds, unlockedThemes } = useTheme();
