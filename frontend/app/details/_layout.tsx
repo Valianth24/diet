@@ -5,6 +5,8 @@ export default function DetailsLayout() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="vitamins" />
       <Stack.Screen name="water-detail" />
+      <Stack.Screen name="meal-detail" />
+      <Stack.Screen name="steps" />
     </Stack>
   );
 }
