@@ -13,12 +13,13 @@ function RootLayoutNav() {
 
     const inAuthGroup = segments[0] === '(auth)';
     const inTabsGroup = segments[0] === '(tabs)';
+    const inDetailsGroup = segments[0] === 'details';
 
     if (!isAuthenticated && !inAuthGroup) {
       router.replace('/(auth)/login');
     } else if (isAuthenticated && needsOnboarding && segments[1] !== 'onboarding') {
       router.replace('/(auth)/onboarding');
-    } else if (isAuthenticated && !needsOnboarding && !inTabsGroup) {
+    } else if (isAuthenticated && !needsOnboarding && !inTabsGroup && !inDetailsGroup) {
       router.replace('/(tabs)');
     }
   }, [isAuthenticated, isLoading, needsOnboarding, segments]);
