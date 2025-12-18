@@ -27,6 +27,9 @@ export default function DashboardScreen() {
   const [foodDatabase, setFoodDatabase] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFood, setSelectedFood] = useState<any>(null);
+  
+  // Premium modal
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
 
   const loadData = async () => {
     try {
