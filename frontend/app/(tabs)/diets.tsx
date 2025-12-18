@@ -7,6 +7,7 @@ import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useStore } from '../../store/useStore';
 import PremiumPaywall from '../../components/PremiumPaywall';
+import AdvancedDietForm from '../../components/AdvancedDietForm';
 
 export default function DietsScreen() {
   const { t } = useTranslation();
