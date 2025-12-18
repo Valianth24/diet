@@ -240,6 +240,9 @@ export default function ProfileScreen() {
           </View>
         </View>
 
+        {/* Theme Selector */}
+        <ThemeSelector />
+
         {/* Logout */}
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Ionicons name="log-out" size={24} color={Colors.white} />
