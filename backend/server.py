@@ -513,6 +513,40 @@ async def get_daily_summary(current_user: Optional[User] = Depends(get_current_u
     
     total_calories = sum(meal.calories for meal in meals)
     total_protein = sum(meal.protein for meal in meals)
+
+# FOOD DATABASE - Uygulama sahipleri tarafından eklenen yemekler
+FOOD_DATABASE = [
+    {"food_id": "food_001", "name": "Tavuk Göğsü (100g)", "calories": 165, "protein": 31, "carbs": 0, "fat": 3.6, "name_en": "Chicken Breast (100g)"},
+    {"food_id": "food_002", "name": "Pirinç Pilavı (1 Porsiyon)", "calories": 206, "protein": 4.3, "carbs": 45, "fat": 0.4, "name_en": "Rice Pilaf (1 Serving)"},
+    {"food_id": "food_003", "name": "Makarna (1 Porsiyon)", "calories": 221, "protein": 8, "carbs": 43, "fat": 1.3, "name_en": "Pasta (1 Serving)"},
+    {"food_id": "food_004", "name": "Yumurta (1 Adet)", "calories": 78, "protein": 6.3, "carbs": 0.6, "fat": 5.3, "name_en": "Egg (1 Piece)"},
+    {"food_id": "food_005", "name": "Peynir (100g)", "calories": 402, "protein": 25, "carbs": 1.3, "fat": 33, "name_en": "Cheese (100g)"},
+    {"food_id": "food_006", "name": "Ekmek (1 Dilim)", "calories": 79, "protein": 2.6, "carbs": 15, "fat": 1, "name_en": "Bread (1 Slice)"},
+    {"food_id": "food_007", "name": "Salata (1 Porsiyon)", "calories": 33, "protein": 1.4, "carbs": 6.3, "fat": 0.2, "name_en": "Salad (1 Serving)"},
+    {"food_id": "food_008", "name": "Köfte (1 Porsiyon)", "calories": 250, "protein": 20, "carbs": 5, "fat": 17, "name_en": "Meatballs (1 Serving)"},
+    {"food_id": "food_009", "name": "Balık (150g)", "calories": 165, "protein": 30, "carbs": 0, "fat": 4, "name_en": "Fish (150g)"},
+    {"food_id": "food_010", "name": "Meyve (1 Porsiyon)", "calories": 60, "protein": 0.5, "carbs": 15, "fat": 0.2, "name_en": "Fruit (1 Serving)"},
+    {"food_id": "food_011", "name": "Yoğurt (200g)", "calories": 122, "protein": 7, "carbs": 9, "fat": 6.4, "name_en": "Yogurt (200g)"},
+    {"food_id": "food_012", "name": "Mercimek Çorbası (1 Kase)", "calories": 180, "protein": 12, "carbs": 30, "fat": 2, "name_en": "Lentil Soup (1 Bowl)"},
+    {"food_id": "food_013", "name": "Patates (1 Adet)", "calories": 130, "protein": 3, "carbs": 30, "fat": 0.1, "name_en": "Potato (1 Piece)"},
+    {"food_id": "food_014", "name": "Domates (1 Adet)", "calories": 22, "protein": 1, "carbs": 4.8, "fat": 0.2, "name_en": "Tomato (1 Piece)"},
+    {"food_id": "food_015", "name": "Elma (1 Adet)", "calories": 95, "protein": 0.5, "carbs": 25, "fat": 0.3, "name_en": "Apple (1 Piece)"},
+]
+
+@api_router.get("/food/database")
+async def get_food_database(lang: str = "tr", current_user: Optional[User] = Depends(get_current_user)):
+    """Get food database for manual entry"""
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    # Return localized food names
+    if lang == "en":
+        return [{"food_id": f["food_id"], "name": f["name_en"], "calories": f["calories"], 
+                 "protein": f["protein"], "carbs": f["carbs"], "fat": f["fat"]} for f in FOOD_DATABASE]
+    else:
+        return [{"food_id": f["food_id"], "name": f["name"], "calories": f["calories"], 
+                 "protein": f["protein"], "carbs": f["carbs"], "fat": f["fat"]} for f in FOOD_DATABASE]
+
     total_carbs = sum(meal.carbs for meal in meals)
     total_fat = sum(meal.fat for meal in meals)
     
