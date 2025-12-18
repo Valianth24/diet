@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ScrollView, View, Text, StyleSheet, RefreshControl, Image, Modal, TouchableOpacity, FlatList, TextInput } from 'react-native';
+import { ScrollView, View, Text, StyleSheet, RefreshControl, Image, Modal, TouchableOpacity, FlatList, TextInput, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useStore } from '../../store/useStore';
 import { getDailySummary, getTodayWater, getTodaySteps, getTodayMeals, getFoodDatabase, addMeal } from '../../utils/api';
@@ -15,6 +15,22 @@ import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import i18n from '../../utils/i18n';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+// Expo Notifications - Sadece production build'de çalışır
+let Notifications: any = null;
+try {
+  Notifications = require('expo-notifications');
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: true,
+      shouldSetBadge: true,
+    }),
+  });
+} catch (error) {
+  console.log('Notifications not available in Expo Go');
+}
 
 export default function DashboardScreen() {
   const { t } = useTranslation();
