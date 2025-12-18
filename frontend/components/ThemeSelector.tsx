@@ -41,10 +41,10 @@ export default function ThemeSelector() {
 
   const renderThemeCard = (themeName: ThemeName) => {
     const metadata = themeMetadata[themeName];
-    const isUnlocked = unlockedThemes.includes(themeName);
+    const isUnlocked = isThemeAvailable(themeName);
     const isActive = currentTheme === themeName;
     const theme = themes[themeName];
-    const videosNeeded = metadata.requiredVideos - watchedVideos;
+    const videosNeeded = metadata.requiredVideos - watchedAds;
 
     if (themeName === 'pinkStar' && isUnlocked) {
       // Pembe tema için özel kart
