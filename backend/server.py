@@ -947,6 +947,58 @@ async def activate_diet(
     
     return {"message": "Diet activated successfully"}
 
+# ==================== PREMIUM MANAGEMENT ====================
+
+@api_router.post("/premium/activate")
+async def activate_premium(
+    purchase_token: str,  # Google Play purchase token
+    current_user: User = Depends(get_current_user)
+):
+    """Activate premium subscription (mock for now)"""
+    # TODO: Verify purchase with Google Play Billing API
+    # For now, we'll mock the activation
+    
+    # Set premium expiry to 30 days from now
+    expires_at = datetime.now(timezone.utc) + timedelta(days=30)
+    
+    await db.users.update_one(
+        {"user_id": current_user.user_id},
+        {"$set": {
+            "is_premium": True,
+            "premium_expires_at": expires_at
+        }}
+    )
+    
+    return {
+        "message": "Premium activated successfully",
+        "expires_at": expires_at.isoformat()
+    }
+
+@api_router.get("/premium/status")
+async def get_premium_status(current_user: User = Depends(get_current_user)):
+    """Check premium status"""
+    user_doc = await db.users.find_one({"user_id": current_user.user_id})
+    
+    if not user_doc:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    is_premium = user_doc.get("is_premium", False)
+    premium_expires_at = user_doc.get("premium_expires_at")
+    
+    # Check if premium expired
+    if is_premium and premium_expires_at:
+        if premium_expires_at < datetime.now(timezone.utc):
+            is_premium = False
+            await db.users.update_one(
+                {"user_id": current_user.user_id},
+                {"$set": {"is_premium": False}}
+            )
+    
+    return {
+        "is_premium": is_premium,
+        "premium_expires_at": premium_expires_at.isoformat() if premium_expires_at else None
+    }
+
 # Include the router in the main app
 app.include_router(api_router)
 
