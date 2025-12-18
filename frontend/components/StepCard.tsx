@@ -18,7 +18,7 @@ export default function StepCard({ current, goal }: StepCardProps) {
   return (
     <TouchableOpacity 
       style={styles.container}
-      onPress={() => router.push('/(tabs)/tracking')}
+      onPress={() => router.push('/details/steps')}
       activeOpacity={0.9}
     >
       <Text style={styles.title} numberOfLines={1}>{t('stepCounter')}</Text>
