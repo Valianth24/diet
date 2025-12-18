@@ -34,7 +34,13 @@
           "backgroundColor": "#000"
         }
       ],
-      "react-native-google-mobile-ads"
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-6980942787991808~1854543038",
+          "iosAppId": "ca-app-pub-6980942787991808~1854543038"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
