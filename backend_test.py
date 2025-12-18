@@ -14,7 +14,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 import uuid
 
 # Configuration
-BACKEND_URL = "https://caloridiet-app.preview.emergentagent.com/api"
+BACKEND_URL = "https://bug-fixers-3.preview.emergentagent.com/api"
 MONGO_URL = "mongodb://localhost:27017"
 DB_NAME = "test_database"
 
