@@ -256,11 +256,21 @@ export default function DashboardScreen() {
               style={styles.foodList}
               renderItem={({ item }) => (
                 <TouchableOpacity
-                  style={[
-                    styles.foodItem,
-                    selectedFood?.food_id === item.food_id && styles.foodItemSelected,
-                  ]}
-                  onPress={() => setSelectedFood(item)}
+                  style={styles.foodItem}
+                  onPress={() => {
+                    setShowAddModal(false);
+                    router.push({
+                      pathname: '/details/meal-detail',
+                      params: {
+                        food_id: item.food_id,
+                        name: item.name,
+                        calories: item.calories,
+                        protein: item.protein,
+                        carbs: item.carbs,
+                        fat: item.fat,
+                      },
+                    });
+                  }}
                 >
                   <View style={styles.foodInfo}>
                     <Text style={styles.foodName}>{item.name}</Text>
@@ -268,19 +278,10 @@ export default function DashboardScreen() {
                       {item.calories} kcal • P: {item.protein}g • K: {item.carbs}g • Y: {item.fat}g
                     </Text>
                   </View>
-                  {selectedFood?.food_id === item.food_id && (
-                    <Ionicons name="checkmark-circle" size={24} color={Colors.primary} />
-                  )}
+                  <Ionicons name="chevron-forward" size={20} color={Colors.lightText} />
                 </TouchableOpacity>
               )}
             />
-
-            {/* Add Button */}
-            {selectedFood && (
-              <TouchableOpacity style={styles.addButton} onPress={handleQuickAdd}>
-                <Text style={styles.addButtonText}>Ekle</Text>
-              </TouchableOpacity>
-            )}
           </View>
         </View>
       </Modal>
