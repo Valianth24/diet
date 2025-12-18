@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { AuthProvider, useAuth } from '../contexts/AuthContext';
+import { ThemeProvider } from '../contexts/ThemeContext';
 import '../utils/i18n';
 
 function RootLayoutNav() {
