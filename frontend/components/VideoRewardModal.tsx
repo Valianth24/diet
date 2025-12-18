@@ -6,22 +6,11 @@ import { useTheme } from '../contexts/ThemeContext';
 import { themeMetadata, ThemeName } from '../constants/Themes';
 import { useStore } from '../store/useStore';
 
-// AdMob sadece native platformlarda çalışır
+// AdMob MOCK MODE - Test için devre dışı
+// Web platformunda import hatası verdiği için tamamen mock
 let RewardedAd: any = null;
 let RewardedAdEventType: any = null;
 let TestIds: any = null;
-
-// Web platformunda AdMob'u yükleme, hata verir
-if (Platform.OS !== 'web') {
-  try {
-    const AdMob = require('react-native-google-mobile-ads');
-    RewardedAd = AdMob.RewardedAd;
-    RewardedAdEventType = AdMob.RewardedAdEventType;
-    TestIds = AdMob.TestIds;
-  } catch (error) {
-    console.log('AdMob not available on this platform');
-  }
-}
 
 interface VideoRewardModalProps {
   visible: boolean;
