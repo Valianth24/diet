@@ -486,6 +486,9 @@ const DashboardPage = () => {
   const [loading, setLoading] = useState(true);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [showAddMealModal, setShowAddMealModal] = useState(false);
+  const [showGramModal, setShowGramModal] = useState(false);
+  const [selectedFood, setSelectedFood] = useState(null);
+  const [gramAmount, setGramAmount] = useState('100');
   const [foodDatabase, setFoodDatabase] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedMealType, setSelectedMealType] = useState('lunch');
