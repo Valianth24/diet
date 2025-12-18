@@ -498,6 +498,169 @@ export default function DashboardScreen() {
         </View>
       </Modal>
 
+      {/* Notification Settings Modal */}
+      <Modal visible={showNotificationModal} transparent animationType="slide">
+        <View style={styles.modalContainer}>
+          <View style={styles.notificationModalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Hatırlatıcı Ayarları</Text>
+              <TouchableOpacity onPress={() => setShowNotificationModal(false)}>
+                <Ionicons name="close" size={28} color={Colors.darkText} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.notificationScrollView} showsVerticalScrollIndicator={false}>
+              {/* Water Reminders */}
+              <View style={styles.reminderSection}>
+                <View style={styles.reminderHeader}>
+                  <View style={styles.reminderHeaderLeft}>
+                    <Ionicons name="water" size={24} color={Colors.teal} />
+                    <Text style={styles.reminderTitle}>Su Hatırlatıcısı</Text>
+                  </View>
+                  <Switch
+                    value={waterReminderEnabled}
+                    onValueChange={setWaterReminderEnabled}
+                    trackColor={{ false: '#E0E0E0', true: Colors.teal }}
+                    thumbColor={Colors.white}
+                  />
+                </View>
+
+                {waterReminderEnabled && (
+                  <View style={styles.reminderTimes}>
+                    <Text style={styles.reminderSubtitle}>Hatırlatma Saatleri ({waterReminderTimes.length})</Text>
+                    <View style={styles.timeChips}>
+                      {waterReminderTimes.map((time) => (
+                        <View key={time} style={[styles.timeChip, { backgroundColor: Colors.teal + '20' }]}>
+                          <Text style={[styles.timeChipText, { color: Colors.teal }]}>{time}</Text>
+                          <TouchableOpacity onPress={() => removeReminderTimeForType(time, 'water')}>
+                            <Ionicons name="close-circle" size={18} color={Colors.teal} />
+                          </TouchableOpacity>
+                        </View>
+                      ))}
+                    </View>
+                    <TouchableOpacity
+                      style={[styles.addTimeChip, { borderColor: Colors.teal }]}
+                      onPress={() => {
+                        setReminderType('water');
+                        addReminderTimeForType();
+                      }}
+                    >
+                      <View style={styles.addTimeRow}>
+                        <TextInput
+                          style={styles.addTimeInput}
+                          placeholder="HH:MM"
+                          value={reminderType === 'water' ? newReminderTime : ''}
+                          onChangeText={(text) => {
+                            setReminderType('water');
+                            setNewReminderTime(text);
+                          }}
+                          keyboardType="numbers-and-punctuation"
+                        />
+                        <TouchableOpacity
+                          style={[styles.addTimeBtn, { backgroundColor: Colors.teal }]}
+                          onPress={() => {
+                            setReminderType('water');
+                            addReminderTimeForType();
+                          }}
+                        >
+                          <Ionicons name="add" size={20} color={Colors.white} />
+                        </TouchableOpacity>
+                      </View>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
+
+              {/* Vitamin Reminders */}
+              <View style={styles.reminderSection}>
+                <View style={styles.reminderHeader}>
+                  <View style={styles.reminderHeaderLeft}>
+                    <Ionicons name="medical" size={24} color={Colors.primary} />
+                    <Text style={styles.reminderTitle}>Vitamin Hatırlatıcısı</Text>
+                  </View>
+                  <Switch
+                    value={vitaminReminderEnabled}
+                    onValueChange={setVitaminReminderEnabled}
+                    trackColor={{ false: '#E0E0E0', true: Colors.primary }}
+                    thumbColor={Colors.white}
+                  />
+                </View>
+
+                {vitaminReminderEnabled && (
+                  <View style={styles.reminderTimes}>
+                    <Text style={styles.reminderSubtitle}>Hatırlatma Saatleri ({vitaminReminderTimes.length})</Text>
+                    <View style={styles.timeChips}>
+                      {vitaminReminderTimes.map((time) => (
+                        <View key={time} style={[styles.timeChip, { backgroundColor: Colors.primary + '20' }]}>
+                          <Text style={[styles.timeChipText, { color: Colors.primary }]}>{time}</Text>
+                          <TouchableOpacity onPress={() => removeReminderTimeForType(time, 'vitamin')}>
+                            <Ionicons name="close-circle" size={18} color={Colors.primary} />
+                          </TouchableOpacity>
+                        </View>
+                      ))}
+                    </View>
+                    <TouchableOpacity
+                      style={[styles.addTimeChip, { borderColor: Colors.primary }]}
+                      onPress={() => {
+                        setReminderType('vitamin');
+                        addReminderTimeForType();
+                      }}
+                    >
+                      <View style={styles.addTimeRow}>
+                        <TextInput
+                          style={styles.addTimeInput}
+                          placeholder="HH:MM"
+                          value={reminderType === 'vitamin' ? newReminderTime : ''}
+                          onChangeText={(text) => {
+                            setReminderType('vitamin');
+                            setNewReminderTime(text);
+                          }}
+                          keyboardType="numbers-and-punctuation"
+                        />
+                        <TouchableOpacity
+                          style={[styles.addTimeBtn, { backgroundColor: Colors.primary }]}
+                          onPress={() => {
+                            setReminderType('vitamin');
+                            addReminderTimeForType();
+                          }}
+                        >
+                          <Ionicons name="add" size={20} color={Colors.white} />
+                        </TouchableOpacity>
+                      </View>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
+
+              {/* Alarm Style */}
+              <View style={styles.alarmStyleSection}>
+                <View style={styles.reminderHeader}>
+                  <View style={styles.reminderHeaderLeft}>
+                    <Ionicons name="volume-high" size={24} color={Colors.warning} />
+                    <View>
+                      <Text style={styles.reminderTitle}>Alarm Tarzı Bildirim</Text>
+                      <Text style={styles.alarmSubtext}>Maksimum ses ve titreşim</Text>
+                    </View>
+                  </View>
+                  <Switch
+                    value={alarmStyle}
+                    onValueChange={setAlarmStyle}
+                    trackColor={{ false: '#E0E0E0', true: Colors.warning }}
+                    thumbColor={Colors.white}
+                  />
+                </View>
+              </View>
+            </ScrollView>
+
+            {/* Save Button */}
+            <TouchableOpacity style={styles.saveNotificationButton} onPress={saveNotificationSettings}>
+              <Ionicons name="checkmark" size={24} color={Colors.white} />
+              <Text style={styles.saveNotificationText}>Kaydet</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
       {/* Premium Paywall */}
       <PremiumPaywall
         visible={showPremiumModal}
