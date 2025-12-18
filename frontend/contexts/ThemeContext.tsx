@@ -1,22 +1,27 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { themes, ThemeName } from '../constants/Themes';
+import { useStore } from '../store/useStore';
 
 interface ThemeContextType {
   currentTheme: ThemeName;
   colors: typeof themes.default;
   setTheme: (theme: ThemeName) => Promise<void>;
-  watchedVideos: number;
-  incrementWatchedVideos: () => Promise<void>;
+  watchedAds: number;
+  incrementWatchedAds: () => Promise<void>;
   unlockedThemes: ThemeName[];
+  themeExpirations: { [key: string]: number };
+  isThemeAvailable: (theme: ThemeName) => boolean;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentTheme, setCurrentTheme] = useState<ThemeName>('default');
-  const [watchedVideos, setWatchedVideos] = useState(0);
+  const [watchedAds, setWatchedAds] = useState(0);
   const [unlockedThemes, setUnlockedThemes] = useState<ThemeName[]>(['default']);
+  const [themeExpirations, setThemeExpirations] = useState<{ [key: string]: number }>({});
+  const { user } = useStore();
 
   useEffect(() => {
     loadThemeSettings();
@@ -25,19 +30,43 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const loadThemeSettings = async () => {
     try {
       const savedTheme = await AsyncStorage.getItem('app_theme');
-      const savedVideos = await AsyncStorage.getItem('watched_videos');
+      const savedAds = await AsyncStorage.getItem('watched_ads');
       const savedUnlocked = await AsyncStorage.getItem('unlocked_themes');
+      const savedExpirations = await AsyncStorage.getItem('theme_expirations');
 
       if (savedTheme) setCurrentTheme(savedTheme as ThemeName);
-      if (savedVideos) setWatchedVideos(parseInt(savedVideos));
+      if (savedAds) setWatchedAds(parseInt(savedAds));
       if (savedUnlocked) setUnlockedThemes(JSON.parse(savedUnlocked));
+      if (savedExpirations) setThemeExpirations(JSON.parse(savedExpirations));
     } catch (error) {
       console.error('Error loading theme settings:', error);
     }
   };
 
+  const isThemeAvailable = (theme: ThemeName): boolean => {
+    // Default theme always available
+    if (theme === 'default') return true;
+    
+    // Premium users have unlimited access
+    if (user?.is_premium) return true;
+    
+    // Check if theme is unlocked and not expired
+    if (unlockedThemes.includes(theme)) {
+      const expiration = themeExpirations[theme];
+      if (expiration) {
+        const now = Date.now();
+        return now < expiration;
+      }
+    }
+    
+    return false;
+  };
+
   const setTheme = async (theme: ThemeName) => {
     try {
+      if (!isThemeAvailable(theme)) {
+        throw new Error('Theme not available');
+      }
       await AsyncStorage.setItem('app_theme', theme);
       setCurrentTheme(theme);
     } catch (error) {
@@ -45,22 +74,45 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
-  const incrementWatchedVideos = async () => {
+  const incrementWatchedAds = async () => {
     try {
-      const newCount = watchedVideos + 1;
-      await AsyncStorage.setItem('watched_videos', newCount.toString());
-      setWatchedVideos(newCount);
+      const newCount = watchedAds + 1;
+      await AsyncStorage.setItem('watched_ads', newCount.toString());
+      setWatchedAds(newCount);
 
-      // Check if new themes should be unlocked
+      // Check if new themes should be unlocked (every 3 ads)
       const newUnlocked: ThemeName[] = ['default'];
-      if (newCount >= 3) newUnlocked.push('pinkStar');
-      if (newCount >= 6) newUnlocked.push('ocean');
-      if (newCount >= 9) newUnlocked.push('sunset');
+      const newExpirations: { [key: string]: number } = { ...themeExpirations };
+      const now = Date.now();
+      const twentyFourHours = 24 * 60 * 60 * 1000;
+
+      // For free users: 24 hour access
+      // For premium: unlimited (handled in isThemeAvailable)
+      if (newCount >= 3) {
+        newUnlocked.push('pinkStar');
+        if (!user?.is_premium) {
+          newExpirations['pinkStar'] = now + twentyFourHours;
+        }
+      }
+      if (newCount >= 6) {
+        newUnlocked.push('ocean');
+        if (!user?.is_premium) {
+          newExpirations['ocean'] = now + twentyFourHours;
+        }
+      }
+      if (newCount >= 9) {
+        newUnlocked.push('sunset');
+        if (!user?.is_premium) {
+          newExpirations['sunset'] = now + twentyFourHours;
+        }
+      }
 
       await AsyncStorage.setItem('unlocked_themes', JSON.stringify(newUnlocked));
+      await AsyncStorage.setItem('theme_expirations', JSON.stringify(newExpirations));
       setUnlockedThemes(newUnlocked);
+      setThemeExpirations(newExpirations);
     } catch (error) {
-      console.error('Error incrementing videos:', error);
+      console.error('Error incrementing ads:', error);
     }
   };
 
@@ -70,9 +122,11 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         currentTheme,
         colors: themes[currentTheme],
         setTheme,
-        watchedVideos,
-        incrementWatchedVideos,
+        watchedAds,
+        incrementWatchedAds,
         unlockedThemes,
+        themeExpirations,
+        isThemeAvailable,
       }}
     >
       {children}
