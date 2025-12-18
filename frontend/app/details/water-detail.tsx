@@ -76,34 +76,38 @@ export default function WaterDetailScreen() {
       await AsyncStorage.setItem('water_reminder_enabled', reminderEnabled.toString());
       await AsyncStorage.setItem('water_reminder_times', JSON.stringify(reminderTimes));
       
-      // Cancel all existing notifications
-      await Notifications.cancelAllScheduledNotificationsAsync();
-      
-      // Schedule new notifications if enabled
-      if (reminderEnabled) {
-        for (const time of reminderTimes) {
-          const [hours, minutes] = time.split(':').map(Number);
-          
-          await Notifications.scheduleNotificationAsync({
-            content: {
-              title: '💧 Su İçme Zamanı!',
-              body: 'Sağlığınız için su içmeyi unutmayın.',
-              sound: true,
-            },
-            trigger: {
-              hour: hours,
-              minute: minutes,
-              repeats: true,
-            },
-          });
+      if (Notifications) {
+        // Cancel all existing notifications
+        await Notifications.cancelAllScheduledNotificationsAsync();
+        
+        // Schedule new notifications if enabled
+        if (reminderEnabled) {
+          for (const time of reminderTimes) {
+            const [hours, minutes] = time.split(':').map(Number);
+            
+            await Notifications.scheduleNotificationAsync({
+              content: {
+                title: '💧 Su İçme Zamanı!',
+                body: 'Sağlığınız için su içmeyi unutmayın.',
+                sound: true,
+              },
+              trigger: {
+                hour: hours,
+                minute: minutes,
+                repeats: true,
+              },
+            });
+          }
         }
+        Alert.alert('Başarılı', 'Hatırlatıcı ayarları kaydedildi!');
+      } else {
+        Alert.alert('Uyarı', 'Hatırlatıcılar sadece production build\'de çalışır.');
       }
       
       setShowReminderModal(false);
-      alert('Hatırlatıcı ayarları kaydedildi!');
     } catch (error) {
       console.error('Error saving reminder settings:', error);
-      alert('Hatırlatıcı ayarları kaydedilemedi.');
+      Alert.alert('Hata', 'Hatırlatıcı ayarları kaydedilemedi.');
     }
   };
 
