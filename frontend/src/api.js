@@ -214,6 +214,15 @@ export const toggleVitamin = async (vitaminId) => {
   return response.json();
 };
 
+export const deleteVitamin = async (vitaminId) => {
+  const response = await fetch(`${API_URL}/vitamins/${vitaminId}`, {
+    method: 'DELETE',
+    headers: getHeaders(),
+  });
+  if (!response.ok) throw new Error('Failed to delete vitamin');
+  return response.json();
+};
+
 export const getTodayVitamins = async () => {
   const response = await fetch(`${API_URL}/vitamins/today`, {
     headers: getHeaders(),
