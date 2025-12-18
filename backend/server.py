@@ -55,6 +55,9 @@ class User(BaseModel):
     daily_calorie_goal: Optional[int] = None
     water_goal: Optional[int] = 2500  # ml
     step_goal: Optional[int] = 10000
+    # Premium
+    is_premium: Optional[bool] = False
+    premium_expires_at: Optional[datetime] = None
 
 class SessionDataResponse(BaseModel):
     user_id: str
