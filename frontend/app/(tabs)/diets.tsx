@@ -73,19 +73,13 @@ export default function DietsScreen() {
     }
   };
 
-  const handleCreateCustomDiet = () => {
-    if (!isPremium) {
-      setShowPaywall(true);
-      return;
-    }
-
-    if (customDietName.trim()) {
-      // Burada custom diet oluşturma işlemi yapılacak
-      setShowCustomModal(false);
-      setCustomDietName('');
-      setCustomDietDesc('');
-      alert('Kişisel diyet oluşturuldu!');
-    }
+  const handleCreateCustomDiet = (dietData: any) => {
+    console.log('Diet Data:', dietData);
+    // TODO: Save to backend
+    alert(`✅ "${dietData.name}" diyeti oluşturuldu!\n\n` +
+          `Hedef Kalori: ${dietData.targetCalories} kcal\n` +
+          `Protein: ${dietData.macros.protein}% | Karb: ${dietData.macros.carbs}% | Yağ: ${dietData.macros.fat}%`);
+    setShowAdvancedForm(false);
   };
 
   const handleSubscribe = async () => {
