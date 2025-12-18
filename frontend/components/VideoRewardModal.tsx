@@ -67,6 +67,15 @@ export default function VideoRewardModal({ visible, onClose, targetTheme }: Vide
     setIsLoading(true);
     setAdLoaded(false);
 
+    // Web platformunda mock reklam
+    if (Platform.OS === 'web') {
+      setTimeout(() => {
+        setAdLoaded(true);
+        setIsLoading(false);
+      }, 1000);
+      return;
+    }
+
     const rewardedAd = RewardedAd.createForAdRequest(REWARDED_AD_ID, {
       requestNonPersonalizedAdsOnly: false,
     });
