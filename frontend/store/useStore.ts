@@ -13,6 +13,9 @@ interface User {
   daily_calorie_goal?: number;
   water_goal?: number;
   step_goal?: number;
+  is_premium?: boolean;
+  premium_expires_at?: string;
+  ads_watched?: number;
 }
 
 interface DailySummary {
