@@ -856,6 +856,94 @@ async def get_today_vitamins(current_user: Optional[User] = Depends(get_current_
     
     return [UserVitamin(**vit) for vit in result_vitamins]
 
+# ==================== DIET MANAGEMENT ====================
+
+@api_router.get("/diets/premium", response_model=List[DietPlan])
+async def get_premium_diets(current_user: User = Depends(get_current_user)):
+    """Get all premium diet plans"""
+    diets = await db.diet_plans.find({"is_premium": True}).to_list(100)
+    return [DietPlan(**diet) for diet in diets]
+
+@api_router.get("/diets/user", response_model=List[UserDiet])
+async def get_user_diets(current_user: User = Depends(get_current_user)):
+    """Get user's diet plans (both premium and custom)"""
+    diets = await db.user_diets.find({"user_id": current_user.user_id}).to_list(100)
+    return [UserDiet(**diet) for diet in diets]
+
+@api_router.post("/diets/user")
+async def create_user_diet(
+    name: str,
+    description: str,
+    is_custom: bool = True,
+    diet_id: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Create a custom diet or activate a premium diet"""
+    user_diet_id = str(uuid.uuid4())
+    today = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+    
+    diet_data = {
+        "user_diet_id": user_diet_id,
+        "user_id": current_user.user_id,
+        "diet_id": diet_id,
+        "name": name,
+        "description": description,
+        "start_date": today,
+        "end_date": None,
+        "is_active": True,
+        "is_custom": is_custom,
+        "meals": [],
+        "created_at": datetime.now(timezone.utc)
+    }
+    
+    # Deactivate other active diets
+    await db.user_diets.update_many(
+        {"user_id": current_user.user_id, "is_active": True},
+        {"$set": {"is_active": False}}
+    )
+    
+    await db.user_diets.insert_one(diet_data)
+    return {"user_diet_id": user_diet_id, "message": "Diet created successfully"}
+
+@api_router.delete("/diets/user/{user_diet_id}")
+async def delete_user_diet(
+    user_diet_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Delete a user diet"""
+    result = await db.user_diets.delete_one({
+        "user_diet_id": user_diet_id,
+        "user_id": current_user.user_id
+    })
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Diet not found")
+    
+    return {"message": "Diet deleted successfully"}
+
+@api_router.post("/diets/user/{user_diet_id}/activate")
+async def activate_diet(
+    user_diet_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Activate a specific diet"""
+    # Deactivate all other diets
+    await db.user_diets.update_many(
+        {"user_id": current_user.user_id, "is_active": True},
+        {"$set": {"is_active": False}}
+    )
+    
+    # Activate the selected diet
+    result = await db.user_diets.update_one(
+        {"user_diet_id": user_diet_id, "user_id": current_user.user_id},
+        {"$set": {"is_active": True, "start_date": datetime.now(timezone.utc).strftime('%Y-%m-%d')}}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Diet not found")
+    
+    return {"message": "Diet activated successfully"}
+
 # Include the router in the main app
 app.include_router(api_router)
 
