@@ -704,24 +704,24 @@ const DashboardPage = () => {
 
         {/* Water & Steps */}
         <div className="grid grid-cols-2 gap-4">
-          <div className="rounded-2xl p-4 shadow-sm" style={{ backgroundColor: colors.cardBg }}>
+          <div className="rounded-2xl p-4 shadow-sm cursor-pointer hover:shadow-md transition-all" style={{ backgroundColor: colors.cardBg }} onClick={() => navigate('/water')}>
             <div className="flex items-center gap-2 mb-3"><span className="text-2xl">💧</span><h3 className="font-bold" style={{ color: colors.text }}>Su</h3></div>
             <div className="relative mb-3 flex justify-center">
               <ProgressRing progress={Math.min((waterData.total_amount / waterGoal) * 100, 100)} size={80} color={colors.secondary} />
               <div className="absolute inset-0 flex items-center justify-center"><span className="text-sm font-bold" style={{ color: colors.text }}>{Math.round((waterData.total_amount / waterGoal) * 100)}%</span></div>
             </div>
             <p className="text-center text-sm mb-2" style={{ color: colors.textLight }}>{waterData.total_amount} / {waterGoal} ml</p>
-            <button onClick={handleAddWater} className="w-full py-2 rounded-xl font-medium transition-all" style={{ backgroundColor: colors.secondary + '20', color: colors.secondary }}>+250 ml</button>
+            <button onClick={(e) => { e.stopPropagation(); handleAddWater(); }} className="w-full py-2 rounded-xl font-medium transition-all" style={{ backgroundColor: colors.secondary + '20', color: colors.secondary }}>+250 ml</button>
           </div>
 
-          <div className="rounded-2xl p-4 shadow-sm" style={{ backgroundColor: colors.cardBg }}>
+          <div className="rounded-2xl p-4 shadow-sm cursor-pointer hover:shadow-md transition-all" style={{ backgroundColor: colors.cardBg }} onClick={() => navigate('/tracking')}>
             <div className="flex items-center gap-2 mb-3"><span className="text-2xl">👣</span><h3 className="font-bold" style={{ color: colors.text }}>Adım</h3></div>
             <div className="relative mb-3 flex justify-center">
               <ProgressRing progress={Math.min((stepData.steps / stepGoal) * 100, 100)} size={80} color="#FF9800" />
               <div className="absolute inset-0 flex items-center justify-center"><span className="text-sm font-bold" style={{ color: colors.text }}>{Math.round((stepData.steps / stepGoal) * 100)}%</span></div>
             </div>
             <p className="text-center text-sm mb-2" style={{ color: colors.textLight }}>{stepData.steps.toLocaleString()} / {stepGoal.toLocaleString()}</p>
-            <button onClick={() => navigate('/tracking')} className="w-full py-2 rounded-xl font-medium bg-orange-50 text-orange-600">Detaylar</button>
+            <button className="w-full py-2 rounded-xl font-medium bg-orange-50 text-orange-600">Detaylar</button>
           </div>
         </div>
 
