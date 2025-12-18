@@ -23,9 +23,14 @@ const AuthProvider = ({ children }) => {
       const token = api.getStoredToken();
       if (token) {
         api.setAuthToken(token);
-        const userData = await api.getMe();
-        setUser(userData);
-        setIsAuthenticated(true);
+        try {
+          const userData = await api.getMe();
+          setUser(userData);
+          setIsAuthenticated(true);
+        } catch (err) {
+          console.error('Failed to get user data:', err);
+          api.setAuthToken(null);
+        }
       }
     } catch (error) {
       console.error('Session check error:', error);
