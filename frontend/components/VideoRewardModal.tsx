@@ -34,11 +34,6 @@ export default function VideoRewardModal({ visible, onClose, targetTheme }: Vide
     if (visible) {
       loadAd();
     }
-    return () => {
-      if (rewarded) {
-        rewarded.removeAllListeners();
-      }
-    };
   }, [visible]);
 
   const loadAd = () => {
