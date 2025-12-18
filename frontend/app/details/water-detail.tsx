@@ -48,9 +48,14 @@ export default function WaterDetailScreen() {
   }, []);
 
   const requestPermissions = async () => {
-    const { status } = await Notifications.requestPermissionsAsync();
-    if (status !== 'granted') {
-      alert('Bildirim izni verilmedi. Ayarlardan açabilirsiniz.');
+    if (!Notifications) return;
+    try {
+      const { status } = await Notifications.requestPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Bildirim İzni', 'Bildirim izni verilmedi. Ayarlardan açabilirsiniz.');
+      }
+    } catch (error) {
+      console.log('Notifications not available');
     }
   };
 
