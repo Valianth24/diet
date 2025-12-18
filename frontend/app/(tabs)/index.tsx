@@ -401,6 +401,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
   },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   avatar: {
     width: 48,
     height: 48,
