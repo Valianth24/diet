@@ -305,39 +305,66 @@ const PremiumPaywall = ({ visible, onClose, onSubscribe }) => {
   );
 };
 
-// Video Reward Modal
+// Video Reward Modal - Günlük 3 video sistemi
 const VideoRewardModal = ({ visible, onClose, targetTheme, onReward }) => {
-  const { watchedAds, incrementWatchedAds, themes } = useTheme();
+  const { todayWatchedAds, incrementWatchedAds, getVideosNeededForTheme, themes } = useTheme();
+  const { user } = useAuth();
   const [isWatching, setIsWatching] = useState(false);
   const [showReward, setShowReward] = useState(false);
+  const [watchProgress, setWatchProgress] = useState(0);
 
-  if (!visible) return null;
+  if (!visible || !targetTheme) return null;
 
   const theme = themes[targetTheme];
-  const videosNeeded = theme.requiredAds - watchedAds;
+  const videosNeeded = getVideosNeededForTheme();
 
   const handleWatchAd = async () => {
     setIsWatching(true);
+    setWatchProgress(0);
+    
+    // 3 saniyelik video simülasyonu - progress bar ile
+    const interval = setInterval(() => {
+      setWatchProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          return 100;
+        }
+        return prev + 4;
+      });
+    }, 100);
+
     setTimeout(async () => {
-      const unlocked = await incrementWatchedAds();
+      clearInterval(interval);
+      setWatchProgress(100);
+      
+      const unlockedTheme = await incrementWatchedAds(targetTheme);
       setIsWatching(false);
-      if (unlocked) {
+      
+      if (unlockedTheme) {
         setShowReward(true);
-      } else {
-        onClose();
+      } else if (getVideosNeededForTheme() <= 0) {
+        // 3 video tamamlandı ama bu tema için değildi
+        alert(`${todayWatchedAds + 1}/3 video izledin! Devam et 🎬`);
       }
-    }, 2000);
+    }, 3000);
   };
 
   if (showReward) {
+    const gradientClass = targetTheme === 'pinkStar' ? 'from-pink-500 to-pink-300' : 
+                          targetTheme === 'ocean' ? 'from-blue-500 to-cyan-300' :
+                          targetTheme === 'sunset' ? 'from-orange-500 to-yellow-300' : 'from-gray-100 to-gray-200';
+    
     return (
       <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-        <div className={`rounded-3xl p-8 max-w-md w-full text-center ${targetTheme === 'pinkStar' ? 'bg-gradient-to-br from-pink-500 to-pink-300' : 'bg-white'}`}>
+        <div className={`rounded-3xl p-8 max-w-md w-full text-center bg-gradient-to-br ${gradientClass}`}>
           <div className="text-6xl mb-4 animate-bounce">{theme.icon}</div>
-          <h2 className={`text-3xl font-bold mb-2 ${targetTheme === 'pinkStar' ? 'text-white' : 'text-gray-800'}`}>Tebrikler! 🎉</h2>
-          <p className={`text-xl mb-2 ${targetTheme === 'pinkStar' ? 'text-white' : 'text-gray-600'}`}>{theme.name} Teması Açıldı!</p>
-          <p className={`mb-6 ${targetTheme === 'pinkStar' ? 'text-white/80' : 'text-gray-400'}`}>24 saat süreyle kullanabilirsin!</p>
-          <button onClick={() => { onReward && onReward(); onClose(); }} className={`px-8 py-3 rounded-xl font-bold ${targetTheme === 'pinkStar' ? 'bg-white text-pink-500' : 'bg-purple-500 text-white'}`}>
+          <h2 className="text-3xl font-bold mb-2 text-white drop-shadow-lg">Tebrikler! 🎉</h2>
+          <p className="text-xl mb-2 text-white">{theme.name} Teması Açıldı!</p>
+          <div className="bg-white/20 rounded-xl p-3 mb-4">
+            <p className="text-white/90">⏰ 24 saat süreyle kullanabilirsin!</p>
+            <p className="text-white/70 text-sm">Yarın tekrar 3 video izle</p>
+          </div>
+          <button onClick={() => { setShowReward(false); onReward && onReward(); onClose(); }} className="px-8 py-3 rounded-xl font-bold bg-white text-purple-600 shadow-lg">
             Harika! 🌟
           </button>
         </div>
@@ -349,25 +376,60 @@ const VideoRewardModal = ({ visible, onClose, targetTheme, onReward }) => {
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onClick={onClose}>
       <div className="bg-white rounded-3xl p-6 max-w-md w-full" onClick={e => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">Reklam İzle & Ödül Kazan</h2>
-          <button onClick={onClose} className="text-gray-500">✕</button>
+          <h2 className="text-xl font-bold">Reklam İzle & Tema Aç</h2>
+          <button onClick={onClose} className="text-gray-500 text-2xl">✕</button>
         </div>
 
         <div className="text-center mb-6">
           <div className="text-5xl mb-3">{theme.icon}</div>
           <h3 className="text-2xl font-bold text-gray-800">{theme.name}</h3>
-          <div className="bg-yellow-100 text-yellow-700 px-4 py-2 rounded-xl mt-4 inline-flex items-center gap-2">
-            📹 {videosNeeded > 1 ? `${videosNeeded} reklam daha izle` : 'Son 1 reklam!'}
+          
+          {/* Günlük ilerleme */}
+          <div className="bg-purple-50 rounded-2xl p-4 mt-4">
+            <p className="text-sm text-purple-600 font-medium mb-2">Bugünkü İlerleme</p>
+            <div className="flex justify-center gap-2 mb-2">
+              {[1, 2, 3].map(i => (
+                <div key={i} className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl ${todayWatchedAds >= i ? 'bg-purple-500' : 'bg-gray-200'}`}>
+                  {todayWatchedAds >= i ? '✓' : '📹'}
+                </div>
+              ))}
+            </div>
+            <p className="text-gray-600">{todayWatchedAds}/3 video izlendi</p>
+            {videosNeeded > 0 && (
+              <p className="text-sm text-purple-500 font-medium">{videosNeeded} video daha!</p>
+            )}
+          </div>
+
+          {/* 24 saat bilgisi */}
+          <div className="bg-yellow-50 rounded-xl p-3 mt-3 flex items-center justify-center gap-2">
+            <span>⏰</span>
+            <span className="text-yellow-700 text-sm">3 video = 24 saat tema kullanımı</span>
           </div>
         </div>
 
-        <button 
-          onClick={handleWatchAd} 
-          disabled={isWatching}
-          className="w-full bg-purple-500 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 disabled:opacity-50"
-        >
-          {isWatching ? '⏳ İzleniyor...' : '▶️ Reklamı İzle'}
-        </button>
+        {/* Video izleme butonu */}
+        {isWatching ? (
+          <div className="space-y-3">
+            <div className="bg-gray-100 rounded-xl p-4 text-center">
+              <p className="text-gray-600 mb-2">🎬 Reklam izleniyor...</p>
+              <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                <div className="h-full bg-purple-500 transition-all duration-100" style={{ width: `${watchProgress}%` }}></div>
+              </div>
+              <p className="text-sm text-gray-500 mt-2">{Math.round(watchProgress)}%</p>
+            </div>
+          </div>
+        ) : (
+          <button 
+            onClick={handleWatchAd}
+            className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 hover:shadow-lg transition-all"
+          >
+            ▶️ Video İzle ({todayWatchedAds + 1}/3)
+          </button>
+        )}
+
+        {user?.is_premium && (
+          <p className="text-center text-green-600 text-sm mt-3">💎 Premium üye olarak sınırsız erişiminiz var!</p>
+        )}
       </div>
     </div>
   );
