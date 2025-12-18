@@ -239,7 +239,7 @@ export default function DashboardScreen() {
             {/* No diets placeholder */}
             <TouchableOpacity
               style={styles.noDietsCard}
-              onPress={() => router.push('/(tabs)/diets')}
+              onPress={() => router.push('/diets')}
             >
               <View style={styles.noDietsIcon}>
                 <Ionicons name="add-circle-outline" size={48} color={Colors.primary} />
