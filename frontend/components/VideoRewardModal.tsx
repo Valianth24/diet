@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal, Animated } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Modal, Animated, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../contexts/ThemeContext';
 import { themeMetadata, ThemeName } from '../constants/Themes';
+import { RewardedAd, RewardedAdEventType, TestIds } from 'react-native-google-mobile-ads';
+import { useStore } from '../store/useStore';
 
 interface VideoRewardModalProps {
   visible: boolean;
@@ -11,41 +13,109 @@ interface VideoRewardModalProps {
   targetTheme: ThemeName;
 }
 
+// Production Ad Unit ID
+const AD_UNIT_ID = 'ca-app-pub-6980942787991808/4593877704';
+
+// Test ad için (geliştirme sırasında)
+const TEST_AD_UNIT_ID = Platform.select({
+  android: TestIds.REWARDED,
+  ios: TestIds.REWARDED,
+  default: TestIds.REWARDED,
+});
+
+// Production için gerçek ID kullan, test için test ID
+const REWARDED_AD_ID = __DEV__ ? TEST_AD_UNIT_ID : AD_UNIT_ID;
+
 export default function VideoRewardModal({ visible, onClose, targetTheme }: VideoRewardModalProps) {
-  const { incrementWatchedVideos, watchedVideos, unlockedThemes } = useTheme();
-  const [isWatching, setIsWatching] = useState(false);
-  const [watchProgress, setWatchProgress] = useState(0);
+  const { incrementWatchedAds, watchedAds, unlockedThemes } = useTheme();
+  const { user } = useStore();
+  const [isLoading, setIsLoading] = useState(false);
+  const [adLoaded, setAdLoaded] = useState(false);
   const [showReward, setShowReward] = useState(false);
   const [newlyUnlocked, setNewlyUnlocked] = useState<ThemeName | null>(null);
+  const [rewarded, setRewarded] = useState<RewardedAd | null>(null);
   
   const scaleAnim = new Animated.Value(0);
   const rotateAnim = new Animated.Value(0);
 
   const metadata = themeMetadata[targetTheme];
-  const videosNeeded = metadata.requiredVideos - watchedVideos;
+  const videosNeeded = metadata.requiredVideos - watchedAds;
 
-  const startVideo = () => {
-    setIsWatching(true);
-    setWatchProgress(0);
+  useEffect(() => {
+    if (visible) {
+      loadAd();
+    }
+    return () => {
+      if (rewarded) {
+        rewarded.removeAllListeners();
+      }
+    };
+  }, [visible]);
 
-    // Mock video progress (5 saniye)
-    const interval = setInterval(() => {
-      setWatchProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          completeVideo();
-          return 100;
+  const loadAd = () => {
+    setIsLoading(true);
+    setAdLoaded(false);
+
+    const rewardedAd = RewardedAd.createForAdRequest(REWARDED_AD_ID, {
+      requestNonPersonalizedAdsOnly: false,
+    });
+
+    // Ad yüklendiğinde
+    const loadedListener = rewardedAd.addAdEventListener(
+      RewardedAdEventType.LOADED,
+      () => {
+        setAdLoaded(true);
+        setIsLoading(false);
+        console.log('Rewarded ad loaded');
+      }
+    );
+
+    // Ödül kazanıldığında
+    const earnedListener = rewardedAd.addAdEventListener(
+      RewardedAdEventType.EARNED_REWARD,
+      async (reward) => {
+        console.log('User earned reward:', reward);
+        await handleAdWatched();
+      }
+    );
+
+    // Reklam kapandığında
+    const dismissedListener = rewardedAd.addAdEventListener(
+      RewardedAdEventType.CLOSED,
+      () => {
+        console.log('Ad closed');
+        if (!showReward) {
+          // Ödül alınmadan kapandıysa
+          onClose();
         }
-        return prev + 2;
-      });
-    }, 100);
+      }
+    );
+
+    // Hata oluştuğunda
+    const errorListener = rewardedAd.addAdEventListener(
+      RewardedAdEventType.ERROR,
+      (error) => {
+        console.error('Ad error:', error);
+        setIsLoading(false);
+        alert('Reklam yüklenemedi. Lütfen internet bağlantınızı kontrol edin.');
+      }
+    );
+
+    setRewarded(rewardedAd);
+    rewardedAd.load();
   };
 
-  const completeVideo = async () => {
-    await incrementWatchedVideos();
+  const showAd = () => {
+    if (rewarded && adLoaded) {
+      rewarded.show();
+    }
+  };
+
+  const handleAdWatched = async () => {
+    await incrementWatchedAds();
     
     // Check if theme is now unlocked
-    const newWatched = watchedVideos + 1;
+    const newWatched = watchedAds + 1;
     let unlocked: ThemeName | null = null;
     
     if (newWatched >= 3 && !unlockedThemes.includes('pinkStar')) {
@@ -118,7 +188,7 @@ export default function VideoRewardModal({ visible, onClose, targetTheme }: Vide
                 {themeMetadata[newlyUnlocked].name} Teması Açıldı!
               </Text>
               <Text style={styles.pinkRewardSubtext}>
-                Çok şirin görünüyor! Hemen kullanmak ister misin? 💕
+                {user?.is_premium ? 'Sınırsız kullan!' : '24 saat süreyle kullanabilirsin! 💕'}
               </Text>
 
               <TouchableOpacity style={styles.pinkClaimButton} onPress={onClose}>
@@ -134,6 +204,9 @@ export default function VideoRewardModal({ visible, onClose, targetTheme }: Vide
               <Text style={styles.rewardTitle}>Tebrikler! 🎉</Text>
               <Text style={styles.rewardMessage}>
                 {themeMetadata[newlyUnlocked].name} Teması Açıldı!
+              </Text>
+              <Text style={styles.rewardSubtext}>
+                {user?.is_premium ? 'Sınırsız kullan!' : '24 saat süreyle kullanabilirsin!'}
               </Text>
 
               <TouchableOpacity style={styles.claimButton} onPress={onClose}>
@@ -151,7 +224,7 @@ export default function VideoRewardModal({ visible, onClose, targetTheme }: Vide
       <View style={styles.overlay}>
         <View style={styles.container}>
           <View style={styles.header}>
-            <Text style={styles.title}>Video İzle & Ödül Kazan</Text>
+            <Text style={styles.title}>Reklam İzle & Ödül Kazan</Text>
             <TouchableOpacity onPress={onClose}>
               <Ionicons name="close" size={28} color="#1F2937" />
             </TouchableOpacity>
@@ -165,27 +238,37 @@ export default function VideoRewardModal({ visible, onClose, targetTheme }: Vide
             <View style={styles.requirementCard}>
               <Ionicons name="videocam" size={24} color="#F59E0B" />
               <Text style={styles.requirementText}>
-                {videosNeeded > 1 ? `${videosNeeded} video daha izle` : 'Son 1 video!'}
+                {videosNeeded > 1 ? `${videosNeeded} reklam daha izle` : 'Son 1 reklam!'}
               </Text>
             </View>
+
+            {!user?.is_premium && (
+              <View style={styles.timeLimitCard}>
+                <Ionicons name="time" size={20} color="#6B7280" />
+                <Text style={styles.timeLimitText}>24 saat süreyle kullanabilirsin</Text>
+              </View>
+            )}
           </View>
 
-          {!isWatching ? (
-            <TouchableOpacity style={styles.watchButton} onPress={startVideo}>
-              <Ionicons name="play-circle" size={32} color="#FFFFFF" />
-              <Text style={styles.watchButtonText}>Video İzle</Text>
-            </TouchableOpacity>
-          ) : (
-            <View style={styles.videoContainer}>
-              <View style={styles.mockVideo}>
-                <Ionicons name="videocam" size={64} color="#FFFFFF" />
-                <Text style={styles.mockVideoText}>Reklam oynatılıyor...</Text>
-              </View>
-              <View style={styles.progressBarContainer}>
-                <View style={[styles.progressBarFill, { width: `${watchProgress}%` }]} />
-              </View>
-              <Text style={styles.progressText}>{Math.round(watchProgress)}%</Text>
+          {isLoading ? (
+            <View style={styles.loadingContainer}>
+              <Text style={styles.loadingText}>Reklam yükleniyor...</Text>
             </View>
+          ) : (
+            <TouchableOpacity 
+              style={[styles.watchButton, !adLoaded && styles.watchButtonDisabled]} 
+              onPress={showAd}
+              disabled={!adLoaded}
+            >
+              <Ionicons name="play-circle" size={32} color="#FFFFFF" />
+              <Text style={styles.watchButtonText}>
+                {adLoaded ? 'Reklamı İzle' : 'Yükleniyor...'}
+              </Text>
+            </TouchableOpacity>
+          )}
+
+          {user?.is_premium && (
+            <Text style={styles.premiumNote}>Premium üye olarak sınırsız erişime sahipsiniz!</Text>
           )}
         </View>
       </View>
@@ -250,6 +333,28 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#92400E',
   },
+  timeLimitCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#F3F4F6',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 12,
+    marginTop: 12,
+  },
+  timeLimitText: {
+    fontSize: 12,
+    color: '#6B7280',
+  },
+  loadingContainer: {
+    paddingVertical: 20,
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#6B7280',
+  },
   watchButton: {
     flexDirection: 'row',
     backgroundColor: '#7C3AED',
@@ -259,44 +364,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 12,
   },
+  watchButtonDisabled: {
+    opacity: 0.6,
+  },
   watchButtonText: {
     color: '#FFFFFF',
     fontSize: 18,
     fontWeight: 'bold',
   },
-  videoContainer: {
-    alignItems: 'center',
-  },
-  mockVideo: {
-    width: '100%',
-    height: 200,
-    backgroundColor: '#1F2937',
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  mockVideoText: {
-    color: '#FFFFFF',
-    fontSize: 14,
+  premiumNote: {
+    fontSize: 12,
+    color: '#10B981',
+    textAlign: 'center',
     marginTop: 12,
-  },
-  progressBarContainer: {
-    width: '100%',
-    height: 8,
-    backgroundColor: '#E5E7EB',
-    borderRadius: 4,
-    overflow: 'hidden',
-    marginBottom: 8,
-  },
-  progressBarFill: {
-    height: '100%',
-    backgroundColor: '#7C3AED',
-  },
-  progressText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#7C3AED',
   },
   // Reward styles
   rewardOverlay: {
@@ -335,6 +415,12 @@ const styles = StyleSheet.create({
   rewardMessage: {
     fontSize: 18,
     color: '#6B7280',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  rewardSubtext: {
+    fontSize: 14,
+    color: '#9CA3AF',
     textAlign: 'center',
     marginBottom: 24,
   },
