@@ -152,9 +152,7 @@ export default function DashboardScreen() {
             </View>
           </View>
           <View style={styles.headerRight}>
-            {!user?.is_premium && (
-              <PremiumPromoButton onPress={() => setShowPremiumModal(true)} />
-            )}
+            <PremiumPromoButton onPress={() => setShowPremiumModal(true)} />
             <Ionicons name="notifications-outline" size={28} color={Colors.darkText} style={{ marginLeft: 12 }} />
           </View>
         </View>
