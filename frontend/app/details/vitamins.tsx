@@ -138,30 +138,34 @@ export default function VitaminsScreen() {
       await AsyncStorage.setItem('vitamin_reminder_times', JSON.stringify(reminderTimes));
       await AsyncStorage.setItem('vitamin_alarm_style', String(alarmStyle));
 
-      // Cancel existing notifications
-      await Notifications.cancelAllScheduledNotificationsAsync();
+      if (Notifications) {
+        // Cancel existing notifications
+        await Notifications.cancelAllScheduledNotificationsAsync();
 
-      if (reminderEnabled) {
-        // Schedule new notifications
-        for (const time of reminderTimes) {
-          const [hour, minute] = time.split(':').map(Number);
-          await Notifications.scheduleNotificationAsync({
-            content: {
-              title: alarmStyle ? '🔔 VITAMIN ZAMANI!' : 'Vitamin Hatırlatıcı',
-              body: 'Vitaminlerinizi almayı unutmayın!',
-              sound: alarmStyle ? 'default' : undefined,
-              priority: alarmStyle ? Notifications.AndroidNotificationPriority.MAX : Notifications.AndroidNotificationPriority.DEFAULT,
-            },
-            trigger: {
-              hour,
-              minute,
-              repeats: true,
-            },
-          });
+        if (reminderEnabled) {
+          // Schedule new notifications
+          for (const time of reminderTimes) {
+            const [hour, minute] = time.split(':').map(Number);
+            await Notifications.scheduleNotificationAsync({
+              content: {
+                title: alarmStyle ? '🔔 VITAMIN ZAMANI!' : 'Vitamin Hatırlatıcı',
+                body: 'Vitaminlerinizi almayı unutmayın!',
+                sound: alarmStyle ? 'default' : undefined,
+                priority: alarmStyle ? Notifications.AndroidNotificationPriority.MAX : Notifications.AndroidNotificationPriority.DEFAULT,
+              },
+              trigger: {
+                hour,
+                minute,
+                repeats: true,
+              },
+            });
+          }
+          alert('Hatırlatıcılar kaydedildi!');
+        } else {
+          alert('Hatırlatıcılar kapatıldı.');
         }
-        alert('Hatırlatıcılar kaydedildi!');
       } else {
-        alert('Hatırlatıcılar kapatıldı.');
+        alert('Hatırlatıcılar sadece production build\'de çalışır (Expo Go\'da çalışmaz)');
       }
 
       setShowReminderModal(false);
