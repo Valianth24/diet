@@ -8,7 +8,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { LineChart, BarChart } from 'react-native-gifted-charts';
 import { useRouter } from 'expo-router';
 import { useStore } from '../../store/useStore';
-import * as Notifications from 'expo-notifications';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -19,45 +18,10 @@ export default function WaterDetailScreen() {
   const [weeklyWater, setWeeklyWater] = useState<any[]>([]);
   const [todayWater, setTodayWater] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
 
   useEffect(() => {
     loadData();
-    checkNotificationStatus();
   }, []);
-
-  const checkNotificationStatus = async () => {
-    const { status } = await Notifications.getPermissionsAsync();
-    setNotificationsEnabled(status === 'granted');
-  };
-
-  const handleEnableNotifications = async () => {
-    const { status: existingStatus } = await Notifications.getPermissionsAsync();
-    let finalStatus = existingStatus;
-
-    if (existingStatus !== 'granted') {
-      const { status } = await Notifications.requestPermissionsAsync();
-      finalStatus = status;
-    }
-
-    if (finalStatus === 'granted') {
-      setNotificationsEnabled(true);
-      // Schedule water reminder every 2 hours
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: 'Su İçme Zamanı! 💧',
-          body: 'Günlük hedefinize ulaşmak için su içmeyi unutmayın!',
-        },
-        trigger: {
-          seconds: 7200, // 2 hours
-          repeats: true,
-        },
-      });
-      alert('Su bildirimleri aktif edildi!');
-    } else {
-      alert('Bildirim izni reddedildi. Ayarlardan açabilirsiniz.');
-    }
-  };
 
   const loadData = async () => {
     try {
@@ -318,21 +282,5 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: Colors.darkText,
     marginBottom: 16,
-  },
-  notificationButton: {
-    backgroundColor: Colors.teal,
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 8,
-    marginTop: 16,
-  },
-  notificationButtonText: {
-    color: Colors.white,
-    fontSize: 16,
-    fontWeight: '600',
   },
 });
