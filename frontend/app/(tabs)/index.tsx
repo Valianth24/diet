@@ -48,6 +48,16 @@ export default function DashboardScreen() {
   
   // Premium modal
   const [showPremiumModal, setShowPremiumModal] = useState(false);
+  
+  // Notification settings modal
+  const [showNotificationModal, setShowNotificationModal] = useState(false);
+  const [waterReminderEnabled, setWaterReminderEnabled] = useState(false);
+  const [vitaminReminderEnabled, setVitaminReminderEnabled] = useState(false);
+  const [waterReminderTimes, setWaterReminderTimes] = useState<string[]>(['09:00', '12:00', '15:00', '18:00', '21:00']);
+  const [vitaminReminderTimes, setVitaminReminderTimes] = useState<string[]>(['09:00', '21:00']);
+  const [alarmStyle, setAlarmStyle] = useState(false);
+  const [newReminderTime, setNewReminderTime] = useState('');
+  const [reminderType, setReminderType] = useState<'water' | 'vitamin'>('water');
 
   const loadData = async () => {
     try {
