@@ -515,10 +515,30 @@ const DashboardPage = () => {
     try { await api.addWater(250); setWaterData(prev => ({ ...prev, total_amount: prev.total_amount + 250 })); } catch (error) {}
   };
 
-  const handleAddMeal = async (food) => {
+  const handleSelectFood = (food) => {
+    setSelectedFood(food);
+    setGramAmount('100');
+    setShowAddMealModal(false);
+    setShowGramModal(true);
+  };
+
+  const handleAddMealWithGram = async () => {
+    if (!selectedFood || !gramAmount) return;
+    const grams = parseFloat(gramAmount) || 100;
+    const multiplier = grams / 100;
+    
     try {
-      await api.addMeal({ name: food.name, calories: food.calories, protein: food.protein, carbs: food.carbs, fat: food.fat, image_base64: '', meal_type: selectedMealType });
-      setShowAddMealModal(false);
+      await api.addMeal({ 
+        name: `${selectedFood.name} (${grams}g)`, 
+        calories: Math.round(selectedFood.calories * multiplier), 
+        protein: Math.round(selectedFood.protein * multiplier * 10) / 10, 
+        carbs: Math.round(selectedFood.carbs * multiplier * 10) / 10, 
+        fat: Math.round(selectedFood.fat * multiplier * 10) / 10, 
+        image_base64: '', 
+        meal_type: selectedMealType 
+      });
+      setShowGramModal(false);
+      setSelectedFood(null);
       loadData();
     } catch (error) { alert('Yemek eklenemedi.'); }
   };
