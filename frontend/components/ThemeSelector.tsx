@@ -12,26 +12,25 @@ export default function ThemeSelector() {
   const [selectedLockedTheme, setSelectedLockedTheme] = useState<ThemeName | null>(null);
 
   const handleThemePress = async (themeName: ThemeName) => {
-    const available = isThemeAvailable(themeName);
-    
-    if (available) {
-      try {
-        await setTheme(themeName);
-        // Güzel bir feedback
-        if (themeName === 'pinkStar') {
-          alert('✨💕 Pembe Yıldız teması aktif! Çok şirin görünüyor! 💕✨');
-        } else if (themeName === 'default') {
-          alert('🎨 Varsayılan tema aktif!');
-        } else {
-          alert(`🎨 ${themeMetadata[themeName].name} teması aktif!`);
-        }
-      } catch (error) {
-        console.error('Theme change error:', error);
-        alert('Tema değiştirilemedi. Lütfen tekrar deneyin.');
+    try {
+      await setTheme(themeName);
+      // Güzel bir feedback
+      if (themeName === 'pinkStar') {
+        alert('✨💕 Pembe Yıldız teması aktif! 💕✨');
+      } else if (themeName === 'default') {
+        alert('🎨 Varsayılan tema aktif!');
+      } else if (themeName === 'ocean') {
+        alert('🌊 Okyanus teması aktif!');
+      } else if (themeName === 'sunset') {
+        alert('🌅 Gün Batımı teması aktif!');
+      } else if (themeName === 'forest') {
+        alert('🌲 Orman teması aktif!');
+      } else {
+        alert(`🎨 ${themeMetadata[themeName]?.name || themeName} teması aktif!`);
       }
-    } else {
-      setSelectedLockedTheme(themeName);
-      setShowVideoModal(true);
+    } catch (error) {
+      console.error('Theme change error:', error);
+      alert('Tema değiştirilemedi. Lütfen tekrar deneyin.');
     }
   };
 
