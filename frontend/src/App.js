@@ -495,7 +495,57 @@ const LoginPage = () => {
     );
   }
 
+  // İlk giriş için dil seçimi kontrolü
+  const [showLanguageSelector, setShowLanguageSelector] = useState(false);
+  const [selectedLang, setSelectedLang] = useState('en');
+  const [langChecked, setLangChecked] = useState(false);
+
+  useEffect(() => {
+    const hasLaunched = localStorage.getItem('has_launched');
+    const savedLang = localStorage.getItem('app_language');
+    if (!hasLaunched && !savedLang) {
+      setShowLanguageSelector(true);
+    }
+    if (savedLang) setSelectedLang(savedLang);
+    setLangChecked(true);
+  }, []);
+
+  const handleLanguageSelect = () => {
+    localStorage.setItem('app_language', selectedLang);
+    localStorage.setItem('has_launched', 'true');
+    setShowLanguageSelector(false);
+  };
+
   if (isAuthenticated) return null;
+
+  // Dil seçim ekranı
+  if (showLanguageSelector) {
+    return (
+      <div className="min-h-screen p-6" style={{ backgroundColor: colors.background }}>
+        <div className="max-w-md mx-auto pt-12">
+          <div className="text-center mb-8">
+            <span className="text-6xl mb-4 block">🍎</span>
+            <h1 className="text-3xl font-bold mb-2" style={{ color: colors.text }}>CalorieDiet</h1>
+            <p className="text-lg" style={{ color: colors.textLight }}>Select Language / Dil Seçin</p>
+          </div>
+
+          <div className="space-y-3 mb-8">
+            {languageList.map(lang => (
+              <button key={lang.code} onClick={() => setSelectedLang(lang.code)} className="w-full p-4 rounded-2xl flex items-center gap-4 transition-all" style={{ backgroundColor: selectedLang === lang.code ? colors.primary + '15' : 'white', borderWidth: 2, borderColor: selectedLang === lang.code ? colors.primary : 'transparent' }}>
+                <span className="text-3xl">{lang.flag}</span>
+                <span className="font-semibold text-lg" style={{ color: selectedLang === lang.code ? colors.primary : colors.text }}>{lang.name}</span>
+                {selectedLang === lang.code && <span className="ml-auto w-6 h-6 rounded-full flex items-center justify-center text-white text-sm" style={{ backgroundColor: colors.primary }}>✓</span>}
+              </button>
+            ))}
+          </div>
+
+          <button onClick={handleLanguageSelect} className="w-full py-4 rounded-2xl font-bold text-lg text-white transition-all hover:shadow-lg" style={{ backgroundColor: colors.primary }}>
+            Continue / Devam Et
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4" style={{ background: `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})` }}>
