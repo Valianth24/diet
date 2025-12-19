@@ -676,7 +676,7 @@ export default function DashboardScreen() {
             {/* Save Button */}
             <TouchableOpacity style={styles.saveNotificationButton} onPress={saveNotificationSettings}>
               <Ionicons name="checkmark" size={24} color={Colors.white} />
-              <Text style={styles.saveNotificationText}>Kaydet</Text>
+              <Text style={styles.saveNotificationText}>{t('save')}</Text>
             </TouchableOpacity>
           </View>
         </View>
