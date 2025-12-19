@@ -524,7 +524,7 @@ export default function DashboardScreen() {
         <View style={styles.modalContainer}>
           <View style={styles.notificationModalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Hatırlatıcı Ayarları</Text>
+              <Text style={styles.modalTitle}>{t('reminderSettings')}</Text>
               <TouchableOpacity onPress={() => setShowNotificationModal(false)}>
                 <Ionicons name="close" size={28} color={Colors.darkText} />
               </TouchableOpacity>
@@ -536,7 +536,7 @@ export default function DashboardScreen() {
                 <View style={styles.reminderHeader}>
                   <View style={styles.reminderHeaderLeft}>
                     <Ionicons name="water" size={24} color={Colors.teal} />
-                    <Text style={styles.reminderTitle}>Su Hatırlatıcısı</Text>
+                    <Text style={styles.reminderTitle}>{t('waterReminder')}</Text>
                   </View>
                   <Switch
                     value={waterReminderEnabled}
