@@ -23,43 +23,43 @@ export default function DietsScreen() {
   const premiumDiets = [
     {
       id: '1',
-      name: 'Keto Diyeti',
-      description: 'Düşük karbonhidrat, yüksek yağ',
-      duration: '30 gün',
+      name: t('ketoDiet'),
+      description: t('ketoDesc'),
+      duration: `30 ${t('days')}`,
       calories: 1800,
       image: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=400',
       isPremium: true,
-      category: 'Kilo Verme'
+      category: t('weightLoss')
     },
     {
       id: '2',
-      name: 'Akdeniz Diyeti',
-      description: 'Dengeli ve sağlıklı beslenme',
-      duration: '30 gün',
+      name: t('mediterraneanDiet'),
+      description: t('mediterraneanDesc'),
+      duration: `30 ${t('days')}`,
       calories: 2000,
       image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400',
       isPremium: true,
-      category: 'Dengeli'
+      category: t('balanced')
     },
     {
       id: '3',
-      name: 'Kas Yapma Diyeti',
-      description: 'Yüksek protein, orta karbonhidrat',
-      duration: '60 gün',
+      name: t('muscleDiet'),
+      description: t('muscleDesc'),
+      duration: `60 ${t('days')}`,
       calories: 2500,
       image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400',
       isPremium: true,
-      category: 'Kas Yapma'
+      category: t('muscleBuilding')
     },
     {
       id: '4',
-      name: 'Vejetaryen Diyeti',
-      description: 'Bitkisel protein kaynakları',
-      duration: '30 gün',
+      name: t('vegetarianDiet'),
+      description: t('vegetarianDesc'),
+      duration: `30 ${t('days')}`,
       calories: 1900,
       image: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=400',
       isPremium: true,
-      category: 'Vejetaryen'
+      category: t('vegetarian')
     },
   ];
 
