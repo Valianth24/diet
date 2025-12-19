@@ -556,19 +556,21 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   buttonContainer: {
-    flexDirection: 'row',
+    flexDirection: 'column',
     gap: 12,
     marginBottom: 24,
+    width: '100%',
   },
   primaryButton: {
-    flex: 1,
     backgroundColor: Colors.primary,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
     paddingVertical: 16,
+    paddingHorizontal: 20,
     borderRadius: 16,
+    minHeight: 56,
   },
   primaryButtonText: {
     fontSize: 16,
@@ -576,7 +578,6 @@ const styles = StyleSheet.create({
     color: '#FFF',
   },
   secondaryButton: {
-    flex: 1,
     borderWidth: 2,
     borderColor: Colors.primary,
     flexDirection: 'row',
@@ -584,7 +585,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     paddingVertical: 14,
+    paddingHorizontal: 20,
     borderRadius: 16,
+    minHeight: 56,
   },
   secondaryButtonText: {
     fontSize: 16,
