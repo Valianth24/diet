@@ -77,9 +77,9 @@ export default function DietsScreen() {
   const handleCreateCustomDiet = (dietData: any) => {
     console.log('Diet Data:', dietData);
     // TODO: Save to backend
-    alert(`✅ "${dietData.name}" diyeti oluşturuldu!\n\n` +
-          `Hedef Kalori: ${dietData.targetCalories} kcal\n` +
-          `Protein: ${dietData.macros.protein}% | Karb: ${dietData.macros.carbs}% | Yağ: ${dietData.macros.fat}%`);
+    alert(`"${dietData.name}" ${t('dietCreated')}\n\n` +
+          `${t('targetCalorie')}: ${dietData.targetCalories} kcal\n` +
+          `${t('protein')}: ${dietData.macros.protein}% | ${t('carbs')}: ${dietData.macros.carbs}% | ${t('fat')}: ${dietData.macros.fat}%`);
     setShowAdvancedForm(false);
   };
 
@@ -102,16 +102,16 @@ export default function DietsScreen() {
       });
       
       if (response.ok) {
-        alert('🎉 Premium aktif edildi! Tüm özelliklere erişiminiz var.');
+        alert(t('premiumActivated'));
         setShowPaywall(false);
         // Refresh user data to get premium status
         window.location.reload();
       } else {
-        alert('Bir hata oluştu. Lütfen tekrar deneyin.');
+        alert(t('errorOccurred'));
       }
     } catch (error) {
       console.error('Premium activation error:', error);
-      alert('Premium aktivasyonu başarısız oldu.');
+      alert(t('premiumActivationFailed'));
     }
   };
 
