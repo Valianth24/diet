@@ -236,15 +236,15 @@ export default function CameraScreen() {
       });
 
       if (!response.ok) {
-        throw new Error('Kaydetme başarısız');
+        throw new Error(t('saveFailed'));
       }
 
       // Son hesaplananlara kaydet
       await saveToRecentScans(mealName, totals);
 
       triggerRefresh();
-      Alert.alert('Başarılı', 'Yemek kaydedildi!', [
-        { text: 'Tamam', onPress: () => {
+      Alert.alert(t('success'), t('mealSaved'), [
+        { text: t('ok'), onPress: () => {
           router.replace('/(tabs)');
           setImage(null);
           setImageBase64(null);
@@ -254,7 +254,7 @@ export default function CameraScreen() {
       ]);
     } catch (error) {
       console.error('Error adding meal:', error);
-      Alert.alert('Hata', 'Yemek eklenemedi. Tekrar deneyin.');
+      Alert.alert(t('error'), t('mealAddError'));
     } finally {
       setSaving(false);
     }
