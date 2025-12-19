@@ -277,7 +277,12 @@ export default function ProfileScreen() {
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>{t('selectLanguage')}</Text>
-              <TouchableOpacity onPress={() => setShowLanguageModal(false)} style={styles.closeButton}>
+              <TouchableOpacity 
+                onPress={() => setShowLanguageModal(false)} 
+                style={styles.closeButton}
+                hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+                activeOpacity={0.7}
+              >
                 <Ionicons name="close" size={28} color={Colors.darkText} />
               </TouchableOpacity>
             </View>
