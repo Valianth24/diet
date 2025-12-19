@@ -459,4 +459,61 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
   },
+  // Modal styles
+  modalOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: Colors.white,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 20,
+    maxHeight: '70%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: Colors.darkText,
+  },
+  languageList: {
+    maxHeight: 400,
+  },
+  languageItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 8,
+    backgroundColor: Colors.background,
+  },
+  languageItemActive: {
+    backgroundColor: Colors.primary + '15',
+    borderWidth: 2,
+    borderColor: Colors.primary,
+  },
+  languageFlag: {
+    fontSize: 28,
+    marginRight: 16,
+  },
+  languageName: {
+    flex: 1,
+    fontSize: 18,
+    fontWeight: '600',
+    color: Colors.darkText,
+  },
+  languageNameActive: {
+    color: Colors.primary,
+  },
 });
