@@ -196,6 +196,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const handleSetUser = (userData: any) => {
+    setUser(userData);
+    if (userData) {
+      setIsAuthenticated(true);
+      if (!userData.height || !userData.weight || !userData.age || !userData.gender) {
+        setNeedsOnboarding(true);
+      } else {
+        setNeedsOnboarding(false);
+      }
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -205,6 +217,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         login,
         logout,
         needsOnboarding,
+        setUser: handleSetUser,
+        setNeedsOnboarding,
       }}
     >
       {children}
