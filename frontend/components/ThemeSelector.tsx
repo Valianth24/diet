@@ -101,7 +101,6 @@ export default function ThemeSelector() {
         style={[
           styles.themeCard,
           isActive && styles.themeCardActive,
-          !isUnlocked && styles.themeCardLocked,
         ]}
         onPress={() => handleThemePress(themeName)}
         activeOpacity={0.7}
@@ -110,24 +109,10 @@ export default function ThemeSelector() {
           <Ionicons name={metadata.icon as any} size={32} color={theme.primary} />
         </View>
 
-        {!isUnlocked && (
-          <View style={styles.lockOverlay}>
-            <Ionicons name="lock-closed" size={24} color="#666" />
-          </View>
-        )}
-
         <Text style={styles.themeName}>{metadata.name}</Text>
         <Text style={styles.themeDesc}>{metadata.description}</Text>
 
         {getThemePreview(themeName)}
-
-        {!isUnlocked && (
-          <View style={styles.lockInfo}>
-            <Text style={styles.lockText}>
-              {videosNeeded > 0 ? `${videosNeeded} video daha` : 'Video izle'}
-            </Text>
-          </View>
-        )}
 
         {isActive && (
           <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]}>
