@@ -136,6 +136,10 @@ const resources = {
       average: 'Average',
       calorie: 'Calorie',
       
+      // Food Photo Card
+      takePhotoOfYourMeal: 'Take Photo of Your Meal',
+      toCalculateCalories: 'to calculate calories',
+      
       // Vitamins
       vitamins: 'Vitamins',
       vitaminTracking: 'Vitamin Tracking',
