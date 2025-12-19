@@ -9,23 +9,34 @@ import { LineChart, BarChart } from 'react-native-gifted-charts';
 import { useRouter } from 'expo-router';
 import { useStore } from '../../store/useStore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { LogBox } from 'react-native';
 
 const screenWidth = Dimensions.get('window').width;
 
-// Expo Notifications - Sadece production build'de çalışır
-let Notifications: any = null;
-try {
-  Notifications = require('expo-notifications');
-  Notifications.setNotificationHandler({
-    handleNotification: async () => ({
-      shouldShowAlert: true,
-      shouldPlaySound: true,
-      shouldSetBadge: true,
-    }),
-  });
-} catch (error) {
-  console.log('Notifications not available in Expo Go');
-}
+LogBox.ignoreLogs([
+  'expo-notifications: Android Push notifications',
+  '`expo-notifications` functionality is not fully supported in Expo Go',
+]);
+
+// Notifications'ı lazy yükle
+let _notifications: any = null;
+const getNotifications = () => {
+  if (!_notifications) {
+    try {
+      _notifications = require('expo-notifications');
+      _notifications.setNotificationHandler({
+        handleNotification: async () => ({
+          shouldShowAlert: true,
+          shouldPlaySound: true,
+          shouldSetBadge: true,
+        }),
+      });
+    } catch (error) {
+      console.log('Notifications not available');
+    }
+  }
+  return _notifications;
+};
 
 export default function WaterDetailScreen() {
   const { t } = useTranslation();
