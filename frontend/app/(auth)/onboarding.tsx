@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -15,12 +15,18 @@ import { updateProfile } from '../../utils/api';
 import { useStore } from '../../store/useStore';
 import { Colors } from '../../constants/Colors';
 import { useTranslation } from 'react-i18next';
+import { languageList, changeLanguage, isFirstLaunch, setFirstLaunchDone, loadSavedLanguage } from '../../utils/i18n';
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function OnboardingScreen() {
   const router = useRouter();
   const { setUser } = useStore();
-  const { t } = useTranslation();
+  const { setNeedsOnboarding } = useAuth();
+  const { t, i18n } = useTranslation();
   const [loading, setLoading] = useState(false);
+  const [step, setStep] = useState<'language' | 'profile'>('language');
+  const [selectedLang, setSelectedLang] = useState('en');
+  const [checkingLang, setCheckingLang] = useState(true);
   const [formData, setFormData] = useState({
     height: '',
     weight: '',
@@ -28,6 +34,34 @@ export default function OnboardingScreen() {
     gender: 'male',
     activity_level: 'moderate',
   });
+
+  useEffect(() => {
+    checkLanguageSelection();
+  }, []);
+
+  const checkLanguageSelection = async () => {
+    try {
+      const savedLang = await loadSavedLanguage();
+      const firstLaunch = await isFirstLaunch();
+      
+      if (savedLang) {
+        setSelectedLang(savedLang);
+        setStep('profile');
+      } else if (!firstLaunch) {
+        setStep('profile');
+      }
+    } catch (error) {
+      console.error('Error checking language:', error);
+    } finally {
+      setCheckingLang(false);
+    }
+  };
+
+  const handleLanguageSelect = async () => {
+    await changeLanguage(selectedLang);
+    await setFirstLaunchDone();
+    setStep('profile');
+  };
 
   const handleSubmit = async () => {
     try {
@@ -40,6 +74,7 @@ export default function OnboardingScreen() {
         activity_level: formData.activity_level,
       });
       setUser(userData);
+      setNeedsOnboarding(false);
       router.replace('/(tabs)');
     } catch (error) {
       console.error('Error updating profile:', error);
@@ -49,6 +84,60 @@ export default function OnboardingScreen() {
     }
   };
 
+  if (checkingLang) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Yükleniyor...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Language Selection Step
+  if (step === 'language') {
+    return (
+      <SafeAreaView style={styles.container}>
+        <ScrollView contentContainerStyle={styles.langContent}>
+          <View style={styles.langHeader}>
+            <Text style={styles.langLogo}>🍎</Text>
+            <Text style={styles.langTitle}>CalorieDiet</Text>
+            <Text style={styles.langSubtitle}>{t('selectLanguage')}</Text>
+          </View>
+
+          <View style={styles.langList}>
+            {languageList.map((lang) => (
+              <TouchableOpacity
+                key={lang.code}
+                style={[
+                  styles.langItem,
+                  selectedLang === lang.code && styles.langItemSelected
+                ]}
+                onPress={() => setSelectedLang(lang.code)}
+              >
+                <Text style={styles.langFlag}>{lang.flag}</Text>
+                <Text style={[
+                  styles.langName,
+                  selectedLang === lang.code && styles.langNameSelected
+                ]}>{lang.name}</Text>
+                {selectedLang === lang.code && (
+                  <View style={styles.langCheck}>
+                    <Text style={styles.langCheckText}>✓</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <TouchableOpacity style={styles.langContinueBtn} onPress={handleLanguageSelect}>
+            <Text style={styles.langContinueText}>{t('continue')}</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
+  // Profile Setup Step
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
@@ -57,7 +146,7 @@ export default function OnboardingScreen() {
       >
         <ScrollView contentContainerStyle={styles.content}>
           <Text style={styles.title}>{t('setupProfile')}</Text>
-          <Text style={styles.subtitle}>Tell us about yourself</Text>
+          <Text style={styles.subtitle}>Kalori hedefinizi hesaplamak için bilgilerinizi girin</Text>
 
           <View style={styles.form}>
             <View style={styles.inputGroup}>
@@ -66,6 +155,7 @@ export default function OnboardingScreen() {
                 style={styles.input}
                 keyboardType="numeric"
                 placeholder="170"
+                placeholderTextColor={Colors.lightText}
                 value={formData.height}
                 onChangeText={(text) => setFormData({ ...formData, height: text })}
               />
@@ -77,6 +167,7 @@ export default function OnboardingScreen() {
                 style={styles.input}
                 keyboardType="numeric"
                 placeholder="70"
+                placeholderTextColor={Colors.lightText}
                 value={formData.weight}
                 onChangeText={(text) => setFormData({ ...formData, weight: text })}
               />
@@ -88,6 +179,7 @@ export default function OnboardingScreen() {
                 style={styles.input}
                 keyboardType="numeric"
                 placeholder="25"
+                placeholderTextColor={Colors.lightText}
                 value={formData.age}
                 onChangeText={(text) => setFormData({ ...formData, age: text })}
               />
@@ -134,7 +226,7 @@ export default function OnboardingScreen() {
             <View style={styles.inputGroup}>
               <Text style={styles.label}>{t('activityLevel')}</Text>
               <View style={styles.buttonGroup}>
-                {['sedentary', 'light', 'moderate', 'active', 'very_active'].map((level) => (
+                {['sedentary', 'light', 'moderate', 'active', 'veryActive'].map((level) => (
                   <TouchableOpacity
                     key={level}
                     style={[
@@ -163,7 +255,7 @@ export default function OnboardingScreen() {
             disabled={loading}
           >
             <Text style={styles.submitButtonText}>
-              {loading ? 'Loading...' : t('save')}
+              {loading ? 'Kaydediliyor...' : t('save')}
             </Text>
           </TouchableOpacity>
         </ScrollView>
@@ -177,6 +269,96 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontSize: 18,
+    color: Colors.lightText,
+  },
+  // Language styles
+  langContent: {
+    flexGrow: 1,
+    padding: 24,
+  },
+  langHeader: {
+    alignItems: 'center',
+    marginBottom: 30,
+    marginTop: 20,
+  },
+  langLogo: {
+    fontSize: 64,
+    marginBottom: 16,
+  },
+  langTitle: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: Colors.darkText,
+    marginBottom: 8,
+  },
+  langSubtitle: {
+    fontSize: 18,
+    color: Colors.lightText,
+  },
+  langList: {
+    flex: 1,
+  },
+  langItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.white,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  langItemSelected: {
+    borderColor: Colors.primary,
+    backgroundColor: Colors.primary + '10',
+  },
+  langFlag: {
+    fontSize: 32,
+    marginRight: 16,
+  },
+  langName: {
+    flex: 1,
+    fontSize: 18,
+    fontWeight: '600',
+    color: Colors.darkText,
+  },
+  langNameSelected: {
+    color: Colors.primary,
+  },
+  langCheck: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: Colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  langCheckText: {
+    color: Colors.white,
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  langContinueBtn: {
+    backgroundColor: Colors.primary,
+    paddingVertical: 18,
+    borderRadius: 16,
+    alignItems: 'center',
+    marginTop: 20,
+    marginBottom: 20,
+  },
+  langContinueText: {
+    color: Colors.white,
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  // Profile styles
   content: {
     padding: 24,
   },
@@ -209,6 +391,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     fontSize: 16,
+    color: Colors.darkText,
   },
   buttonGroup: {
     flexDirection: 'row',
