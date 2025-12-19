@@ -530,7 +530,12 @@ export default function DashboardScreen() {
           <View style={styles.notificationModalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>{t('reminderSettings')}</Text>
-              <TouchableOpacity onPress={() => setShowNotificationModal(false)}>
+              <TouchableOpacity 
+                onPress={() => setShowNotificationModal(false)}
+                style={styles.modalCloseButton}
+                hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+                activeOpacity={0.7}
+              >
                 <Ionicons name="close" size={28} color={Colors.darkText} />
               </TouchableOpacity>
             </View>
