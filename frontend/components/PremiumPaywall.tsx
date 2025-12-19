@@ -103,8 +103,9 @@ export default function PremiumPaywall({ visible, onClose, onSubscribe }: Premiu
               {t('premiumTerms')}
             </Text>
           </View>
+          </TouchableOpacity>
         </ScrollView>
-      </View>
+      </TouchableOpacity>
     </Modal>
   );
 }
