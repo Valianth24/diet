@@ -391,6 +391,147 @@ async def logout(request: Request, current_user: Optional[User] = Depends(get_cu
     response.delete_cookie("session_token")
     return response
 
+@api_router.post("/auth/register", response_model=SessionDataResponse)
+async def register(data: RegisterRequest):
+    """Register new user with email/password"""
+    # Check if email exists
+    existing = await db.users.find_one({"email": data.email}, {"_id": 0})
+    if existing:
+        raise HTTPException(status_code=400, detail="Bu email zaten kayıtlı")
+    
+    # Create user
+    user_id = f"user_{uuid.uuid4().hex[:12]}"
+    session_token = f"sess_{uuid.uuid4().hex}"
+    
+    await db.users.insert_one({
+        "user_id": user_id,
+        "email": data.email,
+        "name": data.name,
+        "password_hash": hash_password(data.password),
+        "auth_type": "email",
+        "picture": None,
+        "created_at": datetime.now(timezone.utc),
+        "water_goal": 2500,
+        "step_goal": 10000
+    })
+    
+    # Create session
+    await db.user_sessions.insert_one({
+        "user_id": user_id,
+        "session_token": session_token,
+        "expires_at": datetime.now(timezone.utc) + timedelta(days=30),
+        "created_at": datetime.now(timezone.utc)
+    })
+    
+    response = JSONResponse(content={
+        "user_id": user_id,
+        "email": data.email,
+        "name": data.name,
+        "picture": None,
+        "session_token": session_token
+    })
+    
+    response.set_cookie(
+        key="session_token",
+        value=session_token,
+        httponly=True,
+        secure=True,
+        samesite="none",
+        max_age=30 * 24 * 60 * 60,
+        path="/"
+    )
+    
+    return response
+
+@api_router.post("/auth/login", response_model=SessionDataResponse)
+async def login(data: LoginRequest):
+    """Login with email/password"""
+    user = await db.users.find_one({"email": data.email}, {"_id": 0})
+    
+    if not user:
+        raise HTTPException(status_code=401, detail="Email veya şifre hatalı")
+    
+    # Check password
+    if user.get("auth_type") == "email":
+        if not verify_password(data.password, user.get("password_hash", "")):
+            raise HTTPException(status_code=401, detail="Email veya şifre hatalı")
+    else:
+        raise HTTPException(status_code=400, detail="Bu hesap Google ile oluşturuldu. Google ile giriş yapın.")
+    
+    # Create session
+    session_token = f"sess_{uuid.uuid4().hex}"
+    await db.user_sessions.insert_one({
+        "user_id": user["user_id"],
+        "session_token": session_token,
+        "expires_at": datetime.now(timezone.utc) + timedelta(days=30),
+        "created_at": datetime.now(timezone.utc)
+    })
+    
+    response = JSONResponse(content={
+        "user_id": user["user_id"],
+        "email": user["email"],
+        "name": user["name"],
+        "picture": user.get("picture"),
+        "session_token": session_token
+    })
+    
+    response.set_cookie(
+        key="session_token",
+        value=session_token,
+        httponly=True,
+        secure=True,
+        samesite="none",
+        max_age=30 * 24 * 60 * 60,
+        path="/"
+    )
+    
+    return response
+
+@api_router.post("/auth/guest", response_model=SessionDataResponse)
+async def guest_login():
+    """Login as guest user"""
+    user_id = f"guest_{uuid.uuid4().hex[:12]}"
+    session_token = f"sess_{uuid.uuid4().hex}"
+    guest_name = f"Misafir_{uuid.uuid4().hex[:6]}"
+    
+    await db.users.insert_one({
+        "user_id": user_id,
+        "email": f"{user_id}@guest.local",
+        "name": guest_name,
+        "auth_type": "guest",
+        "picture": None,
+        "created_at": datetime.now(timezone.utc),
+        "water_goal": 2500,
+        "step_goal": 10000
+    })
+    
+    await db.user_sessions.insert_one({
+        "user_id": user_id,
+        "session_token": session_token,
+        "expires_at": datetime.now(timezone.utc) + timedelta(days=7),
+        "created_at": datetime.now(timezone.utc)
+    })
+    
+    response = JSONResponse(content={
+        "user_id": user_id,
+        "email": f"{user_id}@guest.local",
+        "name": guest_name,
+        "picture": None,
+        "session_token": session_token
+    })
+    
+    response.set_cookie(
+        key="session_token",
+        value=session_token,
+        httponly=True,
+        secure=True,
+        samesite="none",
+        max_age=7 * 24 * 60 * 60,
+        path="/"
+    )
+    
+    return response
+
 @api_router.put("/auth/profile", response_model=User)
 async def update_profile(
     profile_data: ProfileData,
