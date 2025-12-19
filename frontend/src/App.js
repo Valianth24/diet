@@ -1133,6 +1133,22 @@ const ProfilePage = () => {
       </div>
 
       <div className="px-4 -mt-12">
+        {/* Language Selector */}
+        <div className="rounded-2xl p-4 shadow-sm mb-4" style={{ backgroundColor: colors.cardBg }}>
+          <button onClick={() => setShowLanguageModal(true)} className="w-full flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: colors.primary }}>
+                <span className="text-white text-lg">🌐</span>
+              </div>
+              <div className="text-left">
+                <p className="font-medium" style={{ color: colors.text }}>Dil Ayarları</p>
+                <p className="text-sm" style={{ color: colors.textLight }}>{getLangInfo().flag} {getLangInfo().name}</p>
+              </div>
+            </div>
+            <span style={{ color: colors.textLight }}>→</span>
+          </button>
+        </div>
+
         <div className="rounded-2xl p-4 shadow-sm mb-4" style={{ backgroundColor: colors.cardBg }}>
           <ThemeSelector />
         </div>
