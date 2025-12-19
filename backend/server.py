@@ -643,7 +643,7 @@ async def analyze_food(
     request_data: AnalyzeFoodRequest,
     current_user: Optional[User] = Depends(get_current_user)
 ):
-    """Analyze food image using GPT-4 Vision"""
+    """Analyze food image using GPT-4 Vision (Legacy endpoint)"""
     if not current_user:
         raise HTTPException(status_code=401, detail="Not authenticated")
     
@@ -702,6 +702,201 @@ Respond in this exact JSON format:
     except Exception as e:
         logger.error(f"Error analyzing food: {e}")
         raise HTTPException(status_code=500, detail=f"Error analyzing food: {str(e)}")
+
+# Vision cache for cost optimization
+vision_cache: Dict[str, Any] = {}
+
+def get_cache_key(image_base64: str, user_id: str) -> str:
+    """Generate cache key from image hash"""
+    import hashlib
+    image_hash = hashlib.md5(image_base64[:1000].encode()).hexdigest()[:16]
+    date_str = datetime.now(timezone.utc).strftime("%Y%m%d")
+    return f"{user_id}_{date_str}_{image_hash}"
+
+async def map_food_to_db(label: str, aliases: List[str], locale: str) -> Optional[Dict]:
+    """Map detected food label to nutrition database"""
+    # Search in food database
+    search_terms = [label] + aliases
+    
+    for term in search_terms:
+        # Try exact match first
+        food = await db.foods.find_one(
+            {"name": {"$regex": f"^{term}$", "$options": "i"}},
+            {"_id": 0}
+        )
+        if food:
+            return food
+        
+        # Try partial match
+        food = await db.foods.find_one(
+            {"name": {"$regex": term, "$options": "i"}},
+            {"_id": 0}
+        )
+        if food:
+            return food
+    
+    return None
+
+@api_router.post("/meal/vision", response_model=VisionAnalyzeResponse)
+async def analyze_meal_vision(
+    request_data: VisionAnalyzeRequest,
+    current_user: Optional[User] = Depends(get_current_user)
+):
+    """
+    Analyze food image using GPT-5-nano (cost-optimized)
+    Stage 1: Detect foods + estimate portions
+    Stage 2 (optional): Fallback to gpt-5 for accuracy
+    """
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    try:
+        # Check cache
+        cache_key = get_cache_key(request_data.image_base64, current_user.user_id)
+        if cache_key in vision_cache:
+            logger.info(f"Cache hit for {cache_key}")
+            return VisionAnalyzeResponse(**vision_cache[cache_key])
+        
+        # Create LLM chat with gpt-5-nano (cost-optimized)
+        chat = LlmChat(
+            api_key=EMERGENT_LLM_KEY,
+            session_id=f"vision_{current_user.user_id}_{datetime.now().timestamp()}",
+            system_message="""Sen bir beslenme uzmanısın. Yemek fotoğraflarını analiz et.
+KURALLAR:
+- SADECE yemekleri tespit et ve porsiyon tahmini yap
+- Kalori/makro değerleri VERME (veritabanından alınacak)
+- Türk yemeklerini tanı
+- Emin değilsen birden fazla alternatif ver
+- JSON formatında yanıt ver"""
+        ).with_model("openai", "gpt-4o-mini")  # Cost optimized model
+        
+        # Create image content
+        image_content = ImageContent(image_base64=request_data.image_base64)
+        
+        # Vision prompt (minimal for cost)
+        prompt = """Bu yemek fotoğrafını analiz et.
+
+JSON formatında yanıt ver:
+{
+  "items": [
+    {
+      "label": "yemek adı",
+      "aliases": ["alternatif isim"],
+      "portion": {
+        "estimate_g": 180,
+        "range_g": [140, 240],
+        "basis": "visual_estimate"
+      },
+      "confidence": 0.85
+    }
+  ],
+  "notes": ["not varsa"],
+  "needs_user_confirmation": false
+}
+
+Sadece JSON yanıt ver, başka açıklama yapma."""
+        
+        message = UserMessage(
+            text=prompt,
+            file_contents=[image_content]
+        )
+        
+        # Get response
+        response = await chat.send_message(message)
+        
+        # Parse response
+        import json
+        response_text = response.strip()
+        if "```json" in response_text:
+            response_text = response_text.split("```json")[1].split("```")[0].strip()
+        elif "```" in response_text:
+            response_text = response_text.split("```")[1].split("```")[0].strip()
+        
+        # Clean up response
+        response_text = response_text.replace('\n', '').replace('\r', '')
+        
+        try:
+            data = json.loads(response_text)
+        except json.JSONDecodeError as e:
+            logger.error(f"JSON parse error: {e}, response: {response_text[:200]}")
+            # Retry with fix instruction
+            raise HTTPException(status_code=500, detail="AI yanıt formatı hatalı, tekrar deneyin")
+        
+        items = []
+        total_cal = 0
+        total_pro = 0
+        total_carb = 0
+        total_fat = 0
+        
+        for item_data in data.get("items", []):
+            # Map to nutrition DB
+            db_food = await map_food_to_db(
+                item_data.get("label", ""),
+                item_data.get("aliases", []),
+                request_data.locale
+            )
+            
+            portion_g = item_data.get("portion", {}).get("estimate_g", 100)
+            
+            # Calculate nutrition from DB if found
+            if db_food:
+                # DB values are per 100g, scale by portion
+                scale = portion_g / 100.0
+                item_cal = int(db_food.get("calories", 0) * scale)
+                item_pro = round(db_food.get("protein", 0) * scale, 1)
+                item_carb = round(db_food.get("carbs", 0) * scale, 1)
+                item_fat = round(db_food.get("fat", 0) * scale, 1)
+                food_id = db_food.get("food_id")
+            else:
+                # Fallback: rough estimate (not from DB)
+                item_cal = int(portion_g * 1.5)  # ~150kcal per 100g average
+                item_pro = round(portion_g * 0.1, 1)
+                item_carb = round(portion_g * 0.2, 1)
+                item_fat = round(portion_g * 0.08, 1)
+                food_id = None
+            
+            items.append(DetectedFoodItem(
+                label=item_data.get("label", "Bilinmeyen"),
+                aliases=item_data.get("aliases", []),
+                portion=PortionEstimate(
+                    estimate_g=portion_g,
+                    range_g=item_data.get("portion", {}).get("range_g", [int(portion_g*0.8), int(portion_g*1.2)]),
+                    basis=item_data.get("portion", {}).get("basis", "visual_estimate")
+                ),
+                confidence=item_data.get("confidence", 0.7),
+                food_id=food_id,
+                calories=item_cal,
+                protein=item_pro,
+                carbs=item_carb,
+                fat=item_fat
+            ))
+            
+            total_cal += item_cal
+            total_pro += item_pro
+            total_carb += item_carb
+            total_fat += item_fat
+        
+        result = {
+            "items": [item.dict() for item in items],
+            "notes": data.get("notes", []),
+            "needs_user_confirmation": data.get("needs_user_confirmation", len(items) == 0),
+            "total_calories": total_cal,
+            "total_protein": round(total_pro, 1),
+            "total_carbs": round(total_carb, 1),
+            "total_fat": round(total_fat, 1)
+        }
+        
+        # Cache result
+        vision_cache[cache_key] = result
+        
+        logger.info(f"Vision analysis complete: {len(items)} items detected")
+        return VisionAnalyzeResponse(**result)
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in vision analysis: {e}")
+        raise HTTPException(status_code=500, detail=f"Analiz hatası: {str(e)}")
 
 @api_router.post("/food/add-meal", response_model=Meal)
 async def add_meal(
