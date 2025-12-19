@@ -454,19 +454,17 @@ const styles = StyleSheet.create({
   },
   headerSection: {
     alignItems: 'center',
-    paddingVertical: 20,
-  },
-  headerIcon: {
-    marginBottom: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 8,
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: 'bold',
     color: Colors.darkText,
-    marginBottom: 8,
+    marginBottom: 4,
   },
   headerSubtitle: {
-    fontSize: 14,
+    fontSize: 13,
     color: Colors.lightText,
     textAlign: 'center',
   },
