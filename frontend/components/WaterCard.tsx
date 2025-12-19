@@ -56,8 +56,8 @@ export default function WaterCard({ current, goal }: WaterCardProps) {
         ))}
       </View>
 
-      <Text style={styles.amount}>
-        {glassCount} / {totalGlasses} Bardak
+      <Text style={styles.amount} numberOfLines={1}>
+        {glassCount} / {totalGlasses} {t('glass')}
       </Text>
       <Text style={styles.amountMl}>
         {(current / 1000).toFixed(1)} / {(goal / 1000).toFixed(1)} L
