@@ -234,6 +234,17 @@ const ThemeProvider = ({ children }) => {
   );
 };
 
+// ==================== LANGUAGE CONFIG ====================
+const languageList = [
+  { code: 'en', name: 'English', flag: '🇬🇧' },
+  { code: 'tr', name: 'Türkçe', flag: '🇹🇷' },
+  { code: 'es', name: 'Español', flag: '🇪🇸' },
+  { code: 'pt', name: 'Português', flag: '🇧🇷' },
+  { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
+  { code: 'fr', name: 'Français', flag: '🇫🇷' },
+  { code: 'ar', name: 'العربية', flag: '🇸🇦' },
+];
+
 // ==================== COMPONENTS ====================
 const ProgressRing = ({ progress, size = 80, strokeWidth = 8, color = '#4CAF50' }) => {
   const radius = (size - strokeWidth) / 2;
