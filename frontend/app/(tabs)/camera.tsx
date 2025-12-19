@@ -519,7 +519,11 @@ const styles = StyleSheet.create({
     borderBottomColor: '#F0F0F0',
   },
   headerButton: {
-    padding: 8,
+    padding: 12,
+    minWidth: 44,
+    minHeight: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   headerTitle: {
     fontSize: 18,
