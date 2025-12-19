@@ -83,8 +83,8 @@ export default function LoginScreen() {
 
             <View style={styles.formHeader}>
               <Ionicons name="log-in-outline" size={60} color={Colors.primary} />
-              <Text style={styles.formTitle}>Giriş Yap</Text>
-              <Text style={styles.formSubtitle}>Hesabınıza giriş yapın</Text>
+              <Text style={styles.formTitle}>{t('loginTitle')}</Text>
+              <Text style={styles.formSubtitle}>{t('loginSubtitle')}</Text>
             </View>
 
             <View style={styles.form}>
@@ -92,7 +92,7 @@ export default function LoginScreen() {
                 <Ionicons name="mail-outline" size={20} color={Colors.lightText} style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
-                  placeholder="Email"
+                  placeholder={t('email')}
                   placeholderTextColor={Colors.lightText}
                   value={email}
                   onChangeText={setEmail}
@@ -105,7 +105,7 @@ export default function LoginScreen() {
                 <Ionicons name="lock-closed-outline" size={20} color={Colors.lightText} style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
-                  placeholder="Şifre"
+                  placeholder={t('password')}
                   placeholderTextColor={Colors.lightText}
                   value={password}
                   onChangeText={setPassword}
@@ -117,11 +117,11 @@ export default function LoginScreen() {
               </View>
 
               <TouchableOpacity style={styles.primaryButton} onPress={handleEmailLogin} disabled={loading}>
-                <Text style={styles.primaryButtonText}>{loading ? 'Giriş yapılıyor...' : 'Giriş Yap'}</Text>
+                <Text style={styles.primaryButtonText}>{loading ? t('loggingIn') : t('login')}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity onPress={() => setMode('register')}>
-                <Text style={styles.switchText}>Hesabınız yok mu? <Text style={styles.switchLink}>Kayıt Ol</Text></Text>
+                <Text style={styles.switchText}>{t('dontHaveAccount')} <Text style={styles.switchLink}>{t('register')}</Text></Text>
               </TouchableOpacity>
             </View>
           </ScrollView>
