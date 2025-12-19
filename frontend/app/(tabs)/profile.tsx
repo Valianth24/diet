@@ -76,9 +76,30 @@ export default function ProfileScreen() {
     );
   };
 
-  const toggleLanguage = () => {
-    const newLang = i18n.language === 'tr' ? 'en' : 'tr';
-    i18n.changeLanguage(newLang);
+  const [showLanguageModal, setShowLanguageModal] = useState(false);
+  const [selectedLang, setSelectedLang] = useState(i18n.language);
+
+  const languageList = [
+    { code: 'en', name: 'English', flag: '🇬🇧' },
+    { code: 'tr', name: 'Türkçe', flag: '🇹🇷' },
+    { code: 'es', name: 'Español', flag: '🇪🇸' },
+    { code: 'pt', name: 'Português', flag: '🇧🇷' },
+    { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
+    { code: 'fr', name: 'Français', flag: '🇫🇷' },
+    { code: 'ar', name: 'العربية', flag: '🇸🇦' },
+  ];
+
+  const handleLanguageChange = async (langCode: string) => {
+    setSelectedLang(langCode);
+    await i18n.changeLanguage(langCode);
+    const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+    await AsyncStorage.setItem('app_language', langCode);
+    setShowLanguageModal(false);
+  };
+
+  const getCurrentLanguageName = () => {
+    const lang = languageList.find(l => l.code === i18n.language);
+    return lang ? `${lang.flag} ${lang.name}` : '🇬🇧 English';
   };
 
   return (
