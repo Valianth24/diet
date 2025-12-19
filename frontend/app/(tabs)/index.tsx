@@ -238,23 +238,8 @@ export default function DashboardScreen() {
   }, [showAddModal]);
 
   const checkAndShowPremiumModal = async () => {
-    // Don't show if user is already premium
-    if (user?.is_premium) return;
-    
-    try {
-      const lastShown = await AsyncStorage.getItem('premium_modal_last_shown');
-      const today = new Date().toDateString();
-      
-      // Show once per day
-      if (lastShown !== today) {
-        setTimeout(() => {
-          setShowPremiumModal(true);
-        }, 2000); // 2 seconds delay after dashboard loads
-        await AsyncStorage.setItem('premium_modal_last_shown', today);
-      }
-    } catch (error) {
-      console.error('Error checking premium modal:', error);
-    }
+    // Premium modal disabled - users can access from premium button
+    return;
   };
 
   const onRefresh = async () => {
