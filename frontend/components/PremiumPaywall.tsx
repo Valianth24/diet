@@ -1,8 +1,9 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Modal, ScrollView } from 'react-native';
 import { Colors } from '../constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useTranslation } from 'react-i18next';
 
 interface PremiumPaywallProps {
   visible: boolean;
@@ -11,82 +12,88 @@ interface PremiumPaywallProps {
 }
 
 export default function PremiumPaywall({ visible, onClose, onSubscribe }: PremiumPaywallProps) {
+  const { t } = useTranslation();
+  
   const features = [
-    { icon: 'restaurant', text: 'Tüm premium diyetlere erişim' },
-    { icon: 'create', text: 'Sınırsız kişisel diyet oluşturma' },
-    { icon: 'analytics', text: 'Detaylı beslenme analizi' },
-    { icon: 'fitness', text: 'Özel egzersiz planları' },
-    { icon: 'chatbubbles', text: 'Öncelikli destek' },
+    { icon: 'restaurant', textKey: 'premiumFeature1' },
+    { icon: 'create', textKey: 'premiumFeature2' },
+    { icon: 'analytics', textKey: 'premiumFeature3' },
+    { icon: 'fitness', textKey: 'premiumFeature4' },
+    { icon: 'chatbubbles', textKey: 'premiumFeature5' },
   ];
 
   return (
     <Modal visible={visible} transparent animationType="slide">
       <View style={styles.overlay}>
-        <View style={styles.container}>
-          {/* Close Button */}
-          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-            <Ionicons name="close" size={28} color={Colors.darkText} />
-          </TouchableOpacity>
+        <ScrollView 
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.container}>
+            {/* Close Button */}
+            <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+              <Ionicons name="close" size={28} color={Colors.darkText} />
+            </TouchableOpacity>
 
-          {/* Header */}
-          <View style={styles.header}>
-            <View style={styles.iconContainer}>
-              <Ionicons name="diamond" size={48} color={Colors.warning} />
+            {/* Header */}
+            <View style={styles.header}>
+              <View style={styles.iconContainer}>
+                <Ionicons name="diamond" size={48} color={Colors.warning} />
+              </View>
+              <Text style={styles.title}>{t('goPremium')}</Text>
+              <Text style={styles.subtitle}>{t('unlockAllFeatures')}</Text>
             </View>
-            <Text style={styles.title}>Premium'
-a Geç</Text>
-            <Text style={styles.subtitle}>Tüm özelliklerin kilidini aç</Text>
-          </View>
 
-          {/* Features */}
-          <View style={styles.features}>
-            {features.map((feature, index) => (
-              <View key={index} style={styles.featureRow}>
-                <View style={styles.featureIcon}>
-                  <Ionicons name={feature.icon as any} size={20} color={Colors.primary} />
+            {/* Features */}
+            <View style={styles.features}>
+              {features.map((feature, index) => (
+                <View key={index} style={styles.featureRow}>
+                  <View style={styles.featureIcon}>
+                    <Ionicons name={feature.icon as any} size={20} color={Colors.primary} />
+                  </View>
+                  <Text style={styles.featureText} numberOfLines={2}>{t(feature.textKey)}</Text>
                 </View>
-                <Text style={styles.featureText}>{feature.text}</Text>
-              </View>
-            ))}
-          </View>
-
-          {/* Pricing */}
-          <View style={styles.pricing}>
-            <View style={styles.priceCard}>
-              <View style={styles.discountBadge}>
-                <Text style={styles.discountText}>%37 İNDİRİM</Text>
-              </View>
-              <Text style={styles.oldPrice}>$7.99</Text>
-              <View style={styles.priceRow}>
-                <Text style={styles.price}>$4.99</Text>
-                <Text style={styles.period}>/ay</Text>
-              </View>
-              <Text style={styles.priceSubtext}>Ayda sadece $4.99</Text>
+              ))}
             </View>
-          </View>
 
-          {/* Subscribe Button */}
-          <TouchableOpacity 
-            style={styles.subscribeButton} 
-            onPress={onSubscribe}
-            data-testid="premium-subscribe-button"
-          >
-            <LinearGradient
-              colors={['#7C3AED', '#EC4899']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.gradient}
+            {/* Pricing */}
+            <View style={styles.pricing}>
+              <View style={styles.priceCard}>
+                <View style={styles.discountBadge}>
+                  <Text style={styles.discountText}>%37 {t('discount')}</Text>
+                </View>
+                <Text style={styles.oldPrice}>$7.99</Text>
+                <View style={styles.priceRow}>
+                  <Text style={styles.price}>$4.99</Text>
+                  <Text style={styles.period}>{t('perMonth')}</Text>
+                </View>
+                <Text style={styles.priceSubtext}>{t('onlyPerMonth')} $4.99</Text>
+              </View>
+            </View>
+
+            {/* Subscribe Button */}
+            <TouchableOpacity 
+              style={styles.subscribeButton} 
+              onPress={onSubscribe}
+              data-testid="premium-subscribe-button"
             >
-              <Ionicons name="rocket" size={24} color="#FFFFFF" />
-              <Text style={styles.subscribeText}>🎉 ÜCRETSİZ ABONE OL</Text>
-            </LinearGradient>
-          </TouchableOpacity>
+              <LinearGradient
+                colors={['#7C3AED', '#EC4899']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.gradient}
+              >
+                <Ionicons name="rocket" size={24} color="#FFFFFF" />
+                <Text style={styles.subscribeText}>{t('freeSubscribe')}</Text>
+              </LinearGradient>
+            </TouchableOpacity>
 
-          {/* Terms */}
-          <Text style={styles.terms}>
-            Şu an için tamamen ücretsiz! Ödeme alınmadan premium özelliklerini kullanabilirsiniz.
-          </Text>
-        </View>
+            {/* Terms */}
+            <Text style={styles.terms}>
+              {t('premiumTerms')}
+            </Text>
+          </View>
+        </ScrollView>
       </View>
     </Modal>
   );
