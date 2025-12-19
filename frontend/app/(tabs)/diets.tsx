@@ -206,14 +206,14 @@ export default function DietsScreen() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Ionicons name="create" size={24} color={Colors.primary} />
-            <Text style={styles.sectionTitle}>Kişisel Diyet Oluştur</Text>
+            <Text style={styles.sectionTitle}>{t('createCustomDiet')}</Text>
             {!isPremium && (
               <View style={styles.lockBadge}>
                 <Ionicons name="lock-closed" size={14} color={Colors.white} />
               </View>
             )}
           </View>
-          <Text style={styles.sectionSubtitle}>Kendi beslenme planınızı oluşturun</Text>
+          <Text style={styles.sectionSubtitle}>{t('createCustomDietSubtitle')}</Text>
           
           <TouchableOpacity
             style={[styles.customDietCard, !isPremium && styles.customDietCardLocked]}
@@ -223,9 +223,9 @@ export default function DietsScreen() {
               <View style={styles.iconCircle}>
                 <Ionicons name={isPremium ? 'add' : 'lock-closed'} size={32} color={isPremium ? Colors.primary : Colors.lightText} />
               </View>
-              <Text style={styles.customDietTitle}>Yeni Diyet Planı</Text>
+              <Text style={styles.customDietTitle}>{t('newDietPlan')}</Text>
               <Text style={styles.customDietSubtitle}>
-                {isPremium ? 'Kendi öğünlerinizi ve hedeflerinizi belirleyin' : 'Premium ile kilidi açın'}
+                {isPremium ? t('setYourOwnMeals') : t('unlockWithPremium')}
               </Text>
             </View>
           </TouchableOpacity>
