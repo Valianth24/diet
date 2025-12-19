@@ -47,20 +47,20 @@ export default function TabLayout() {
           title: '',
           tabBarIcon: ({ focused }) => (
             <View style={{
-              width: 60,
-              height: 60,
-              borderRadius: 30,
+              width: 52,
+              height: 52,
+              borderRadius: 26,
               backgroundColor: Colors.primary,
               justifyContent: 'center',
               alignItems: 'center',
-              marginBottom: 30,
+              marginBottom: 24,
               shadowColor: '#000',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.3,
-              shadowRadius: 8,
-              elevation: 8,
+              shadowOffset: { width: 0, height: 3 },
+              shadowOpacity: 0.25,
+              shadowRadius: 6,
+              elevation: 6,
             }}>
-              <Ionicons name="add" size={32} color={Colors.white} />
+              <Ionicons name="add" size={28} color={Colors.white} />
             </View>
           ),
         }}
