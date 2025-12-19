@@ -1,10 +1,18 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import * as Localization from 'expo-localization';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
+// 7 Dil - Play Store için en popüler diller
 const resources = {
+  // İngilizce
   en: {
     translation: {
+      // Language
+      selectLanguage: 'Select Language',
+      languageName: 'English',
+      continue: 'Continue',
+      
       // Navigation
       home: 'Home',
       camera: 'Camera',
@@ -31,6 +39,10 @@ const resources = {
       taken: 'Taken',
       notTaken: 'Not Taken',
       reminders: 'Reminders',
+      todaysMeals: "Today's Meals",
+      noMealsYet: 'No meals added yet',
+      totalCalories: 'Total Calories',
+      details: 'Details',
       
       // Food Analysis
       foodAnalysis: 'Food Analysis',
@@ -68,18 +80,30 @@ const resources = {
       welcome: 'Welcome to CalorieDiet',
       loginWithGoogle: 'Login with Google',
       setupProfile: 'Setup Your Profile',
+      
+      // Vitamins
+      vitamins: 'Vitamins',
+      addVitamin: 'Add Vitamin',
+      vitaminName: 'Vitamin Name',
+      vitaminTime: 'Time',
+      reminderSettings: 'Reminder Settings',
+      enableReminder: 'Enable Reminder',
+      alarmStyle: 'Alarm Style',
+      reminderTimes: 'Reminder Times',
     }
   },
+  
+  // Türkçe
   tr: {
     translation: {
-      // Navigation
+      selectLanguage: 'Dil Seçin',
+      languageName: 'Türkçe',
+      continue: 'Devam Et',
       home: 'Ana Sayfa',
       camera: 'Kamera',
       nutrition: 'Beslenme',
       tracking: 'Takip',
       profile: 'Profil',
-      
-      // Dashboard
       hello: 'Merhaba',
       howAreYouToday: 'Bugün nasılsın?',
       dailyCalories: 'Günlük Kalori',
@@ -98,8 +122,10 @@ const resources = {
       taken: 'Alındı',
       notTaken: 'Alınmadı',
       reminders: 'Hatırlatıcılar',
-      
-      // Food Analysis
+      todaysMeals: 'Bugünkü Yemekler',
+      noMealsYet: 'Henüz yemek eklenmedi',
+      totalCalories: 'Toplam Kalori',
+      details: 'Detaylar',
       foodAnalysis: 'AI Yemek Analizi',
       analyzing: 'Analiz ediliyor...',
       addToMeal: 'Öğüne Ekle',
@@ -108,8 +134,6 @@ const resources = {
       lunch: 'Öğle Yemeği',
       dinner: 'Akşam Yemeği',
       snack: 'Ara Öğün',
-      
-      // Profile
       updateProfile: 'Profili Güncelle',
       height: 'Boy (cm)',
       weight: 'Kilo (kg)',
@@ -125,26 +149,444 @@ const resources = {
       veryActive: 'Çok Aktif',
       save: 'Kaydet',
       logout: 'Çıkış Yap',
-      
-      // Water
       addWater: '+250 ml',
       dailyGoal: 'Günlük Hedef',
       weeklyAverage: 'Haftalık Ortalama',
-      
-      // Auth
-      welcome: 'CalorieDiet Uygulamasına Hoş Geldiniz',
+      welcome: 'CalorieDiet\'e Hoş Geldiniz',
       loginWithGoogle: 'Google ile Giriş Yap',
       setupProfile: 'Profilini Oluştur',
+      vitamins: 'Vitaminler',
+      addVitamin: 'Vitamin Ekle',
+      vitaminName: 'Vitamin Adı',
+      vitaminTime: 'Zaman',
+      reminderSettings: 'Hatırlatıcı Ayarları',
+      enableReminder: 'Hatırlatıcıyı Aç',
+      alarmStyle: 'Alarm Tarzı',
+      reminderTimes: 'Hatırlatma Saatleri',
     }
+  },
+  
+  // İspanyolca
+  es: {
+    translation: {
+      selectLanguage: 'Seleccionar Idioma',
+      languageName: 'Español',
+      continue: 'Continuar',
+      home: 'Inicio',
+      camera: 'Cámara',
+      nutrition: 'Nutrición',
+      tracking: 'Seguimiento',
+      profile: 'Perfil',
+      hello: 'Hola',
+      howAreYouToday: '¿Cómo estás hoy?',
+      dailyCalories: 'Calorías Diarias',
+      waterTracking: 'Seguimiento de Agua',
+      stepCounter: 'Contador de Pasos',
+      vitaminTracking: 'Seguimiento de Vitaminas',
+      takePhotoOfYourMeal: 'Toma una Foto de tu Comida',
+      toCalculateCalories: 'Para calcular calorías, toma una foto.',
+      takePhoto: 'Tomar Foto',
+      kcal: 'kcal',
+      protein: 'Proteína',
+      carbs: 'Carbohidratos',
+      fat: 'Grasa',
+      remaining: 'restante',
+      steps: 'pasos',
+      taken: 'Tomado',
+      notTaken: 'No Tomado',
+      reminders: 'Recordatorios',
+      todaysMeals: 'Comidas de Hoy',
+      noMealsYet: 'No hay comidas añadidas',
+      totalCalories: 'Calorías Totales',
+      details: 'Detalles',
+      foodAnalysis: 'Análisis de Alimentos',
+      analyzing: 'Analizando...',
+      addToMeal: 'Añadir a Comida',
+      retake: 'Repetir',
+      breakfast: 'Desayuno',
+      lunch: 'Almuerzo',
+      dinner: 'Cena',
+      snack: 'Merienda',
+      updateProfile: 'Actualizar Perfil',
+      height: 'Altura (cm)',
+      weight: 'Peso (kg)',
+      age: 'Edad',
+      gender: 'Género',
+      male: 'Masculino',
+      female: 'Femenino',
+      activityLevel: 'Nivel de Actividad',
+      sedentary: 'Sedentario',
+      light: 'Ligero',
+      moderate: 'Moderado',
+      active: 'Activo',
+      veryActive: 'Muy Activo',
+      save: 'Guardar',
+      logout: 'Cerrar Sesión',
+      addWater: '+250 ml',
+      dailyGoal: 'Meta Diaria',
+      weeklyAverage: 'Promedio Semanal',
+      welcome: 'Bienvenido a CalorieDiet',
+      loginWithGoogle: 'Iniciar con Google',
+      setupProfile: 'Configurar Perfil',
+      vitamins: 'Vitaminas',
+      addVitamin: 'Añadir Vitamina',
+      vitaminName: 'Nombre de Vitamina',
+      vitaminTime: 'Hora',
+      reminderSettings: 'Ajustes de Recordatorio',
+      enableReminder: 'Activar Recordatorio',
+      alarmStyle: 'Estilo de Alarma',
+      reminderTimes: 'Horarios de Recordatorio',
+    }
+  },
+  
+  // Portekizce
+  pt: {
+    translation: {
+      selectLanguage: 'Selecionar Idioma',
+      languageName: 'Português',
+      continue: 'Continuar',
+      home: 'Início',
+      camera: 'Câmera',
+      nutrition: 'Nutrição',
+      tracking: 'Rastreamento',
+      profile: 'Perfil',
+      hello: 'Olá',
+      howAreYouToday: 'Como você está hoje?',
+      dailyCalories: 'Calorias Diárias',
+      waterTracking: 'Rastreamento de Água',
+      stepCounter: 'Contador de Passos',
+      vitaminTracking: 'Rastreamento de Vitaminas',
+      takePhotoOfYourMeal: 'Tire uma Foto da sua Refeição',
+      toCalculateCalories: 'Para calcular calorias, tire uma foto.',
+      takePhoto: 'Tirar Foto',
+      kcal: 'kcal',
+      protein: 'Proteína',
+      carbs: 'Carboidratos',
+      fat: 'Gordura',
+      remaining: 'restante',
+      steps: 'passos',
+      taken: 'Tomado',
+      notTaken: 'Não Tomado',
+      reminders: 'Lembretes',
+      todaysMeals: 'Refeições de Hoje',
+      noMealsYet: 'Nenhuma refeição adicionada',
+      totalCalories: 'Calorias Totais',
+      details: 'Detalhes',
+      foodAnalysis: 'Análise de Alimentos',
+      analyzing: 'Analisando...',
+      addToMeal: 'Adicionar à Refeição',
+      retake: 'Refazer',
+      breakfast: 'Café da Manhã',
+      lunch: 'Almoço',
+      dinner: 'Jantar',
+      snack: 'Lanche',
+      updateProfile: 'Atualizar Perfil',
+      height: 'Altura (cm)',
+      weight: 'Peso (kg)',
+      age: 'Idade',
+      gender: 'Gênero',
+      male: 'Masculino',
+      female: 'Feminino',
+      activityLevel: 'Nível de Atividade',
+      sedentary: 'Sedentário',
+      light: 'Leve',
+      moderate: 'Moderado',
+      active: 'Ativo',
+      veryActive: 'Muito Ativo',
+      save: 'Salvar',
+      logout: 'Sair',
+      addWater: '+250 ml',
+      dailyGoal: 'Meta Diária',
+      weeklyAverage: 'Média Semanal',
+      welcome: 'Bem-vindo ao CalorieDiet',
+      loginWithGoogle: 'Entrar com Google',
+      setupProfile: 'Configurar Perfil',
+      vitamins: 'Vitaminas',
+      addVitamin: 'Adicionar Vitamina',
+      vitaminName: 'Nome da Vitamina',
+      vitaminTime: 'Horário',
+      reminderSettings: 'Configurações de Lembrete',
+      enableReminder: 'Ativar Lembrete',
+      alarmStyle: 'Estilo de Alarme',
+      reminderTimes: 'Horários de Lembrete',
+    }
+  },
+  
+  // Almanca
+  de: {
+    translation: {
+      selectLanguage: 'Sprache Auswählen',
+      languageName: 'Deutsch',
+      continue: 'Weiter',
+      home: 'Startseite',
+      camera: 'Kamera',
+      nutrition: 'Ernährung',
+      tracking: 'Tracking',
+      profile: 'Profil',
+      hello: 'Hallo',
+      howAreYouToday: 'Wie geht es dir heute?',
+      dailyCalories: 'Tägliche Kalorien',
+      waterTracking: 'Wasser-Tracking',
+      stepCounter: 'Schrittzähler',
+      vitaminTracking: 'Vitamin-Tracking',
+      takePhotoOfYourMeal: 'Mach ein Foto von deiner Mahlzeit',
+      toCalculateCalories: 'Um Kalorien zu berechnen, mach ein Foto.',
+      takePhoto: 'Foto Machen',
+      kcal: 'kcal',
+      protein: 'Protein',
+      carbs: 'Kohlenhydrate',
+      fat: 'Fett',
+      remaining: 'übrig',
+      steps: 'Schritte',
+      taken: 'Genommen',
+      notTaken: 'Nicht Genommen',
+      reminders: 'Erinnerungen',
+      todaysMeals: 'Heutige Mahlzeiten',
+      noMealsYet: 'Noch keine Mahlzeiten hinzugefügt',
+      totalCalories: 'Gesamtkalorien',
+      details: 'Details',
+      foodAnalysis: 'Lebensmittelanalyse',
+      analyzing: 'Analysiere...',
+      addToMeal: 'Zur Mahlzeit Hinzufügen',
+      retake: 'Wiederholen',
+      breakfast: 'Frühstück',
+      lunch: 'Mittagessen',
+      dinner: 'Abendessen',
+      snack: 'Snack',
+      updateProfile: 'Profil Aktualisieren',
+      height: 'Größe (cm)',
+      weight: 'Gewicht (kg)',
+      age: 'Alter',
+      gender: 'Geschlecht',
+      male: 'Männlich',
+      female: 'Weiblich',
+      activityLevel: 'Aktivitätslevel',
+      sedentary: 'Sitzend',
+      light: 'Leicht',
+      moderate: 'Mäßig',
+      active: 'Aktiv',
+      veryActive: 'Sehr Aktiv',
+      save: 'Speichern',
+      logout: 'Abmelden',
+      addWater: '+250 ml',
+      dailyGoal: 'Tagesziel',
+      weeklyAverage: 'Wochendurchschnitt',
+      welcome: 'Willkommen bei CalorieDiet',
+      loginWithGoogle: 'Mit Google Anmelden',
+      setupProfile: 'Profil Einrichten',
+      vitamins: 'Vitamine',
+      addVitamin: 'Vitamin Hinzufügen',
+      vitaminName: 'Vitaminname',
+      vitaminTime: 'Zeit',
+      reminderSettings: 'Erinnerungseinstellungen',
+      enableReminder: 'Erinnerung Aktivieren',
+      alarmStyle: 'Alarmstil',
+      reminderTimes: 'Erinnerungszeiten',
+    }
+  },
+  
+  // Fransızca
+  fr: {
+    translation: {
+      selectLanguage: 'Choisir la Langue',
+      languageName: 'Français',
+      continue: 'Continuer',
+      home: 'Accueil',
+      camera: 'Caméra',
+      nutrition: 'Nutrition',
+      tracking: 'Suivi',
+      profile: 'Profil',
+      hello: 'Bonjour',
+      howAreYouToday: 'Comment vas-tu aujourd\'hui?',
+      dailyCalories: 'Calories Quotidiennes',
+      waterTracking: 'Suivi de l\'Eau',
+      stepCounter: 'Compteur de Pas',
+      vitaminTracking: 'Suivi des Vitamines',
+      takePhotoOfYourMeal: 'Prends une Photo de ton Repas',
+      toCalculateCalories: 'Pour calculer les calories, prends une photo.',
+      takePhoto: 'Prendre Photo',
+      kcal: 'kcal',
+      protein: 'Protéine',
+      carbs: 'Glucides',
+      fat: 'Lipides',
+      remaining: 'restant',
+      steps: 'pas',
+      taken: 'Pris',
+      notTaken: 'Non Pris',
+      reminders: 'Rappels',
+      todaysMeals: 'Repas d\'Aujourd\'hui',
+      noMealsYet: 'Aucun repas ajouté',
+      totalCalories: 'Calories Totales',
+      details: 'Détails',
+      foodAnalysis: 'Analyse Alimentaire',
+      analyzing: 'Analyse en cours...',
+      addToMeal: 'Ajouter au Repas',
+      retake: 'Reprendre',
+      breakfast: 'Petit-déjeuner',
+      lunch: 'Déjeuner',
+      dinner: 'Dîner',
+      snack: 'Collation',
+      updateProfile: 'Mettre à Jour le Profil',
+      height: 'Taille (cm)',
+      weight: 'Poids (kg)',
+      age: 'Âge',
+      gender: 'Genre',
+      male: 'Homme',
+      female: 'Femme',
+      activityLevel: 'Niveau d\'Activité',
+      sedentary: 'Sédentaire',
+      light: 'Léger',
+      moderate: 'Modéré',
+      active: 'Actif',
+      veryActive: 'Très Actif',
+      save: 'Sauvegarder',
+      logout: 'Déconnexion',
+      addWater: '+250 ml',
+      dailyGoal: 'Objectif Quotidien',
+      weeklyAverage: 'Moyenne Hebdomadaire',
+      welcome: 'Bienvenue sur CalorieDiet',
+      loginWithGoogle: 'Se Connecter avec Google',
+      setupProfile: 'Configurer le Profil',
+      vitamins: 'Vitamines',
+      addVitamin: 'Ajouter Vitamine',
+      vitaminName: 'Nom de la Vitamine',
+      vitaminTime: 'Heure',
+      reminderSettings: 'Paramètres de Rappel',
+      enableReminder: 'Activer le Rappel',
+      alarmStyle: 'Style d\'Alarme',
+      reminderTimes: 'Heures de Rappel',
+    }
+  },
+  
+  // Arapça
+  ar: {
+    translation: {
+      selectLanguage: 'اختر اللغة',
+      languageName: 'العربية',
+      continue: 'متابعة',
+      home: 'الرئيسية',
+      camera: 'الكاميرا',
+      nutrition: 'التغذية',
+      tracking: 'التتبع',
+      profile: 'الملف الشخصي',
+      hello: 'مرحباً',
+      howAreYouToday: 'كيف حالك اليوم؟',
+      dailyCalories: 'السعرات اليومية',
+      waterTracking: 'تتبع الماء',
+      stepCounter: 'عداد الخطوات',
+      vitaminTracking: 'تتبع الفيتامينات',
+      takePhotoOfYourMeal: 'التقط صورة لوجبتك',
+      toCalculateCalories: 'لحساب السعرات، التقط صورة.',
+      takePhoto: 'التقاط صورة',
+      kcal: 'سعرة',
+      protein: 'بروتين',
+      carbs: 'كربوهيدرات',
+      fat: 'دهون',
+      remaining: 'متبقي',
+      steps: 'خطوة',
+      taken: 'تم التناول',
+      notTaken: 'لم يتم التناول',
+      reminders: 'التذكيرات',
+      todaysMeals: 'وجبات اليوم',
+      noMealsYet: 'لم تتم إضافة وجبات بعد',
+      totalCalories: 'إجمالي السعرات',
+      details: 'التفاصيل',
+      foodAnalysis: 'تحليل الطعام',
+      analyzing: 'جاري التحليل...',
+      addToMeal: 'إضافة للوجبة',
+      retake: 'إعادة التصوير',
+      breakfast: 'الإفطار',
+      lunch: 'الغداء',
+      dinner: 'العشاء',
+      snack: 'وجبة خفيفة',
+      updateProfile: 'تحديث الملف',
+      height: 'الطول (سم)',
+      weight: 'الوزن (كغ)',
+      age: 'العمر',
+      gender: 'الجنس',
+      male: 'ذكر',
+      female: 'أنثى',
+      activityLevel: 'مستوى النشاط',
+      sedentary: 'خامل',
+      light: 'خفيف',
+      moderate: 'معتدل',
+      active: 'نشيط',
+      veryActive: 'نشيط جداً',
+      save: 'حفظ',
+      logout: 'تسجيل الخروج',
+      addWater: '+250 مل',
+      dailyGoal: 'الهدف اليومي',
+      weeklyAverage: 'المعدل الأسبوعي',
+      welcome: 'مرحباً بك في CalorieDiet',
+      loginWithGoogle: 'تسجيل الدخول بـ Google',
+      setupProfile: 'إعداد الملف الشخصي',
+      vitamins: 'الفيتامينات',
+      addVitamin: 'إضافة فيتامين',
+      vitaminName: 'اسم الفيتامين',
+      vitaminTime: 'الوقت',
+      reminderSettings: 'إعدادات التذكير',
+      enableReminder: 'تفعيل التذكير',
+      alarmStyle: 'نمط المنبه',
+      reminderTimes: 'أوقات التذكير',
+    }
+  },
+};
+
+// Dil listesi (UI için)
+export const languageList = [
+  { code: 'en', name: 'English', flag: '🇬🇧' },
+  { code: 'tr', name: 'Türkçe', flag: '🇹🇷' },
+  { code: 'es', name: 'Español', flag: '🇪🇸' },
+  { code: 'pt', name: 'Português', flag: '🇧🇷' },
+  { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
+  { code: 'fr', name: 'Français', flag: '🇫🇷' },
+  { code: 'ar', name: 'العربية', flag: '🇸🇦' },
+];
+
+// Dil değiştirme fonksiyonu
+export const changeLanguage = async (langCode: string) => {
+  await AsyncStorage.setItem('app_language', langCode);
+  await i18n.changeLanguage(langCode);
+};
+
+// Kayıtlı dili yükle
+export const loadSavedLanguage = async () => {
+  try {
+    const savedLang = await AsyncStorage.getItem('app_language');
+    if (savedLang) {
+      await i18n.changeLanguage(savedLang);
+      return savedLang;
+    }
+    return null;
+  } catch (error) {
+    console.error('Error loading saved language:', error);
+    return null;
   }
+};
+
+// İlk giriş kontrolü
+export const isFirstLaunch = async () => {
+  try {
+    const hasLaunched = await AsyncStorage.getItem('has_launched');
+    if (hasLaunched === null) {
+      return true;
+    }
+    return false;
+  } catch (error) {
+    return false;
+  }
+};
+
+export const setFirstLaunchDone = async () => {
+  await AsyncStorage.setItem('has_launched', 'true');
 };
 
 i18n
   .use(initReactI18next)
   .init({
     resources,
-    lng: Localization.getLocales()[0]?.languageCode || 'tr',
-    fallbackLng: 'tr',
+    lng: Localization.getLocales()[0]?.languageCode || 'en',
+    fallbackLng: 'en',
     interpolation: {
       escapeValue: false
     }
