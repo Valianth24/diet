@@ -11,16 +11,23 @@ export default function ThemeSelector() {
   const [showVideoModal, setShowVideoModal] = useState(false);
   const [selectedLockedTheme, setSelectedLockedTheme] = useState<ThemeName | null>(null);
 
-  const handleThemePress = (themeName: ThemeName) => {
+  const handleThemePress = async (themeName: ThemeName) => {
     const available = isThemeAvailable(themeName);
     
     if (available) {
-      setTheme(themeName);
-      // Güzel bir feedback
-      if (themeName === 'pinkStar') {
-        alert('✨💕 Pembe Yıldız teması aktif! Çok şirin görünüyor! 💕✨');
-      } else {
-        alert(`🎨 ${themeMetadata[themeName].name} teması aktif!`);
+      try {
+        await setTheme(themeName);
+        // Güzel bir feedback
+        if (themeName === 'pinkStar') {
+          alert('✨💕 Pembe Yıldız teması aktif! Çok şirin görünüyor! 💕✨');
+        } else if (themeName === 'default') {
+          alert('🎨 Varsayılan tema aktif!');
+        } else {
+          alert(`🎨 ${themeMetadata[themeName].name} teması aktif!`);
+        }
+      } catch (error) {
+        console.error('Theme change error:', error);
+        alert('Tema değiştirilemedi. Lütfen tekrar deneyin.');
       }
     } else {
       setSelectedLockedTheme(themeName);
