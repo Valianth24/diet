@@ -503,7 +503,11 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   closeButton: {
-    padding: 4,
+    padding: 12,
+    minWidth: 44,
+    minHeight: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   languageList: {
     maxHeight: 450,
