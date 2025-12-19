@@ -60,6 +60,7 @@ export default function ThemeSelector() {
           key={themeName}
           style={[styles.themeCard, isActive && styles.themeCardActive]}
           onPress={() => handleThemePress(themeName)}
+          activeOpacity={0.7}
         >
           <LinearGradient
             colors={['#FF1493', '#FFB6C1', '#FFC0CB']}
