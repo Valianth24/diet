@@ -74,20 +74,20 @@ export default function TrackingScreen() {
 
         {/* Water Tracking Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Su Takibi</Text>
+          <Text style={styles.sectionTitle}>{t('waterTracking')}</Text>
 
           <View style={styles.card}>
             <View style={styles.goalContainer}>
               <Ionicons name="water" size={40} color={Colors.teal} />
               <View>
-                <Text style={styles.goalLabel}>Bugün</Text>
-                <Text style={styles.goalValue}>{(todayWater / 1000).toFixed(1)} L</Text>
+                <Text style={styles.goalLabel}>{t('today')}</Text>
+                <Text style={styles.goalValue}>{(todayWater / 1000).toFixed(1)} {t('liters')}</Text>
               </View>
             </View>
 
             {weeklyWater.length > 0 && (
               <View style={styles.chartContainer}>
-                <Text style={styles.chartTitle}>Haftalık Su Tüketimi</Text>
+                <Text style={styles.chartTitle}>{t('weeklyWater')}</Text>
                 <LineChart
                   data={lineChartData}
                   width={screenWidth - 80}
