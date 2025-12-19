@@ -106,8 +106,8 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   list: {
-    maxHeight: 120,
-    marginBottom: 12,
+    maxHeight: 110,
+    marginBottom: 8,
   },
   vitaminItem: {
     flexDirection: 'row',
@@ -119,12 +119,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   vitaminName: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '600',
     color: Colors.darkText,
   },
   vitaminTime: {
-    fontSize: 11,
+    fontSize: 10,
     color: Colors.lightText,
   },
   status: {
