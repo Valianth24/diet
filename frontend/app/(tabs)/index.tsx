@@ -346,7 +346,7 @@ export default function DashboardScreen() {
         {/* Recent Meals */}
         {recentMeals.length > 0 && (
           <View style={styles.recentMealsSection}>
-            <Text style={styles.sectionTitle}>Son Yemekler</Text>
+            <Text style={styles.sectionTitle}>{t('recentMeals')}</Text>
             {recentMeals.map((meal) => (
               <View key={meal.meal_id} style={styles.mealCard}>
                 <Image source={{ uri: meal.image_base64 }} style={styles.mealImage} />
