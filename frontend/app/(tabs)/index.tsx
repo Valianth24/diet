@@ -881,6 +881,13 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: Colors.darkText,
   },
+  modalCloseButton: {
+    padding: 12,
+    minWidth: 44,
+    minHeight: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   sectionLabel: {
     fontSize: 16,
     fontWeight: '600',
