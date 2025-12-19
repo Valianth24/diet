@@ -221,26 +221,26 @@ export default function LoginScreen() {
           {/* Email Login */}
           <TouchableOpacity style={styles.emailButton} onPress={() => setMode('login')}>
             <Ionicons name="mail-outline" size={24} color={Colors.primary} />
-            <Text style={styles.emailButtonText}>Email ile Giriş</Text>
+            <Text style={styles.emailButtonText}>{t('emailLogin')}</Text>
           </TouchableOpacity>
 
           {/* Register */}
           <TouchableOpacity style={styles.registerButton} onPress={() => setMode('register')}>
             <Ionicons name="person-add-outline" size={24} color={Colors.darkText} />
-            <Text style={styles.registerButtonText}>Hesap Oluştur</Text>
+            <Text style={styles.registerButtonText}>{t('createAccount')}</Text>
           </TouchableOpacity>
 
           {/* Divider */}
           <View style={styles.divider}>
             <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>veya</Text>
+            <Text style={styles.dividerText}>{t('or')}</Text>
             <View style={styles.dividerLine} />
           </View>
 
           {/* Guest Login */}
           <TouchableOpacity style={styles.guestButton} onPress={handleGuestLogin} disabled={loading}>
             <Ionicons name="person-outline" size={24} color={Colors.lightText} />
-            <Text style={styles.guestButtonText}>{loading ? 'Giriş yapılıyor...' : 'Misafir Olarak Devam Et'}</Text>
+            <Text style={styles.guestButtonText}>{loading ? t('loggingIn') : t('guestLogin')}</Text>
           </TouchableOpacity>
         </View>
       </View>
