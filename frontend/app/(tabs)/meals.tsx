@@ -22,7 +22,6 @@ import i18n from '../../utils/i18n';
 import { useTranslation } from 'react-i18next';
 
 const { width: screenWidth } = Dimensions.get('window');
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || '';
 
 type FoodItem = {
   food_id: string;
@@ -41,7 +40,6 @@ type RecentScan = {
   carbs: number;
   fat: number;
   timestamp: number;
-  imagePreview?: string;
 };
 
 export default function MealsScreen() {
@@ -79,20 +77,11 @@ export default function MealsScreen() {
     }
   };
 
-  const addToRecentScans = async (scan: RecentScan) => {
-    try {
-      const updated = [scan, ...recentScans.filter(s => s.id !== scan.id)].slice(0, 20);
-      setRecentScans(updated);
-      await AsyncStorage.setItem('recent_food_scans', JSON.stringify(updated));
-    } catch (error) {
-      console.error('Error saving recent scan:', error);
-    }
-  };
-
   const addMealFromRecent = async (scan: RecentScan) => {
     try {
       setLoading(true);
       const token = await AsyncStorage.getItem('session_token');
+      const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || '';
       
       const response = await fetch(`${API_BASE_URL}/api/food/add-meal`, {
         method: 'POST',
@@ -106,20 +95,17 @@ export default function MealsScreen() {
           protein: scan.protein,
           carbs: scan.carbs,
           fat: scan.fat,
-          image_base64: scan.imagePreview || '',
+          image_base64: '',
           meal_type: 'snack',
         }),
       });
 
-      if (!response.ok) {
-        throw new Error('Kaydetme başarısız');
-      }
+      if (!response.ok) throw new Error('Failed');
 
-      Alert.alert('Başarılı', `${scan.name} eklendi!`);
+      Alert.alert(t('success') || 'Başarılı', `${scan.name} ${t('added') || 'eklendi'}!`);
       router.replace('/(tabs)');
     } catch (error) {
-      console.error('Error adding meal:', error);
-      Alert.alert('Hata', 'Yemek eklenemedi');
+      Alert.alert(t('error') || 'Hata', t('mealAddError') || 'Yemek eklenemedi');
     } finally {
       setLoading(false);
     }
@@ -129,22 +115,20 @@ export default function MealsScreen() {
     food.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Ana ekran - Seçenekler
+  // Ana ekran
   const renderMainOptions = () => (
     <ScrollView style={styles.optionsContainer} showsVerticalScrollIndicator={false}>
-      {/* Header - Daha kompakt */}
       <View style={styles.headerSection}>
         <Text style={styles.headerTitle}>{t('addCalorie') || 'Kalori Ekle'}</Text>
-        <Text style={styles.headerSubtitle}>{t('trackYourMeals') || 'Yediğiniz yemeği kaydedin'}</Text>
+        <Text style={styles.headerSubtitle}>{t('trackYourMeals') || 'Yediğinizi kaydedin'}</Text>
       </View>
 
-      {/* Seçenekler */}
       <View style={styles.optionCards}>
-        {/* Fotoğraf ile Hesapla */}
+        {/* Fotoğraf */}
         <TouchableOpacity 
           style={styles.optionCard}
           onPress={() => router.push('/(tabs)/camera')}
-          activeOpacity={0.85}
+          activeOpacity={0.8}
         >
           <LinearGradient
             colors={['#667eea', '#764ba2']}
@@ -153,24 +137,21 @@ export default function MealsScreen() {
             style={styles.optionGradient}
           >
             <View style={styles.optionIconContainer}>
-              <Ionicons name="camera" size={36} color="#FFFFFF" />
+              <Ionicons name="camera" size={28} color="#FFF" />
             </View>
-            <Text style={styles.optionTitle}>Fotoğrafla Hesapla</Text>
-            <Text style={styles.optionDescription}>
-              Yemeğinizin fotoğrafını çekin, AI kalorileri hesaplasın
-            </Text>
-            <View style={styles.optionBadge}>
-              <Ionicons name="sparkles" size={14} color="#FFD700" />
-              <Text style={styles.optionBadgeText}>AI Destekli</Text>
+            <View style={styles.optionContent}>
+              <Text style={styles.optionTitle} numberOfLines={1}>{t('photoCalc') || 'Fotoğrafla Hesapla'}</Text>
+              <Text style={styles.optionDescription} numberOfLines={2}>{t('photoCalcDesc') || 'AI ile kalori hesapla'}</Text>
             </View>
+            <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.7)" />
           </LinearGradient>
         </TouchableOpacity>
 
-        {/* Daha Önce Hesaplananlar */}
+        {/* Son Hesaplananlar */}
         <TouchableOpacity 
           style={styles.optionCard}
           onPress={() => setActiveTab('recent')}
-          activeOpacity={0.85}
+          activeOpacity={0.8}
         >
           <LinearGradient
             colors={['#11998e', '#38ef7d']}
@@ -179,24 +160,21 @@ export default function MealsScreen() {
             style={styles.optionGradient}
           >
             <View style={styles.optionIconContainer}>
-              <Ionicons name="time" size={36} color="#FFFFFF" />
+              <Ionicons name="time" size={28} color="#FFF" />
             </View>
-            <Text style={styles.optionTitle}>Son Hesaplananlar</Text>
-            <Text style={styles.optionDescription}>
-              Daha önce hesapladığınız yemeklerden seçin
-            </Text>
-            <View style={styles.optionBadge}>
-              <Ionicons name="flash" size={14} color="#FFFFFF" />
-              <Text style={styles.optionBadgeText}>{recentScans.length} Kayıt</Text>
+            <View style={styles.optionContent}>
+              <Text style={styles.optionTitle} numberOfLines={1}>{t('recentCalc') || 'Son Hesaplananlar'}</Text>
+              <Text style={styles.optionDescription} numberOfLines={1}>{recentScans.length} {t('records') || 'kayıt'}</Text>
             </View>
+            <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.7)" />
           </LinearGradient>
         </TouchableOpacity>
 
-        {/* Manuel Seçim */}
+        {/* Listeden Seç */}
         <TouchableOpacity 
           style={styles.optionCard}
           onPress={() => setActiveTab('search')}
-          activeOpacity={0.85}
+          activeOpacity={0.8}
         >
           <LinearGradient
             colors={['#f093fb', '#f5576c']}
@@ -205,61 +183,46 @@ export default function MealsScreen() {
             style={styles.optionGradient}
           >
             <View style={styles.optionIconContainer}>
-              <Ionicons name="search" size={36} color="#FFFFFF" />
+              <Ionicons name="search" size={28} color="#FFF" />
             </View>
-            <Text style={styles.optionTitle}>Listeden Seç</Text>
-            <Text style={styles.optionDescription}>
-              Yemek veritabanından arama yapın
-            </Text>
-            <View style={styles.optionBadge}>
-              <Ionicons name="restaurant" size={14} color="#FFFFFF" />
-              <Text style={styles.optionBadgeText}>500+ Yemek</Text>
+            <View style={styles.optionContent}>
+              <Text style={styles.optionTitle} numberOfLines={1}>{t('selectFromList') || 'Listeden Seç'}</Text>
+              <Text style={styles.optionDescription} numberOfLines={1}>500+ {t('foods') || 'yemek'}</Text>
             </View>
+            <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.7)" />
           </LinearGradient>
         </TouchableOpacity>
       </View>
 
-      {/* Hızlı Ekle Butonları */}
+      {/* Hızlı Ekle */}
       <View style={styles.quickAddSection}>
-        <Text style={styles.quickAddTitle}>Hızlı Ekle</Text>
+        <Text style={styles.quickAddTitle}>{t('quickAdd') || 'Hızlı Ekle'}</Text>
         <View style={styles.quickAddButtons}>
           {[
-            { icon: 'water', label: 'Su', color: Colors.teal, cal: 0 },
-            { icon: 'cafe', label: 'Kahve', color: '#8B4513', cal: 5 },
-            { icon: 'nutrition', label: 'Elma', color: '#FF6B6B', cal: 52 },
-            { icon: 'pizza', label: 'Atıştırma', color: '#FFA500', cal: 150 },
+            { icon: 'water', label: t('water') || 'Su', color: Colors.teal, cal: 0 },
+            { icon: 'cafe', label: t('coffee') || 'Kahve', color: '#8B4513', cal: 5 },
+            { icon: 'nutrition', label: t('apple') || 'Elma', color: '#FF6B6B', cal: 52 },
+            { icon: 'pizza', label: t('snack') || 'Atıştırma', color: '#FFA500', cal: 150 },
           ].map((item, index) => (
             <TouchableOpacity 
               key={index} 
               style={styles.quickAddButton}
-              onPress={() => {
-                Alert.alert(
-                  item.label,
-                  `${item.cal} kcal eklensin mi?`,
-                  [
-                    { text: 'İptal', style: 'cancel' },
-                    { text: 'Ekle', onPress: () => addMealFromRecent({
-                      id: `quick_${Date.now()}`,
-                      name: item.label,
-                      calories: item.cal,
-                      protein: 0,
-                      carbs: 0,
-                      fat: 0,
-                      timestamp: Date.now(),
-                    })}
-                  ]
-                );
-              }}
+              onPress={() => addMealFromRecent({
+                id: `quick_${Date.now()}`,
+                name: item.label,
+                calories: item.cal,
+                protein: 0, carbs: 0, fat: 0,
+                timestamp: Date.now(),
+              })}
             >
               <View style={[styles.quickAddIcon, { backgroundColor: item.color + '20' }]}>
-                <Ionicons name={item.icon as any} size={24} color={item.color} />
+                <Ionicons name={item.icon as any} size={22} color={item.color} />
               </View>
-              <Text style={styles.quickAddLabel}>{item.label}</Text>
+              <Text style={styles.quickAddLabel} numberOfLines={1}>{item.label}</Text>
             </TouchableOpacity>
           ))}
         </View>
       </View>
-
       <View style={{ height: 100 }} />
     </ScrollView>
   );
@@ -267,18 +230,15 @@ export default function MealsScreen() {
   // Son Hesaplananlar
   const renderRecentScans = () => (
     <View style={styles.tabContent}>
-      <TouchableOpacity style={styles.backArrow} onPress={() => setActiveTab('main')}>
-        <Ionicons name="arrow-back" size={24} color={Colors.darkText} />
-        <Text style={styles.backText}>Geri</Text>
+      <TouchableOpacity style={styles.backRow} onPress={() => setActiveTab('main')}>
+        <Ionicons name="arrow-back" size={22} color={Colors.darkText} />
+        <Text style={styles.backText}>{t('back') || 'Geri'}</Text>
       </TouchableOpacity>
-
-      <Text style={styles.sectionTitle}>Son Hesaplanan Yemekler</Text>
 
       {recentScans.length === 0 ? (
         <View style={styles.emptyState}>
-          <Ionicons name="time-outline" size={64} color={Colors.lightText} />
-          <Text style={styles.emptyText}>Henüz hesaplama yapılmadı</Text>
-          <Text style={styles.emptySubtext}>Fotoğrafla kalori hesapladığınızda burada görünecek</Text>
+          <Ionicons name="time-outline" size={48} color={Colors.lightText} />
+          <Text style={styles.emptyText}>{t('noRecords') || 'Henüz kayıt yok'}</Text>
         </View>
       ) : (
         <FlatList
@@ -286,29 +246,15 @@ export default function MealsScreen() {
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContent}
           renderItem={({ item }) => (
-            <TouchableOpacity
-              style={styles.recentCard}
-              onPress={() => addMealFromRecent(item)}
-              disabled={loading}
-            >
+            <TouchableOpacity style={styles.recentCard} onPress={() => addMealFromRecent(item)} disabled={loading}>
               <View style={styles.recentIcon}>
-                <Ionicons name="restaurant" size={24} color={Colors.primary} />
+                <Ionicons name="restaurant" size={20} color={Colors.primary} />
               </View>
               <View style={styles.recentInfo}>
                 <Text style={styles.recentName} numberOfLines={1}>{item.name}</Text>
-                <View style={styles.recentMacros}>
-                  <Text style={styles.recentCalories}>{item.calories} kcal</Text>
-                  <Text style={styles.recentMacroText}>
-                    P:{item.protein}g K:{item.carbs}g Y:{item.fat}g
-                  </Text>
-                </View>
-                <Text style={styles.recentTime}>
-                  {new Date(item.timestamp).toLocaleDateString('tr-TR')}
-                </Text>
+                <Text style={styles.recentCalories}>{item.calories} kcal</Text>
               </View>
-              <View style={styles.addIconContainer}>
-                <Ionicons name="add-circle" size={28} color={Colors.primary} />
-              </View>
+              <Ionicons name="add-circle" size={24} color={Colors.primary} />
             </TouchableOpacity>
           )}
         />
@@ -316,45 +262,39 @@ export default function MealsScreen() {
     </View>
   );
 
-  // Listeden Seçim
+  // Listeden Seç
   const renderSearchTab = () => (
     <View style={styles.tabContent}>
-      <TouchableOpacity style={styles.backArrow} onPress={() => {
-        setActiveTab('main');
-        setSearchQuery('');
-      }}>
-        <Ionicons name="arrow-back" size={24} color={Colors.darkText} />
-        <Text style={styles.backText}>Geri</Text>
+      <TouchableOpacity style={styles.backRow} onPress={() => { setActiveTab('main'); setSearchQuery(''); }}>
+        <Ionicons name="arrow-back" size={22} color={Colors.darkText} />
+        <Text style={styles.backText}>{t('back') || 'Geri'}</Text>
       </TouchableOpacity>
       
-      {/* Search */}
       <View style={styles.searchContainer}>
-        <Ionicons name="search" size={20} color={Colors.lightText} style={styles.searchIcon} />
+        <Ionicons name="search" size={18} color={Colors.lightText} />
         <TextInput
           style={styles.searchInput}
-          placeholder="Yemek ara..."
+          placeholder={t('searchFood') || 'Yemek ara...'}
+          placeholderTextColor={Colors.lightText}
           value={searchQuery}
           onChangeText={setSearchQuery}
           autoFocus
         />
         {searchQuery.length > 0 && (
           <TouchableOpacity onPress={() => setSearchQuery('')}>
-            <Ionicons name="close-circle" size={20} color={Colors.lightText} />
+            <Ionicons name="close-circle" size={18} color={Colors.lightText} />
           </TouchableOpacity>
         )}
       </View>
 
-      {/* Food List */}
       <FlatList
         data={filteredFoods}
         keyExtractor={(item: FoodItem) => item.food_id}
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={
           <View style={styles.emptyState}>
-            <Ionicons name="search-outline" size={48} color={Colors.lightText} />
-            <Text style={styles.emptyText}>
-              {searchQuery ? 'Sonuç bulunamadı' : 'Aramak için yazın'}
-            </Text>
+            <Ionicons name="search-outline" size={40} color={Colors.lightText} />
+            <Text style={styles.emptyText}>{searchQuery ? t('noResults') || 'Sonuç yok' : t('typeToSearch') || 'Aramak için yazın'}</Text>
           </View>
         }
         renderItem={({ item }: { item: FoodItem }) => (
@@ -362,28 +302,17 @@ export default function MealsScreen() {
             style={styles.foodCard}
             onPress={() => router.push({
               pathname: '/details/meal-detail',
-              params: {
-                food_id: item.food_id,
-                name: item.name,
-                calories: item.calories,
-                protein: item.protein,
-                carbs: item.carbs,
-                fat: item.fat,
-              },
+              params: { food_id: item.food_id, name: item.name, calories: item.calories, protein: item.protein, carbs: item.carbs, fat: item.fat },
             })}
-            activeOpacity={0.7}
           >
             <View style={styles.foodIcon}>
-              <Ionicons name="restaurant" size={24} color={Colors.primary} />
+              <Ionicons name="restaurant" size={20} color={Colors.primary} />
             </View>
             <View style={styles.foodInfo}>
               <Text style={styles.foodName} numberOfLines={1}>{item.name}</Text>
-              <View style={styles.macroRow}>
-                <Text style={styles.calorieText}>{item.calories} kcal</Text>
-                <Text style={styles.macroText}>P:{item.protein}g K:{item.carbs}g Y:{item.fat}g</Text>
-              </View>
+              <Text style={styles.foodCalories}>{item.calories} kcal</Text>
             </View>
-            <Ionicons name="chevron-forward" size={20} color={Colors.lightText} />
+            <Ionicons name="chevron-forward" size={18} color={Colors.lightText} />
           </TouchableOpacity>
         )}
       />
@@ -392,26 +321,23 @@ export default function MealsScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.closeButton}>
-          <Ionicons name="close" size={28} color={Colors.darkText} />
+        <TouchableOpacity onPress={() => router.back()} style={styles.headerButton}>
+          <Ionicons name="close" size={26} color={Colors.darkText} />
         </TouchableOpacity>
-        <Text style={styles.title}>
-          {activeTab === 'recent' ? 'Son Hesaplananlar' : 
-           activeTab === 'search' ? 'Yemek Ara' : 'Kalori Ekle'}
+        <Text style={styles.headerTitle} numberOfLines={1}>
+          {activeTab === 'recent' ? (t('recentCalc') || 'Son Hesaplananlar') : 
+           activeTab === 'search' ? (t('searchFood') || 'Yemek Ara') : (t('addCalorie') || 'Kalori Ekle')}
         </Text>
         <View style={{ width: 40 }} />
       </View>
 
-      {/* Loading Overlay */}
       {loading && (
         <View style={styles.loadingOverlay}>
           <ActivityIndicator size="large" color={Colors.primary} />
         </View>
       )}
 
-      {/* Content */}
       {activeTab === 'main' && renderMainOptions()}
       {activeTab === 'recent' && renderRecentScans()}
       {activeTab === 'search' && renderSearchTab()}
@@ -420,27 +346,18 @@ export default function MealsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.white,
-  },
+  container: { flex: 1, backgroundColor: Colors.white },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#F0F0F0',
   },
-  closeButton: {
-    padding: 8,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: Colors.darkText,
-  },
+  headerButton: { padding: 6 },
+  headerTitle: { fontSize: 17, fontWeight: '600', color: Colors.darkText, flex: 1, textAlign: 'center' },
   loadingOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(255,255,255,0.8)',
@@ -448,264 +365,101 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     zIndex: 100,
   },
-  optionsContainer: {
-    flex: 1,
-    paddingHorizontal: 16,
-  },
-  headerSection: {
-    alignItems: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 8,
-  },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: Colors.darkText,
-    marginBottom: 4,
-  },
-  headerSubtitle: {
-    fontSize: 13,
-    color: Colors.lightText,
-    textAlign: 'center',
-  },
-  optionCards: {
-    gap: 16,
-    marginBottom: 24,
-  },
-  optionCard: {
-    borderRadius: 20,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 5,
-  },
+  optionsContainer: { flex: 1, paddingHorizontal: 16 },
+  headerSection: { alignItems: 'center', paddingVertical: 16 },
+  headerTitle2: { fontSize: 20, fontWeight: 'bold', color: Colors.darkText, marginBottom: 4 },
+  headerSubtitle: { fontSize: 13, color: Colors.lightText, textAlign: 'center' },
+  optionCards: { gap: 12, marginBottom: 20 },
+  optionCard: { borderRadius: 16, overflow: 'hidden' },
   optionGradient: {
-    padding: 16,
-    minHeight: 100,
     flexDirection: 'row',
     alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 14,
   },
   optionIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: 'rgba(255,255,255,0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 14,
-  },
-  optionContent: {
-    flex: 1,
-  },
-  optionTitle: {
-    fontSize: 17,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginBottom: 4,
-  },
-  optionDescription: {
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.85)',
-    marginBottom: 6,
-  },
-  optionBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    backgroundColor: 'rgba(0,0,0,0.2)',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 12,
-    gap: 4,
-  },
-  optionBadgeText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
-  quickAddSection: {
-    marginBottom: 32,
-  },
-  quickAddTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: Colors.darkText,
-    marginBottom: 16,
-  },
-  quickAddButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  quickAddButton: {
-    alignItems: 'center',
-    width: (screenWidth - 64) / 4,
-  },
-  quickAddIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  quickAddLabel: {
-    fontSize: 12,
-    color: Colors.darkText,
-    fontWeight: '500',
-  },
-  tabContent: {
-    flex: 1,
-    padding: 16,
-  },
-  backArrow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 16,
-  },
-  backText: {
-    fontSize: 16,
-    color: Colors.darkText,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: Colors.darkText,
-    marginBottom: 16,
-  },
-  emptyState: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 60,
-  },
-  emptyText: {
-    fontSize: 16,
-    color: Colors.lightText,
-    marginTop: 16,
-  },
-  emptySubtext: {
-    fontSize: 14,
-    color: Colors.lightText,
-    marginTop: 4,
-    textAlign: 'center',
-  },
-  listContent: {
-    paddingBottom: 100,
-  },
-  recentCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.white,
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  recentIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: Colors.background,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
   },
-  recentInfo: {
-    flex: 1,
-  },
-  recentName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: Colors.darkText,
-    marginBottom: 4,
-  },
-  recentMacros: {
-    flexDirection: 'row',
+  optionContent: { flex: 1 },
+  optionTitle: { fontSize: 16, fontWeight: '600', color: '#FFF', marginBottom: 2 },
+  optionDescription: { fontSize: 12, color: 'rgba(255,255,255,0.8)' },
+  quickAddSection: { marginTop: 8 },
+  quickAddTitle: { fontSize: 16, fontWeight: '600', color: Colors.darkText, marginBottom: 12 },
+  quickAddButtons: { flexDirection: 'row', justifyContent: 'space-between' },
+  quickAddButton: { alignItems: 'center', width: (screenWidth - 64) / 4 },
+  quickAddIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
     alignItems: 'center',
-    gap: 8,
+    marginBottom: 6,
   },
-  recentCalories: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Colors.primary,
-  },
-  recentMacroText: {
-    fontSize: 12,
-    color: Colors.lightText,
-  },
-  recentTime: {
-    fontSize: 11,
-    color: Colors.lightText,
-    marginTop: 4,
-  },
-  addIconContainer: {
-    padding: 4,
-  },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.background,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    marginBottom: 16,
-  },
-  searchIcon: {
-    marginRight: 8,
-  },
-  searchInput: {
-    flex: 1,
-    paddingVertical: 12,
-    fontSize: 16,
-  },
-  foodCard: {
+  quickAddLabel: { fontSize: 11, color: Colors.darkText, fontWeight: '500', textAlign: 'center' },
+  tabContent: { flex: 1, padding: 16 },
+  backRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 16 },
+  backText: { fontSize: 15, color: Colors.darkText },
+  emptyState: { alignItems: 'center', justifyContent: 'center', paddingVertical: 60 },
+  emptyText: { fontSize: 14, color: Colors.lightText, marginTop: 12 },
+  listContent: { paddingBottom: 100 },
+  recentCard: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.white,
     borderRadius: 12,
     padding: 12,
     marginBottom: 8,
-    shadowColor: Colors.cardShadow,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 1,
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
   },
-  foodIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+  recentIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: Colors.background,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: 10,
   },
-  foodInfo: {
-    flex: 1,
-  },
-  foodName: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: Colors.darkText,
-    marginBottom: 4,
-  },
-  macroRow: {
+  recentInfo: { flex: 1 },
+  recentName: { fontSize: 14, fontWeight: '600', color: Colors.darkText, marginBottom: 2 },
+  recentCalories: { fontSize: 12, color: Colors.primary, fontWeight: '500' },
+  searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: Colors.background,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    marginBottom: 12,
     gap: 8,
   },
-  calorieText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: Colors.primary,
+  searchInput: { flex: 1, paddingVertical: 10, fontSize: 15, color: Colors.darkText },
+  foodCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.white,
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 6,
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
   },
-  macroText: {
-    fontSize: 11,
-    color: Colors.lightText,
+  foodIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: Colors.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
   },
+  foodInfo: { flex: 1 },
+  foodName: { fontSize: 14, fontWeight: '500', color: Colors.darkText, marginBottom: 2 },
+  foodCalories: { fontSize: 12, color: Colors.primary },
 });
