@@ -24,12 +24,17 @@ export default function PremiumPaywall({ visible, onClose, onSubscribe }: Premiu
 
   return (
     <Modal visible={visible} transparent animationType="slide">
-      <View style={styles.overlay}>
+      <TouchableOpacity 
+        style={styles.overlay} 
+        activeOpacity={1} 
+        onPress={() => {}}
+      >
         <ScrollView 
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.container}>
+          <TouchableOpacity activeOpacity={1} onPress={() => {}}>
+            <View style={styles.container}>
             {/* Close Button */}
             <TouchableOpacity 
               style={styles.closeButton} 
