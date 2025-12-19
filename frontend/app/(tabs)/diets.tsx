@@ -135,8 +135,8 @@ export default function DietsScreen() {
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.title}>Diyetler</Text>
-            <Text style={styles.subtitle}>Size özel beslenme planları</Text>
+            <Text style={styles.title}>{t('diets')}</Text>
+            <Text style={styles.subtitle}>{t('dietsSubtitle')}</Text>
           </View>
         </View>
 
@@ -144,7 +144,7 @@ export default function DietsScreen() {
         {isPremium && (
           <View style={styles.premiumBanner}>
             <Ionicons name="checkmark-circle" size={24} color={Colors.success} />
-            <Text style={styles.premiumBannerText}>Premium üyesiniz! Tüm özelliklere erişime sahipsiniz.</Text>
+            <Text style={styles.premiumBannerText}>{t('premiumMember')}</Text>
           </View>
         )}
 
@@ -152,14 +152,14 @@ export default function DietsScreen() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Ionicons name="star" size={24} color={Colors.warning} />
-            <Text style={styles.sectionTitle}>Hazır Diyetler</Text>
+            <Text style={styles.sectionTitle}>{t('premiumDiets')}</Text>
             {!isPremium && (
               <View style={styles.lockBadge}>
                 <Ionicons name="lock-closed" size={14} color={Colors.white} />
               </View>
             )}
           </View>
-          <Text style={styles.sectionSubtitle}>Uzman diyetisyenler tarafından hazırlanmış</Text>
+          <Text style={styles.sectionSubtitle}>{t('premiumDietsSubtitle')}</Text>
           
           <View style={styles.dietGrid}>
             {premiumDiets.map((diet) => (
