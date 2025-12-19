@@ -60,14 +60,14 @@ export default function NutritionScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.primary]} />
         }
       >
-        <Text style={styles.title}>Bugünkü Menüm</Text>
-        <Text style={styles.date}>{new Date().toLocaleDateString('tr-TR', { day: '2-digit', month: 'long', year: 'numeric' })}</Text>
+        <Text style={styles.title}>{t('todaysMenu')}</Text>
+        <Text style={styles.date}>{new Date().toLocaleDateString(undefined, { day: '2-digit', month: 'long', year: 'numeric' })}</Text>
 
         {Object.keys(groupedMeals).length === 0 ? (
           <View style={styles.emptyState}>
             <Ionicons name="restaurant" size={60} color={Colors.lightText} />
-            <Text style={styles.emptyText}>No meals added today</Text>
-            <Text style={styles.emptySubtext}>Start by taking a photo of your meal!</Text>
+            <Text style={styles.emptyText}>{t('noMealsYet')}</Text>
+            <Text style={styles.emptySubtext}>{t('trackYourMeals')}</Text>
           </View>
         ) : (
           <View style={styles.mealGroups}>
