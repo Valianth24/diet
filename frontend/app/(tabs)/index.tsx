@@ -112,6 +112,7 @@ export default function DashboardScreen() {
   }, [refreshData]);
 
   const requestNotificationPermissions = async () => {
+    const Notifications = getNotifications();
     if (!Notifications) return;
     try {
       const { status } = await Notifications.requestPermissionsAsync();
