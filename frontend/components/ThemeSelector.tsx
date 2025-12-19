@@ -104,6 +104,7 @@ export default function ThemeSelector() {
           !isUnlocked && styles.themeCardLocked,
         ]}
         onPress={() => handleThemePress(themeName)}
+        activeOpacity={0.7}
       >
         <View style={[styles.iconCircle, { backgroundColor: theme.primary + '20' }]}>
           <Ionicons name={metadata.icon as any} size={32} color={theme.primary} />
