@@ -24,7 +24,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const { width: screenWidth } = Dimensions.get('window');
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || '';
 
-interface DetectedItem {
+type DetectedItem = {
   label: string;
   aliases: string[];
   portion: {
@@ -38,9 +38,9 @@ interface DetectedItem {
   protein: number;
   carbs: number;
   fat: number;
-}
+};
 
-interface VisionResult {
+type VisionResult = {
   items: DetectedItem[];
   notes: string[];
   needs_user_confirmation: boolean;
@@ -48,7 +48,7 @@ interface VisionResult {
   total_protein: number;
   total_carbs: number;
   total_fat: number;
-}
+};
 
 export default function CameraScreen() {
   const { t } = useTranslation();
