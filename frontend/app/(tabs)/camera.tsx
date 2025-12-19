@@ -399,22 +399,22 @@ export default function CameraScreen() {
                       </View>
                       <View style={styles.nutritionItem}>
                         <Text style={styles.nutritionValue}>{item.protein}g</Text>
-                        <Text style={styles.nutritionLabel}>Protein</Text>
+                        <Text style={styles.nutritionLabel}>{t('protein')}</Text>
                       </View>
                       <View style={styles.nutritionItem}>
                         <Text style={styles.nutritionValue}>{item.carbs}g</Text>
-                        <Text style={styles.nutritionLabel}>Karb</Text>
+                        <Text style={styles.nutritionLabel}>{t('carbs')}</Text>
                       </View>
                       <View style={styles.nutritionItem}>
                         <Text style={styles.nutritionValue}>{item.fat}g</Text>
-                        <Text style={styles.nutritionLabel}>Yağ</Text>
+                        <Text style={styles.nutritionLabel}>{t('fat')}</Text>
                       </View>
                     </View>
 
                     {!item.food_id && (
                       <View style={styles.warningBanner}>
                         <Ionicons name="warning" size={14} color="#996600" />
-                        <Text style={styles.warningText}>Tahmini değerler</Text>
+                        <Text style={styles.warningText}>{t('estimatedValues')}</Text>
                       </View>
                     )}
                   </View>
@@ -422,23 +422,23 @@ export default function CameraScreen() {
 
                 {/* Totals */}
                 <View style={styles.totalsCard}>
-                  <Text style={styles.totalsTitle}>Toplam</Text>
+                  <Text style={styles.totalsTitle}>{t('total')}</Text>
                   <View style={styles.totalsRow}>
                     <View style={styles.totalItem}>
                       <Text style={styles.totalValue}>{totals.calories}</Text>
-                      <Text style={styles.totalLabel}>kcal</Text>
+                      <Text style={styles.totalLabel}>{t('kcal')}</Text>
                     </View>
                     <View style={styles.totalItem}>
                       <Text style={styles.totalValue}>{totals.protein.toFixed(1)}g</Text>
-                      <Text style={styles.totalLabel}>Protein</Text>
+                      <Text style={styles.totalLabel}>{t('protein')}</Text>
                     </View>
                     <View style={styles.totalItem}>
                       <Text style={styles.totalValue}>{totals.carbs.toFixed(1)}g</Text>
-                      <Text style={styles.totalLabel}>Karb</Text>
+                      <Text style={styles.totalLabel}>{t('carbs')}</Text>
                     </View>
                     <View style={styles.totalItem}>
                       <Text style={styles.totalValue}>{totals.fat.toFixed(1)}g</Text>
-                      <Text style={styles.totalLabel}>Yağ</Text>
+                      <Text style={styles.totalLabel}>{t('fat')}</Text>
                     </View>
                   </View>
                 </View>
@@ -447,7 +447,7 @@ export default function CameraScreen() {
                 <View style={styles.disclaimer}>
                   <Ionicons name="information-circle" size={16} color={Colors.lightText} />
                   <Text style={styles.disclaimerText}>
-                    AI tahminidir. Gram değerlerini düzenleyebilirsiniz.
+                    {t('aiDisclaimer')}
                   </Text>
                 </View>
 
@@ -468,7 +468,7 @@ export default function CameraScreen() {
                     ) : (
                       <>
                         <Ionicons name="checkmark-circle" size={24} color="#FFF" />
-                        <Text style={styles.saveButtonText}>Yemeği Kaydet</Text>
+                        <Text style={styles.saveButtonText}>{t('saveMeal')}</Text>
                       </>
                     )}
                   </LinearGradient>
@@ -477,10 +477,10 @@ export default function CameraScreen() {
             ) : result && editedItems.length === 0 ? (
               <View style={styles.noResultCard}>
                 <Ionicons name="alert-circle" size={48} color={Colors.lightText} />
-                <Text style={styles.noResultText}>Yemek tespit edilemedi</Text>
-                <Text style={styles.noResultSubtext}>Farklı bir açıdan tekrar deneyin</Text>
+                <Text style={styles.noResultText}>{t('noFoodDetected')}</Text>
+                <Text style={styles.noResultSubtext}>{t('tryDifferentAngle')}</Text>
                 <TouchableOpacity style={styles.retryButton} onPress={resetScreen}>
-                  <Text style={styles.retryButtonText}>Tekrar Dene</Text>
+                  <Text style={styles.retryButtonText}>{t('tryAgain')}</Text>
                 </TouchableOpacity>
               </View>
             ) : null}
