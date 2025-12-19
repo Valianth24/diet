@@ -20,31 +20,12 @@ import { useStore } from '../../store/useStore';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LogBox } from 'react-native';
+import { clearReminderNotifications, requestNotificationPermission, syncReminderNotifications } from '../../utils/notifications';
 
 LogBox.ignoreLogs([
   'expo-notifications: Android Push notifications',
   '`expo-notifications` functionality is not fully supported in Expo Go',
 ]);
-
-// Notifications'ı lazy yükle
-let _notifications: any = null;
-const getNotifications = () => {
-  if (!_notifications) {
-    try {
-      _notifications = require('expo-notifications');
-      _notifications.setNotificationHandler({
-        handleNotification: async () => ({
-          shouldShowAlert: true,
-          shouldPlaySound: true,
-          shouldSetBadge: true,
-        }),
-      });
-    } catch (error) {
-      console.log('Notifications not available');
-    }
-  }
-  return _notifications;
-};
 
 interface Vitamin {
   vitamin_id: string;
@@ -70,21 +51,8 @@ export default function VitaminsScreen() {
   useEffect(() => {
     loadVitamins();
     loadReminderSettings();
-    requestPermissions();
+    requestNotificationPermission();
   }, [refreshData]);
-
-  const requestPermissions = async () => {
-    const Notifications = getNotifications();
-    if (!Notifications) return; // Expo Go'da çalışmaz
-    try {
-      const { status } = await Notifications.requestPermissionsAsync();
-      if (status !== 'granted') {
-        alert('Bildirim izni verilmedi. Ayarlardan açabilirsiniz.');
-      }
-    } catch (error) {
-      console.log('Notifications not available');
-    }
-  };
 
   const loadReminderSettings = async () => {
     try {
@@ -141,9 +109,15 @@ export default function VitaminsScreen() {
   };
 
   const handleAddVitamin = async () => {
-    if (!newVitaminName) return;
+    const trimmedName = newVitaminName.trim();
+    const trimmedTime = newVitaminTime.trim();
+
+    if (!trimmedName || !trimmedTime) {
+      alert('Vitamin adı ve zamanını doldurun.');
+      return;
+    }
     try {
-      await addVitamin(newVitaminName, newVitaminTime);
+      await addVitamin(trimmedName, trimmedTime);
       await loadVitamins();
       setShowAddModal(false);
       setNewVitaminName('');
@@ -159,34 +133,24 @@ export default function VitaminsScreen() {
       await AsyncStorage.setItem('vitamin_reminder_times', JSON.stringify(reminderTimes));
       await AsyncStorage.setItem('vitamin_alarm_style', String(alarmStyle));
 
-      const Notifications = getNotifications();
-      if (Notifications) {
-        // Cancel existing notifications
-        await Notifications.cancelAllScheduledNotificationsAsync();
+      const hasPermission = await requestNotificationPermission();
 
-        if (reminderEnabled) {
-          // Schedule new notifications
-          for (const time of reminderTimes) {
-            const [hour, minute] = time.split(':').map(Number);
-            await Notifications.scheduleNotificationAsync({
-              content: {
-                title: alarmStyle ? '🔔 VITAMIN ZAMANI!' : 'Vitamin Hatırlatıcı',
-                body: 'Vitaminlerinizi almayı unutmayın!',
-                sound: alarmStyle ? 'default' : undefined,
-              },
-              trigger: {
-                hour,
-                minute,
-                repeats: true,
-              },
-            });
-          }
-          alert('Hatırlatıcılar kaydedildi!');
-        } else {
-          alert('Hatırlatıcılar kapatıldı.');
-        }
+      if (hasPermission) {
+        await syncReminderNotifications({
+          type: 'vitamin',
+          enabled: reminderEnabled,
+          times: reminderTimes,
+          content: {
+            title: alarmStyle ? '🔔 VITAMIN ZAMANI!' : 'Vitamin Hatırlatıcı',
+            body: 'Vitaminlerinizi almayı unutmayın!',
+            sound: alarmStyle ? 'default' : undefined,
+          },
+        });
+
+        alert(reminderEnabled ? 'Hatırlatıcılar kaydedildi!' : 'Hatırlatıcılar kapatıldı.');
       } else {
-        alert('Hatırlatıcılar kaydedildi! (Development build\'de bildirimler aktif olacak)');
+        await clearReminderNotifications('vitamin');
+        alert('Bildirim izni verilmedi. Ayarlardan açabilirsiniz.');
       }
 
       setShowReminderModal(false);

@@ -10,6 +10,7 @@ import { useRouter } from 'expo-router';
 import { useStore } from '../../store/useStore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LogBox } from 'react-native';
+import { clearReminderNotifications, requestNotificationPermission, syncReminderNotifications } from '../../utils/notifications';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -17,26 +18,6 @@ LogBox.ignoreLogs([
   'expo-notifications: Android Push notifications',
   '`expo-notifications` functionality is not fully supported in Expo Go',
 ]);
-
-// Notifications'ı lazy yükle
-let _notifications: any = null;
-const getNotifications = () => {
-  if (!_notifications) {
-    try {
-      _notifications = require('expo-notifications');
-      _notifications.setNotificationHandler({
-        handleNotification: async () => ({
-          shouldShowAlert: true,
-          shouldPlaySound: true,
-          shouldSetBadge: true,
-        }),
-      });
-    } catch (error) {
-      console.log('Notifications not available');
-    }
-  }
-  return _notifications;
-};
 
 export default function WaterDetailScreen() {
   const { t } = useTranslation();
@@ -59,15 +40,9 @@ export default function WaterDetailScreen() {
   }, []);
 
   const requestPermissions = async () => {
-    const Notifications = getNotifications();
-    if (!Notifications) return;
-    try {
-      const { status } = await Notifications.requestPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Bildirim İzni', 'Bildirim izni verilmedi. Ayarlardan açabilirsiniz.');
-      }
-    } catch (error) {
-      console.log('Notifications not available');
+    const granted = await requestNotificationPermission();
+    if (!granted) {
+      Alert.alert('Bildirim İzni', 'Bildirim izni verilmedi. Ayarlardan açabilirsiniz.');
     }
   };
 
@@ -87,36 +62,26 @@ export default function WaterDetailScreen() {
     try {
       await AsyncStorage.setItem('water_reminder_enabled', reminderEnabled.toString());
       await AsyncStorage.setItem('water_reminder_times', JSON.stringify(reminderTimes));
-      
-      const Notifications = getNotifications();
-      if (Notifications) {
-        // Cancel all existing notifications
-        await Notifications.cancelAllScheduledNotificationsAsync();
-        
-        // Schedule new notifications if enabled
-        if (reminderEnabled) {
-          for (const time of reminderTimes) {
-            const [hours, minutes] = time.split(':').map(Number);
-            
-            await Notifications.scheduleNotificationAsync({
-              content: {
-                title: '💧 Su İçme Zamanı!',
-                body: 'Sağlığınız için su içmeyi unutmayın.',
-                sound: true,
-              },
-              trigger: {
-                hour: hours,
-                minute: minutes,
-                repeats: true,
-              },
-            });
-          }
-        }
-        Alert.alert('Başarılı', 'Hatırlatıcı ayarları kaydedildi!');
+
+      const hasPermission = await requestNotificationPermission();
+
+      if (hasPermission) {
+        await syncReminderNotifications({
+          type: 'water',
+          enabled: reminderEnabled,
+          times: reminderTimes,
+          content: {
+            title: '💧 Su İçme Zamanı!',
+            body: 'Sağlığınız için su içmeyi unutmayın.',
+            sound: 'default',
+          },
+        });
+        Alert.alert('Başarılı', reminderEnabled ? 'Hatırlatıcı ayarları kaydedildi!' : 'Hatırlatıcılar kapatıldı.');
       } else {
-        Alert.alert('Kaydedildi', 'Hatırlatıcı ayarları kaydedildi! (Development build\'de bildirimler aktif olacak)');
+        await clearReminderNotifications('water');
+        Alert.alert('Bildirim İzni', 'Bildirim izni verilmedi. Ayarlardan açabilirsiniz.');
       }
-      
+
       setShowReminderModal(false);
     } catch (error) {
       console.error('Error saving reminder settings:', error);
