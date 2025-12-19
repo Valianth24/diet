@@ -159,6 +159,7 @@ export default function VitaminsScreen() {
       await AsyncStorage.setItem('vitamin_reminder_times', JSON.stringify(reminderTimes));
       await AsyncStorage.setItem('vitamin_alarm_style', String(alarmStyle));
 
+      const Notifications = getNotifications();
       if (Notifications) {
         // Cancel existing notifications
         await Notifications.cancelAllScheduledNotificationsAsync();
@@ -172,7 +173,6 @@ export default function VitaminsScreen() {
                 title: alarmStyle ? '🔔 VITAMIN ZAMANI!' : 'Vitamin Hatırlatıcı',
                 body: 'Vitaminlerinizi almayı unutmayın!',
                 sound: alarmStyle ? 'default' : undefined,
-                priority: alarmStyle ? Notifications.AndroidNotificationPriority.MAX : Notifications.AndroidNotificationPriority.DEFAULT,
               },
               trigger: {
                 hour,
@@ -186,7 +186,7 @@ export default function VitaminsScreen() {
           alert('Hatırlatıcılar kapatıldı.');
         }
       } else {
-        alert('Hatırlatıcılar sadece production build\'de çalışır (Expo Go\'da çalışmaz)');
+        alert('Hatırlatıcılar kaydedildi! (Development build\'de bildirimler aktif olacak)');
       }
 
       setShowReminderModal(false);
