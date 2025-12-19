@@ -95,7 +95,7 @@ export default function CameraScreen() {
   const pickFromGallery = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permissionResult.granted) {
-      Alert.alert('İzin Gerekli', 'Galeri izni gerekli!');
+      Alert.alert(t('error'), t('error'));
       return;
     }
 
