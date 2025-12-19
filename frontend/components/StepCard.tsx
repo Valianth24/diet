@@ -71,12 +71,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   steps: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
     color: Colors.darkText,
   },
   goal: {
-    fontSize: 13,
+    fontSize: 12,
     color: Colors.lightText,
   },
   progressBar: {
