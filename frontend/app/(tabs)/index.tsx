@@ -402,10 +402,10 @@ export default function DashboardScreen() {
           <View style={styles.personalDietsSection}>
             <View style={styles.personalDietsHeader}>
               <Ionicons name="heart" size={24} color={Colors.error} />
-              <Text style={styles.personalDietsTitle}>Kişisel Diyetlerim</Text>
+              <Text style={styles.personalDietsTitle}>{t('personalDiets')}</Text>
             </View>
             <Text style={styles.personalDietsSubtitle}>
-              Aktif diyet planlarınız ve özel beslenme programlarınız
+              {t('personalDietsSubtitle')}
             </Text>
             
             {/* No diets placeholder */}
@@ -416,12 +416,12 @@ export default function DashboardScreen() {
               <View style={styles.noDietsIcon}>
                 <Ionicons name="add-circle-outline" size={48} color={Colors.primary} />
               </View>
-              <Text style={styles.noDietsText}>Henüz bir diyet planınız yok</Text>
+              <Text style={styles.noDietsText}>{t('noDietsYet')}</Text>
               <Text style={styles.noDietsSubtext}>
-                Hazır diyetlerimize göz atın veya kendi diyetinizi oluşturun
+                {t('noDietsSubtext')}
               </Text>
               <View style={styles.noDietsButton}>
-                <Text style={styles.noDietsButtonText}>Diyetlere Git</Text>
+                <Text style={styles.noDietsButtonText}>{t('goToDiets')}</Text>
                 <Ionicons name="arrow-forward" size={20} color={Colors.primary} />
               </View>
             </TouchableOpacity>
