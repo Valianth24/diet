@@ -20,7 +20,7 @@ export default function LoginScreen() {
 
   const handleEmailLogin = async () => {
     if (!email || !password) {
-      Alert.alert('Hata', 'Email ve şifre gerekli');
+      Alert.alert(t('error'), t('emailRequired'));
       return;
     }
     setLoading(true);
