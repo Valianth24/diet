@@ -184,6 +184,30 @@ export default function CameraScreen() {
     );
   };
 
+  // Son hesaplananlara kaydet
+  const saveToRecentScans = async (name: string, totals: any) => {
+    try {
+      const stored = await AsyncStorage.getItem('recent_food_scans');
+      const existing = stored ? JSON.parse(stored) : [];
+      
+      const newScan = {
+        id: `scan_${Date.now()}`,
+        name: name,
+        calories: totals.calories,
+        protein: totals.protein,
+        carbs: totals.carbs,
+        fat: totals.fat,
+        timestamp: Date.now(),
+        imagePreview: imageBase64?.substring(0, 100), // Sadece küçük önizleme
+      };
+      
+      const updated = [newScan, ...existing].slice(0, 20);
+      await AsyncStorage.setItem('recent_food_scans', JSON.stringify(updated));
+    } catch (error) {
+      console.error('Error saving to recent:', error);
+    }
+  };
+
   const handleAddMeal = async () => {
     if (!result || !imageBase64 || editedItems.length === 0) return;
 
@@ -214,6 +238,9 @@ export default function CameraScreen() {
       if (!response.ok) {
         throw new Error('Kaydetme başarısız');
       }
+
+      // Son hesaplananlara kaydet
+      await saveToRecentScans(mealName, totals);
 
       triggerRefresh();
       Alert.alert('Başarılı', 'Yemek kaydedildi!', [
