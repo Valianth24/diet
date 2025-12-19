@@ -146,7 +146,7 @@ export default function OnboardingScreen() {
       >
         <ScrollView contentContainerStyle={styles.content}>
           <Text style={styles.title}>{t('setupProfile')}</Text>
-          <Text style={styles.subtitle}>Kalori hedefinizi hesaplamak için bilgilerinizi girin</Text>
+          <Text style={styles.subtitle}>{t('healthInfo')}</Text>
 
           <View style={styles.form}>
             <View style={styles.inputGroup}>
