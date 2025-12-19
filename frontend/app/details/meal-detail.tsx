@@ -192,7 +192,7 @@ export default function MealDetailScreen() {
             disabled={loading}
           >
             <Ionicons name="add-circle" size={24} color={Colors.white} />
-            <Text style={styles.addButtonText}>Öğüne Ekle</Text>
+            <Text style={styles.addButtonText}>{t('addToMealBtn')}</Text>
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
