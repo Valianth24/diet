@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ScrollView,
   View,
@@ -8,6 +8,7 @@ import {
   TextInput,
   Image,
   Alert,
+  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../contexts/AuthContext';
@@ -16,7 +17,7 @@ import { updateProfile, updateGoals } from '../../utils/api';
 import { Colors } from '../../constants/Colors';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
-import i18n from '../../utils/i18n';
+import i18n, { languageList, changeLanguage } from '../../utils/i18n';
 import ThemeSelector from '../../components/ThemeSelector';
 
 export default function ProfileScreen() {
