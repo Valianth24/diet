@@ -150,6 +150,7 @@ export default function DashboardScreen() {
       await AsyncStorage.setItem('vitamin_reminder_times', JSON.stringify(vitaminReminderTimes));
       await AsyncStorage.setItem('alarm_style', String(alarmStyle));
 
+      const Notifications = getNotifications();
       if (Notifications) {
         // Cancel existing notifications
         await Notifications.cancelAllScheduledNotificationsAsync();
@@ -194,7 +195,7 @@ export default function DashboardScreen() {
 
         alert('Hatırlatıcılar kaydedildi!');
       } else {
-        alert('Hatırlatıcılar sadece production build\'de çalışır (Expo Go\'da çalışmaz)');
+        alert('Hatırlatıcılar kaydedildi! (Bildirimler development build\'de aktif olacak)');
       }
 
       setShowNotificationModal(false);
