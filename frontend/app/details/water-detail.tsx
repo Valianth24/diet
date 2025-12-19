@@ -59,6 +59,7 @@ export default function WaterDetailScreen() {
   }, []);
 
   const requestPermissions = async () => {
+    const Notifications = getNotifications();
     if (!Notifications) return;
     try {
       const { status } = await Notifications.requestPermissionsAsync();
@@ -87,6 +88,7 @@ export default function WaterDetailScreen() {
       await AsyncStorage.setItem('water_reminder_enabled', reminderEnabled.toString());
       await AsyncStorage.setItem('water_reminder_times', JSON.stringify(reminderTimes));
       
+      const Notifications = getNotifications();
       if (Notifications) {
         // Cancel all existing notifications
         await Notifications.cancelAllScheduledNotificationsAsync();
@@ -112,7 +114,7 @@ export default function WaterDetailScreen() {
         }
         Alert.alert('Başarılı', 'Hatırlatıcı ayarları kaydedildi!');
       } else {
-        Alert.alert('Uyarı', 'Hatırlatıcılar sadece production build\'de çalışır.');
+        Alert.alert('Kaydedildi', 'Hatırlatıcı ayarları kaydedildi! (Development build\'de bildirimler aktif olacak)');
       }
       
       setShowReminderModal(false);
