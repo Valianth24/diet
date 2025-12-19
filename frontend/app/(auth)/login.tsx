@@ -30,7 +30,7 @@ export default function LoginScreen() {
       await AsyncStorage.setItem('session_token', data.session_token);
       setUser(data);
     } catch (error: any) {
-      Alert.alert('Hata', error.message || 'Giriş başarısız');
+      Alert.alert(t('error'), error.message || t('loginFailed'));
     } finally {
       setLoading(false);
     }
@@ -38,11 +38,11 @@ export default function LoginScreen() {
 
   const handleRegister = async () => {
     if (!email || !password || !name) {
-      Alert.alert('Hata', 'Tüm alanları doldurun');
+      Alert.alert(t('error'), t('fillAllFields'));
       return;
     }
     if (password.length < 6) {
-      Alert.alert('Hata', 'Şifre en az 6 karakter olmalı');
+      Alert.alert(t('error'), t('passwordTooShort'));
       return;
     }
     setLoading(true);
