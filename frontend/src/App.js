@@ -684,7 +684,7 @@ const DashboardPage = () => {
         {/* Kalori ve Vitamin - Yan Yana */}
         <div className="grid grid-cols-2 gap-4">
           {/* Calorie Card */}
-          <div className="rounded-2xl p-4 shadow-sm" style={{ backgroundColor: colors.cardBg }}>
+          <div className="rounded-2xl p-4 shadow-sm cursor-pointer hover:shadow-md transition-all" style={{ backgroundColor: colors.cardBg }} onClick={() => navigate('/meals')}>
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2"><span className="text-xl">🔥</span><h3 className="font-bold" style={{ color: colors.text }}>Kalori</h3></div>
               <span className="text-xs" style={{ color: colors.textLight }}>{calorieGoal - dailySummary.total_calories} kalan</span>
@@ -700,6 +700,7 @@ const DashboardPage = () => {
               <div className="flex justify-between"><span style={{ color: colors.textLight }}>Karb</span><span className="font-medium" style={{ color: colors.text }}>{dailySummary.total_carbs.toFixed(1)}g</span></div>
               <div className="flex justify-between"><span style={{ color: colors.textLight }}>Yağ</span><span className="font-medium" style={{ color: colors.text }}>{dailySummary.total_fat.toFixed(1)}g</span></div>
             </div>
+            <p className="text-center text-xs mt-2 font-medium" style={{ color: colors.primary }}>Yemekleri Gör →</p>
           </div>
 
           {/* Vitamin Card */}
