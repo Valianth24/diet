@@ -123,41 +123,41 @@ export default function MealDetailScreen() {
 
           {/* Calculated Values */}
           <View style={styles.resultsCard}>
-            <Text style={styles.resultsTitle}>Besin Değerleri ({gramsNum}g)</Text>
+            <Text style={styles.resultsTitle}>{t('nutritionValues')} ({gramsNum}g)</Text>
             
             <View style={styles.calorieDisplay}>
               <Text style={styles.calorieValue}>{calculatedCalories}</Text>
-              <Text style={styles.calorieLabel}>KCAL</Text>
+              <Text style={styles.calorieLabel}>{t('kcal')}</Text>
             </View>
 
             <View style={styles.macroGrid}>
               <View style={styles.macroCard}>
                 <Ionicons name="leaf" size={24} color={Colors.success} />
                 <Text style={styles.macroValue}>{calculatedProtein}g</Text>
-                <Text style={styles.macroLabel}>Protein</Text>
+                <Text style={styles.macroLabel}>{t('protein')}</Text>
               </View>
               <View style={styles.macroCard}>
                 <Ionicons name="fast-food" size={24} color={Colors.warning} />
                 <Text style={styles.macroValue}>{calculatedCarbs}g</Text>
-                <Text style={styles.macroLabel}>Karbonhidrat</Text>
+                <Text style={styles.macroLabel}>{t('carbohydrate')}</Text>
               </View>
               <View style={styles.macroCard}>
                 <Ionicons name="water" size={24} color={Colors.orange} />
                 <Text style={styles.macroValue}>{calculatedFat}g</Text>
-                <Text style={styles.macroLabel}>Yağ</Text>
+                <Text style={styles.macroLabel}>{t('fat')}</Text>
               </View>
             </View>
           </View>
 
           {/* Meal Type Selection */}
           <View style={styles.mealTypeSection}>
-            <Text style={styles.sectionTitle}>Öğün Seç</Text>
+            <Text style={styles.sectionTitle}>{t('selectMeal')}</Text>
             <View style={styles.mealTypeRow}>
               {[
-                { key: 'breakfast', icon: 'sunny', label: 'Kahvaltı' },
-                { key: 'lunch', icon: 'restaurant', label: 'Öğle' },
-                { key: 'dinner', icon: 'moon', label: 'Akşam' },
-                { key: 'snack', icon: 'cafe', label: 'Ara Öğün' },
+                { key: 'breakfast', icon: 'sunny', label: t('breakfast') },
+                { key: 'lunch', icon: 'restaurant', label: t('lunch') },
+                { key: 'dinner', icon: 'moon', label: t('dinner') },
+                { key: 'snack', icon: 'cafe', label: t('snack') },
               ].map((type) => (
                 <TouchableOpacity
                   key={type.key}
