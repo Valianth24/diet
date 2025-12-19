@@ -18,6 +18,7 @@ import i18n from '../../utils/i18n';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { LogBox } from 'react-native';
+import { clearReminderNotifications, requestNotificationPermission, syncReminderNotifications } from '../../utils/notifications';
 
 // Expo Go'da remote push notification uyarılarını gizle
 LogBox.ignoreLogs([
@@ -29,26 +30,6 @@ LogBox.ignoreLogs([
 const isExpoGo =
   Constants.appOwnership === 'expo' ||
   Constants.executionEnvironment === 'storeClient';
-
-// Notifications'ı lazy yükle - sadece çağrıldığında
-let _notifications: any = null;
-const getNotifications = () => {
-  if (!_notifications) {
-    try {
-      _notifications = require('expo-notifications');
-      _notifications.setNotificationHandler({
-        handleNotification: async () => ({
-          shouldShowAlert: true,
-          shouldPlaySound: true,
-          shouldSetBadge: true,
-        }),
-      });
-    } catch (error) {
-      console.log('Notifications not available');
-    }
-  }
-  return _notifications;
-};
 
 export default function DashboardScreen() {
   const { t } = useTranslation();
@@ -112,15 +93,9 @@ export default function DashboardScreen() {
   }, [refreshData]);
 
   const requestNotificationPermissions = async () => {
-    const Notifications = getNotifications();
-    if (!Notifications) return;
-    try {
-      const { status } = await Notifications.requestPermissionsAsync();
-      if (status !== 'granted') {
-        console.log('Notification permission not granted');
-      }
-    } catch (error) {
-      console.log('Notifications not available');
+    const granted = await requestNotificationPermission();
+    if (!granted) {
+      console.log('Notification permission not granted');
     }
   };
 
@@ -150,52 +125,36 @@ export default function DashboardScreen() {
       await AsyncStorage.setItem('vitamin_reminder_times', JSON.stringify(vitaminReminderTimes));
       await AsyncStorage.setItem('alarm_style', String(alarmStyle));
 
-      const Notifications = getNotifications();
-      if (Notifications) {
-        // Cancel existing notifications
-        await Notifications.cancelAllScheduledNotificationsAsync();
+      const hasPermission = await requestNotificationPermission();
 
-        // Schedule water reminders
-        if (waterReminderEnabled) {
-          for (const time of waterReminderTimes) {
-            const [hour, minute] = time.split(':').map(Number);
-            await Notifications.scheduleNotificationAsync({
-              content: {
-                title: alarmStyle ? '💧 SU İÇME ZAMANI!' : 'Su Hatırlatıcısı',
-                body: 'Sağlığınız için su içmeyi unutmayın!',
-                sound: alarmStyle ? 'default' : undefined,
-              },
-              trigger: {
-                hour,
-                minute,
-                repeats: true,
-              },
-            });
-          }
-        }
+      if (hasPermission) {
+        await syncReminderNotifications({
+          type: 'water',
+          enabled: waterReminderEnabled,
+          times: waterReminderTimes,
+          content: {
+            title: alarmStyle ? '💧 SU İÇME ZAMANI!' : 'Su Hatırlatıcısı',
+            body: 'Sağlığınız için su içmeyi unutmayın!',
+            sound: alarmStyle ? 'default' : undefined,
+          },
+        });
 
-        // Schedule vitamin reminders
-        if (vitaminReminderEnabled) {
-          for (const time of vitaminReminderTimes) {
-            const [hour, minute] = time.split(':').map(Number);
-            await Notifications.scheduleNotificationAsync({
-              content: {
-                title: alarmStyle ? '💊 VİTAMİN ZAMANI!' : 'Vitamin Hatırlatıcısı',
-                body: 'Vitaminlerinizi almayı unutmayın!',
-                sound: alarmStyle ? 'default' : undefined,
-              },
-              trigger: {
-                hour,
-                minute,
-                repeats: true,
-              },
-            });
-          }
-        }
+        await syncReminderNotifications({
+          type: 'vitamin',
+          enabled: vitaminReminderEnabled,
+          times: vitaminReminderTimes,
+          content: {
+            title: alarmStyle ? '💊 VİTAMİN ZAMANI!' : 'Vitamin Hatırlatıcısı',
+            body: 'Vitaminlerinizi almayı unutmayın!',
+            sound: alarmStyle ? 'default' : undefined,
+          },
+        });
 
         alert('Hatırlatıcılar kaydedildi!');
       } else {
-        alert('Hatırlatıcılar kaydedildi! (Bildirimler development build\'de aktif olacak)');
+        await clearReminderNotifications('water');
+        await clearReminderNotifications('vitamin');
+        alert('Bildirim izni verilmedi. Ayarlardan açabilirsiniz.');
       }
 
       setShowNotificationModal(false);
