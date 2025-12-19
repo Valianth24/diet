@@ -16,21 +16,39 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import i18n from '../../utils/i18n';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Constants from 'expo-constants';
+import { LogBox } from 'react-native';
 
-// Expo Notifications - Sadece production build'de çalışır
-let Notifications: any = null;
-try {
-  Notifications = require('expo-notifications');
-  Notifications.setNotificationHandler({
-    handleNotification: async () => ({
-      shouldShowAlert: true,
-      shouldPlaySound: true,
-      shouldSetBadge: true,
-    }),
-  });
-} catch (error) {
-  console.log('Notifications not available in Expo Go');
-}
+// Expo Go'da remote push notification uyarılarını gizle
+LogBox.ignoreLogs([
+  'expo-notifications: Android Push notifications',
+  '`expo-notifications` functionality is not fully supported in Expo Go',
+]);
+
+// Expo Go kontrolü
+const isExpoGo =
+  Constants.appOwnership === 'expo' ||
+  Constants.executionEnvironment === 'storeClient';
+
+// Notifications'ı lazy yükle - sadece çağrıldığında
+let _notifications: any = null;
+const getNotifications = () => {
+  if (!_notifications) {
+    try {
+      _notifications = require('expo-notifications');
+      _notifications.setNotificationHandler({
+        handleNotification: async () => ({
+          shouldShowAlert: true,
+          shouldPlaySound: true,
+          shouldSetBadge: true,
+        }),
+      });
+    } catch (error) {
+      console.log('Notifications not available');
+    }
+  }
+  return _notifications;
+};
 
 export default function DashboardScreen() {
   const { t } = useTranslation();
