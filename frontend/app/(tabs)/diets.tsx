@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { useStore } from '../../store/useStore';
 import PremiumPaywall from '../../components/PremiumPaywall';
 import AdvancedDietForm from '../../components/AdvancedDietForm';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function DietsScreen() {
   const { t } = useTranslation();
