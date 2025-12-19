@@ -111,15 +111,15 @@ export default function TrackingScreen() {
             )}
 
             <View style={styles.avgContainer}>
-              <Text style={styles.avgLabel}>Bu Hafta Ort:</Text>
-              <Text style={styles.avgValue}>{avgWater.toFixed(1)} L / Gün</Text>
+              <Text style={styles.avgLabel}>{t('thisWeekAvg')}</Text>
+              <Text style={styles.avgValue}>{avgWater.toFixed(1)} {t('liters')} {t('perDay')}</Text>
             </View>
           </View>
         </View>
 
         {/* Bar Chart Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Haftalık Detay</Text>
+          <Text style={styles.sectionTitle}>{t('weeklyDetail')}</Text>
 
           <View style={styles.card}>
             {chartData.length > 0 && (
@@ -145,13 +145,13 @@ export default function TrackingScreen() {
 
         {/* Steps Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Adım Sayısı</Text>
+          <Text style={styles.sectionTitle}>{t('stepCounter')}</Text>
 
           <View style={styles.card}>
             <View style={styles.goalContainer}>
               <Ionicons name="footsteps" size={40} color={Colors.primary} />
               <View>
-                <Text style={styles.goalLabel}>Hedef</Text>
+                <Text style={styles.goalLabel}>{t('goal')}</Text>
                 <Text style={styles.goalValue}>{stepGoal.toLocaleString()}</Text>
               </View>
             </View>
@@ -163,17 +163,17 @@ export default function TrackingScreen() {
             <View style={styles.statsRow}>
               <View style={styles.statItem}>
                 <Ionicons name="trophy" size={24} color={Colors.warning} />
-                <Text style={styles.statLabel}>Bugün</Text>
+                <Text style={styles.statLabel}>{t('today')}</Text>
                 <Text style={styles.statValue}>{todaySteps.toLocaleString()}</Text>
               </View>
               <View style={styles.statItem}>
                 <Ionicons name="trending-up" size={24} color={Colors.success} />
-                <Text style={styles.statLabel}>Ortalama</Text>
+                <Text style={styles.statLabel}>{t('average')}</Text>
                 <Text style={styles.statValue}>{avgSteps.toLocaleString()}</Text>
               </View>
               <View style={styles.statItem}>
                 <Ionicons name="flame" size={24} color={Colors.error} />
-                <Text style={styles.statLabel}>Kalori</Text>
+                <Text style={styles.statLabel}>{t('calorie')}</Text>
                 <Text style={styles.statValue}>{caloriesBurned}</Text>
               </View>
             </View>
