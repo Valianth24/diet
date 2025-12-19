@@ -609,7 +609,7 @@ export default function DashboardScreen() {
 
                 {vitaminReminderEnabled && (
                   <View style={styles.reminderTimes}>
-                    <Text style={styles.reminderSubtitle}>Hatırlatma Saatleri ({vitaminReminderTimes.length})</Text>
+                    <Text style={styles.reminderSubtitle}>{t('reminderTimes')} ({vitaminReminderTimes.length})</Text>
                     <View style={styles.timeChips}>
                       {vitaminReminderTimes.map((time) => (
                         <View key={time} style={[styles.timeChip, { backgroundColor: Colors.primary + '20' }]}>
