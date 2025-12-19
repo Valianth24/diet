@@ -18,6 +18,8 @@ interface AuthContextType {
   login: () => Promise<void>;
   logout: () => Promise<void>;
   needsOnboarding: boolean;
+  setUser: (user: any) => void;
+  setNeedsOnboarding: (needs: boolean) => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -27,6 +29,8 @@ const AuthContext = createContext<AuthContextType>({
   login: async () => {},
   logout: async () => {},
   needsOnboarding: false,
+  setUser: () => {},
+  setNeedsOnboarding: () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);
