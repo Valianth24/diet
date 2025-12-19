@@ -119,12 +119,18 @@ export default function DietsScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Back Button Header */}
       <View style={styles.topHeader}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+        <TouchableOpacity 
+          onPress={() => router.back()} 
+          style={styles.backButton}
+          hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+          activeOpacity={0.7}
+        >
           <Ionicons name="chevron-back" size={28} color={Colors.darkText} />
         </TouchableOpacity>
         <TouchableOpacity 
           style={styles.premiumButton}
           onPress={() => setShowPaywall(true)}
+          activeOpacity={0.8}
         >
           <Ionicons name="diamond" size={20} color={Colors.white} />
           <Text style={styles.premiumButtonText}>Premium</Text>
