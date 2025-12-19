@@ -318,11 +318,7 @@ export default function CameraScreen() {
             {/* Tips */}
             <View style={styles.tips}>
               <Text style={styles.tipsTitle}>{t('tips')}</Text>
-              {[
-                'Yemeği üstten ve net çekin',
-                'İyi aydınlatma kullanın',
-                'Porsiyonu tam gösterin',
-              ].map((tip, index) => (
+              {[t('tip1'), t('tip2'), t('tip3')].map((tip, index) => (
                 <View key={index} style={styles.tipItem}>
                   <Ionicons name="checkmark-circle" size={18} color={Colors.success} />
                   <Text style={styles.tipText}>{tip}</Text>
@@ -338,20 +334,20 @@ export default function CameraScreen() {
               <Image source={{ uri: image }} style={styles.image} resizeMode="cover" />
               <View style={styles.aiLabel}>
                 <Ionicons name="sparkles" size={14} color="#FFD700" />
-                <Text style={styles.aiLabelText}>AI Tahmini</Text>
+                <Text style={styles.aiLabelText}>{t('aiEstimate')}</Text>
               </View>
             </View>
 
             {analyzing ? (
               <View style={styles.loadingCard}>
                 <ActivityIndicator size="large" color={Colors.primary} />
-                <Text style={styles.loadingText}>Yemek analiz ediliyor...</Text>
-                <Text style={styles.loadingSubtext}>AI görüntüyü inceliyor</Text>
+                <Text style={styles.loadingText}>{t('analyzingFood')}</Text>
+                <Text style={styles.loadingSubtext}>{t('aiAnalyzing')}</Text>
               </View>
             ) : result && editedItems.length > 0 ? (
               <>
                 {/* Detected Items */}
-                <Text style={styles.sectionTitle}>Tespit Edilen Yemekler</Text>
+                <Text style={styles.sectionTitle}>{t('detectedFoods')}</Text>
                 {editedItems.map((item, index) => (
                   <View key={index} style={styles.itemCard}>
                     <View style={styles.itemHeader}>
@@ -368,7 +364,7 @@ export default function CameraScreen() {
 
                     {/* Gram Input */}
                     <View style={styles.gramRow}>
-                      <Text style={styles.gramLabel}>Porsiyon:</Text>
+                      <Text style={styles.gramLabel}>{t('portion')}:</Text>
                       <View style={styles.gramInputContainer}>
                         <TouchableOpacity 
                           style={styles.gramButton}
