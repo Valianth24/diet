@@ -303,7 +303,7 @@ const styles = StyleSheet.create({
     color: Colors.lightText,
   },
   langList: {
-    flex: 1,
+    marginBottom: 20,
   },
   langItem: {
     flexDirection: 'row',
