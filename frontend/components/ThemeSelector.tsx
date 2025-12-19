@@ -52,7 +52,7 @@ export default function ThemeSelector() {
     const theme = themes[themeName];
     const videosNeeded = metadata.requiredVideos - watchedAds;
 
-    if (themeName === 'pinkStar' && isUnlocked) {
+    if (themeName === 'pinkStar') {
       // Pembe tema için özel kart
       return (
         <TouchableOpacity
