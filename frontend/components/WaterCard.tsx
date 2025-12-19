@@ -69,7 +69,7 @@ export default function WaterCard({ current, goal }: WaterCardProps) {
         disabled={loading}
       >
         <Ionicons name="add" size={16} color={Colors.white} />
-        <Text style={styles.addButtonText}>1 Bardak</Text>
+        <Text style={styles.addButtonText}>{t('addGlass')}</Text>
       </TouchableOpacity>
     </TouchableOpacity>
   );
