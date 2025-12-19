@@ -1343,6 +1343,121 @@ const WaterDetailPage = () => {
   );
 };
 
+// Meals Page - Günlük Yemekler Öğün Öğün
+const MealsPage = () => {
+  const { user } = useAuth();
+  const { colors } = useTheme();
+  const navigate = useNavigate();
+  const [meals, setMeals] = useState([]);
+  const [summary, setSummary] = useState({ total_calories: 0, total_protein: 0, total_carbs: 0, total_fat: 0 });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => { loadData(); }, []);
+
+  const loadData = async () => {
+    try {
+      const [mealsData, summaryData] = await Promise.all([api.getTodayMeals(), api.getDailySummary()]);
+      setMeals(mealsData);
+      setSummary(summaryData);
+    } catch (error) {} finally { setLoading(false); }
+  };
+
+  const getMealsByType = (type) => meals.filter(m => m.meal_type === type);
+  const getMealTypeCalories = (type) => getMealsByType(type).reduce((sum, m) => sum + m.calories, 0);
+  const getMealTypeIcon = (type) => {
+    switch (type) {
+      case 'breakfast': return '🌅';
+      case 'lunch': return '🌞';
+      case 'dinner': return '🌙';
+      case 'snack': return '☕';
+      default: return '🍽️';
+    }
+  };
+  const getMealTypeName = (type) => {
+    switch (type) {
+      case 'breakfast': return 'Kahvaltı';
+      case 'lunch': return 'Öğle Yemeği';
+      case 'dinner': return 'Akşam Yemeği';
+      case 'snack': return 'Ara Öğün';
+      default: return 'Diğer';
+    }
+  };
+
+  const calorieGoal = user?.daily_calorie_goal || 2000;
+  const mealTypes = ['breakfast', 'lunch', 'dinner', 'snack'];
+
+  if (loading) return <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: colors.background }}><div className="animate-spin rounded-full h-12 w-12 border-4 border-t-transparent" style={{ borderColor: colors.primary, borderTopColor: 'transparent' }}></div></div>;
+
+  return (
+    <div className="min-h-screen pb-24" style={{ backgroundColor: colors.background }}>
+      <div className="p-4 shadow-sm flex items-center gap-2" style={{ backgroundColor: colors.cardBg }}>
+        <button onClick={() => navigate('/')} className="p-2" style={{ color: colors.text }}>←</button>
+        <h1 className="text-xl font-bold" style={{ color: colors.text }}>Bugünkü Yemekler</h1>
+      </div>
+
+      <div className="p-4 space-y-4">
+        {/* Summary */}
+        <div className="rounded-2xl p-4 shadow-sm" style={{ backgroundColor: colors.cardBg }}>
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              <p className="text-sm" style={{ color: colors.textLight }}>Toplam Kalori</p>
+              <p className="text-2xl font-bold" style={{ color: colors.text }}>{summary.total_calories} / {calorieGoal} kcal</p>
+            </div>
+            <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ backgroundColor: colors.primary + '20' }}>
+              <span className="text-xl font-bold" style={{ color: colors.primary }}>{Math.round((summary.total_calories / calorieGoal) * 100)}%</span>
+            </div>
+          </div>
+          <div className="flex justify-around">
+            <div className="text-center"><div className="w-3 h-3 rounded-full mx-auto mb-1" style={{ backgroundColor: '#FF6B6B' }}></div><p className="text-xs" style={{ color: colors.textLight }}>Protein</p><p className="font-bold" style={{ color: colors.text }}>{summary.total_protein.toFixed(1)}g</p></div>
+            <div className="text-center"><div className="w-3 h-3 rounded-full mx-auto mb-1" style={{ backgroundColor: '#4ECDC4' }}></div><p className="text-xs" style={{ color: colors.textLight }}>Karb</p><p className="font-bold" style={{ color: colors.text }}>{summary.total_carbs.toFixed(1)}g</p></div>
+            <div className="text-center"><div className="w-3 h-3 rounded-full mx-auto mb-1" style={{ backgroundColor: '#FFE66D' }}></div><p className="text-xs" style={{ color: colors.textLight }}>Yağ</p><p className="font-bold" style={{ color: colors.text }}>{summary.total_fat.toFixed(1)}g</p></div>
+          </div>
+        </div>
+
+        {/* Meal Sections */}
+        {mealTypes.map(type => {
+          const typeMeals = getMealsByType(type);
+          const typeCalories = getMealTypeCalories(type);
+          return (
+            <div key={type} className="rounded-2xl p-4 shadow-sm" style={{ backgroundColor: colors.cardBg }}>
+              <div className="flex justify-between items-center mb-3 pb-3 border-b" style={{ borderColor: colors.background }}>
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl">{getMealTypeIcon(type)}</span>
+                  <span className="font-bold text-lg" style={{ color: colors.text }}>{getMealTypeName(type)}</span>
+                </div>
+                <span className="font-bold" style={{ color: colors.primary }}>{typeCalories} kcal</span>
+              </div>
+              {typeMeals.length === 0 ? (
+                <p className="text-center py-4" style={{ color: colors.textLight }}>Henüz yemek eklenmedi</p>
+              ) : (
+                <div className="space-y-2">
+                  {typeMeals.map(meal => (
+                    <div key={meal.meal_id} className="flex items-center gap-3 p-2 rounded-xl" style={{ backgroundColor: colors.background }}>
+                      <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: colors.primary + '20' }}>
+                        {meal.image_base64 ? <img src={meal.image_base64} alt="" className="w-full h-full object-cover rounded-xl" /> : <span className="text-xl">🍽️</span>}
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium" style={{ color: colors.text }}>{meal.name}</p>
+                        <p className="text-xs" style={{ color: colors.textLight }}>P: {meal.protein.toFixed(1)}g • K: {meal.carbs.toFixed(1)}g • Y: {meal.fat.toFixed(1)}g</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold" style={{ color: colors.primary }}>{meal.calories}</p>
+                        <p className="text-xs" style={{ color: colors.textLight }}>kcal</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      <BottomNav />
+    </div>
+  );
+};
+
 // Tracking Page
 const TrackingPage = () => {
   const { user } = useAuth();
