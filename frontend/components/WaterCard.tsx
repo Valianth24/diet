@@ -50,7 +50,7 @@ export default function WaterCard({ current, goal }: WaterCardProps) {
           <Ionicons
             key={index}
             name="water"
-            size={40}
+            size={28}
             color={index < glassCount ? Colors.teal : '#E0E0E0'}
           />
         ))}
@@ -97,11 +97,13 @@ const styles = StyleSheet.create({
   },
   glassContainer: {
     flexDirection: 'row',
-    gap: 8,
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 6,
     marginVertical: 8,
   },
   amount: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: 'bold',
     color: Colors.darkText,
   },
