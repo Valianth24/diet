@@ -31,7 +31,12 @@ export default function PremiumPaywall({ visible, onClose, onSubscribe }: Premiu
         >
           <View style={styles.container}>
             {/* Close Button */}
-            <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+            <TouchableOpacity 
+              style={styles.closeButton} 
+              onPress={onClose}
+              hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+              activeOpacity={0.7}
+            >
               <Ionicons name="close" size={28} color={Colors.darkText} />
             </TouchableOpacity>
 
