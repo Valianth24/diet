@@ -282,7 +282,7 @@ export default function CameraScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.headerButton}>
           <Ionicons name="arrow-back" size={24} color={Colors.darkText} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Fotoğraf ile Analiz</Text>
+        <Text style={styles.headerTitle}>{t('photoAnalysis')}</Text>
         {image && (
           <TouchableOpacity onPress={resetScreen} style={styles.headerButton}>
             <Ionicons name="refresh" size={24} color={Colors.primary} />
@@ -300,24 +300,24 @@ export default function CameraScreen() {
               style={styles.emptyGradient}
             >
               <Ionicons name="camera" size={64} color="#FFF" />
-              <Text style={styles.emptyTitle}>Yemek Fotoğrafı</Text>
-              <Text style={styles.emptySubtitle}>AI kalorileri otomatik hesaplasın</Text>
+              <Text style={styles.emptyTitle}>{t('mealPhoto')}</Text>
+              <Text style={styles.emptySubtitle}>{t('aiCalcCalories')}</Text>
             </LinearGradient>
             
             <View style={styles.buttonContainer}>
               <TouchableOpacity style={styles.primaryButton} onPress={pickImage}>
                 <Ionicons name="camera" size={24} color="#FFF" />
-                <Text style={styles.primaryButtonText}>Fotoğraf Çek</Text>
+                <Text style={styles.primaryButtonText}>{t('takePhoto')}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.secondaryButton} onPress={pickFromGallery}>
                 <Ionicons name="images" size={24} color={Colors.primary} />
-                <Text style={styles.secondaryButtonText}>Galeriden Seç</Text>
+                <Text style={styles.secondaryButtonText}>{t('selectFromGallery')}</Text>
               </TouchableOpacity>
             </View>
 
             {/* Tips */}
             <View style={styles.tips}>
-              <Text style={styles.tipsTitle}>İpuçları</Text>
+              <Text style={styles.tipsTitle}>{t('tips')}</Text>
               {[
                 'Yemeği üstten ve net çekin',
                 'İyi aydınlatma kullanın',
