@@ -59,20 +59,20 @@ export default function ProfileScreen() {
 
       setUser(updatedGoals);
       setEditing(false);
-      Alert.alert('Success', 'Profile updated successfully!');
+      Alert.alert(t('success'), t('profileUpdated'));
     } catch (error) {
       console.error('Error updating profile:', error);
-      Alert.alert('Error', 'Failed to update profile. Please try again.');
+      Alert.alert(t('error'), t('profileUpdateError'));
     }
   };
 
   const handleLogout = async () => {
     Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
+      t('logout'),
+      t('logoutConfirm'),
       [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Logout', style: 'destructive', onPress: logout },
+        { text: t('cancel'), style: 'cancel' },
+        { text: t('logout'), style: 'destructive', onPress: logout },
       ]
     );
   };
