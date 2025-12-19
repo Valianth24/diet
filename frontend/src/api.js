@@ -56,6 +56,41 @@ export const logout = async () => {
   return response.json();
 };
 
+export const registerUser = async (email, password, name) => {
+  const response = await fetch(`${API_URL}/auth/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password, name }),
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.detail || 'Kayıt başarısız');
+  }
+  return response.json();
+};
+
+export const loginUser = async (email, password) => {
+  const response = await fetch(`${API_URL}/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.detail || 'Giriş başarısız');
+  }
+  return response.json();
+};
+
+export const guestLogin = async () => {
+  const response = await fetch(`${API_URL}/auth/guest`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+  });
+  if (!response.ok) throw new Error('Misafir girişi başarısız');
+  return response.json();
+};
+
 export const updateProfile = async (profileData) => {
   const response = await fetch(`${API_URL}/auth/profile`, {
     method: 'PUT',
