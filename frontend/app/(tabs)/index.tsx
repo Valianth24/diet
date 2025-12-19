@@ -477,7 +477,7 @@ export default function DashboardScreen() {
             {/* Search */}
             <TextInput
               style={styles.searchInput}
-              placeholder="Yemek ara..."
+              placeholder={t('searchFood')}
               value={searchQuery}
               onChangeText={setSearchQuery}
             />
