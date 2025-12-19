@@ -78,29 +78,26 @@ export default function ProfileScreen() {
   };
 
   const [showLanguageModal, setShowLanguageModal] = useState(false);
-  const [selectedLang, setSelectedLang] = useState(i18n.language);
+  const [currentLang, setCurrentLang] = useState(i18n.language);
 
-  const languageList = [
-    { code: 'en', name: 'English', flag: '🇬🇧' },
-    { code: 'tr', name: 'Türkçe', flag: '🇹🇷' },
-    { code: 'es', name: 'Español', flag: '🇪🇸' },
-    { code: 'pt', name: 'Português', flag: '🇧🇷' },
-    { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
-    { code: 'fr', name: 'Français', flag: '🇫🇷' },
-    { code: 'ar', name: 'العربية', flag: '🇸🇦' },
-  ];
+  useEffect(() => {
+    setCurrentLang(i18n.language);
+  }, [i18n.language]);
 
   const handleLanguageChange = async (langCode: string) => {
-    setSelectedLang(langCode);
-    await i18n.changeLanguage(langCode);
-    const AsyncStorage = require('@react-native-async-storage/async-storage').default;
-    await AsyncStorage.setItem('app_language', langCode);
-    setShowLanguageModal(false);
+    try {
+      await changeLanguage(langCode);
+      setCurrentLang(langCode);
+      setShowLanguageModal(false);
+      Alert.alert(t('success'), t('languageChanged'));
+    } catch (error) {
+      Alert.alert(t('error'), 'Language change failed');
+    }
   };
 
-  const getCurrentLanguageName = () => {
-    const lang = languageList.find(l => l.code === i18n.language);
-    return lang ? `${lang.flag} ${lang.name}` : '🇬🇧 English';
+  const getCurrentLanguageInfo = () => {
+    const lang = languageList.find(l => l.code === currentLang);
+    return lang || languageList[0];
   };
 
   return (
