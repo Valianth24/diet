@@ -279,16 +279,26 @@ export default function CameraScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.headerButton}>
+        <TouchableOpacity 
+          onPress={() => router.back()} 
+          style={styles.headerButton}
+          hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+          activeOpacity={0.7}
+        >
           <Ionicons name="arrow-back" size={24} color={Colors.darkText} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t('photoAnalysis')}</Text>
+        <Text style={styles.headerTitle} numberOfLines={1}>{t('photoAnalysis')}</Text>
         {image && (
-          <TouchableOpacity onPress={resetScreen} style={styles.headerButton}>
+          <TouchableOpacity 
+            onPress={resetScreen} 
+            style={styles.headerButton}
+            hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+            activeOpacity={0.7}
+          >
             <Ionicons name="refresh" size={24} color={Colors.primary} />
           </TouchableOpacity>
         )}
-        {!image && <View style={{ width: 40 }} />}
+        {!image && <View style={{ width: 44 }} />}
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
