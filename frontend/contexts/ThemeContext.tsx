@@ -64,13 +64,13 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const setTheme = async (theme: ThemeName) => {
     try {
-      if (!isThemeAvailable(theme)) {
-        throw new Error('Theme not available');
-      }
+      // Allow all themes for now (remove restriction)
       await AsyncStorage.setItem('app_theme', theme);
       setCurrentTheme(theme);
+      console.log('Theme changed to:', theme);
     } catch (error) {
       console.error('Error setting theme:', error);
+      throw error;
     }
   };
 
