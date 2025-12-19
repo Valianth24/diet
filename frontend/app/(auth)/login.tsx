@@ -141,8 +141,8 @@ export default function LoginScreen() {
 
             <View style={styles.formHeader}>
               <Ionicons name="person-add-outline" size={60} color={Colors.primary} />
-              <Text style={styles.formTitle}>Hesap Oluştur</Text>
-              <Text style={styles.formSubtitle}>Yeni hesap oluşturun</Text>
+              <Text style={styles.formTitle}>{t('registerTitle')}</Text>
+              <Text style={styles.formSubtitle}>{t('registerSubtitle')}</Text>
             </View>
 
             <View style={styles.form}>
@@ -150,7 +150,7 @@ export default function LoginScreen() {
                 <Ionicons name="person-outline" size={20} color={Colors.lightText} style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
-                  placeholder="Ad Soyad"
+                  placeholder={t('fullName')}
                   placeholderTextColor={Colors.lightText}
                   value={name}
                   onChangeText={setName}
@@ -161,7 +161,7 @@ export default function LoginScreen() {
                 <Ionicons name="mail-outline" size={20} color={Colors.lightText} style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
-                  placeholder="Email"
+                  placeholder={t('email')}
                   placeholderTextColor={Colors.lightText}
                   value={email}
                   onChangeText={setEmail}
@@ -174,7 +174,7 @@ export default function LoginScreen() {
                 <Ionicons name="lock-closed-outline" size={20} color={Colors.lightText} style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
-                  placeholder="Şifre (min 6 karakter)"
+                  placeholder={t('passwordHint')}
                   placeholderTextColor={Colors.lightText}
                   value={password}
                   onChangeText={setPassword}
@@ -186,11 +186,11 @@ export default function LoginScreen() {
               </View>
 
               <TouchableOpacity style={styles.primaryButton} onPress={handleRegister} disabled={loading}>
-                <Text style={styles.primaryButtonText}>{loading ? 'Kayıt olunuyor...' : 'Kayıt Ol'}</Text>
+                <Text style={styles.primaryButtonText}>{loading ? t('registering') : t('register')}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity onPress={() => setMode('login')}>
-                <Text style={styles.switchText}>Zaten hesabınız var mı? <Text style={styles.switchLink}>Giriş Yap</Text></Text>
+                <Text style={styles.switchText}>{t('alreadyHaveAccount')} <Text style={styles.switchLink}>{t('login')}</Text></Text>
               </TouchableOpacity>
             </View>
           </ScrollView>
