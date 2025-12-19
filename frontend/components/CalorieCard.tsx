@@ -28,7 +28,7 @@ export default function CalorieCard({ current, goal, protein, carbs, fat }: Calo
   return (
     <TouchableOpacity 
       style={styles.container}
-      onPress={() => router.push('/(tabs)/nutrition')}
+      onPress={() => router.push('/details/meals')}
       activeOpacity={0.9}
     >
       <Text style={styles.title} numberOfLines={1}>{t('dailyCalories')}</Text>
