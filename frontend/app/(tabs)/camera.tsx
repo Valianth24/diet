@@ -70,7 +70,7 @@ export default function CameraScreen() {
   const pickImage = async () => {
     const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
     if (!permissionResult.granted) {
-      Alert.alert('İzin Gerekli', 'Kamera izni gerekli!');
+      Alert.alert(t('error'), t('error'));
       return;
     }
 
