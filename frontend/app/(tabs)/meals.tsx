@@ -132,13 +132,10 @@ export default function MealsScreen() {
   // Ana ekran - Seçenekler
   const renderMainOptions = () => (
     <ScrollView style={styles.optionsContainer} showsVerticalScrollIndicator={false}>
-      {/* Header */}
+      {/* Header - Daha kompakt */}
       <View style={styles.headerSection}>
-        <View style={styles.headerIcon}>
-          <Ionicons name="add-circle" size={48} color={Colors.primary} />
-        </View>
-        <Text style={styles.headerTitle}>Kalori Ekle</Text>
-        <Text style={styles.headerSubtitle}>Yediğiniz yemeği kaydedin ve kalori takibi yapın</Text>
+        <Text style={styles.headerTitle}>{t('addCalorie') || 'Kalori Ekle'}</Text>
+        <Text style={styles.headerSubtitle}>{t('trackYourMeals') || 'Yediğiniz yemeği kaydedin'}</Text>
       </View>
 
       {/* Seçenekler */}
