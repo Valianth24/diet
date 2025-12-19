@@ -659,8 +659,8 @@ export default function DashboardScreen() {
                   <View style={styles.reminderHeaderLeft}>
                     <Ionicons name="volume-high" size={24} color={Colors.warning} />
                     <View>
-                      <Text style={styles.reminderTitle}>Alarm Tarzı Bildirim</Text>
-                      <Text style={styles.alarmSubtext}>Maksimum ses ve titreşim</Text>
+                      <Text style={styles.reminderTitle}>{t('alarmStyle')}</Text>
+                      <Text style={styles.alarmSubtext}>{t('alarmStyleDesc')}</Text>
                     </View>
                   </View>
                   <Switch
