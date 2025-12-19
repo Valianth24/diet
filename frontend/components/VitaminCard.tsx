@@ -81,7 +81,7 @@ export default function VitaminCard() {
       </ScrollView>
 
       <View style={styles.footer}>
-        <Text style={styles.footerText}>Detaylar için dokun</Text>
+        <Text style={styles.footerText}>{t('tapForDetails')}</Text>
       </View>
     </TouchableOpacity>
   );
