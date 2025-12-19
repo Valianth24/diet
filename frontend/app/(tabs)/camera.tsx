@@ -138,7 +138,7 @@ export default function CameraScreen() {
       if (!response.ok) {
         const errorText = await response.text();
         console.error('Vision API error:', errorText);
-        throw new Error('Analiz başarısız');
+        throw new Error(t('error'));
       }
 
       const data: VisionResult = await response.json();
@@ -146,7 +146,7 @@ export default function CameraScreen() {
       setEditedItems(data.items);
     } catch (error) {
       console.error('Error analyzing image:', error);
-      Alert.alert('Hata', 'AI analiz şu an kullanılamıyor. Lütfen tekrar deneyin.');
+      Alert.alert(t('error'), t('aiNotAvailable'));
     } finally {
       setAnalyzing(false);
     }
