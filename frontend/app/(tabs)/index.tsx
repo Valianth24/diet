@@ -597,7 +597,7 @@ export default function DashboardScreen() {
                 <View style={styles.reminderHeader}>
                   <View style={styles.reminderHeaderLeft}>
                     <Ionicons name="medical" size={24} color={Colors.primary} />
-                    <Text style={styles.reminderTitle}>Vitamin Hatırlatıcısı</Text>
+                    <Text style={styles.reminderTitle}>{t('vitaminReminder')}</Text>
                   </View>
                   <Switch
                     value={vitaminReminderEnabled}
