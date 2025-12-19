@@ -54,11 +54,11 @@ export default function MealDetailScreen() {
         meal_type: mealType,
       });
       triggerRefresh();
-      alert('Yemek eklendi!');
+      alert(t('mealAdded'));
       router.back();
     } catch (error) {
       console.error('Error adding meal:', error);
-      alert('Hata: Yemek eklenemedi.');
+      alert(t('mealAddError'));
     } finally {
       setLoading(false);
     }
