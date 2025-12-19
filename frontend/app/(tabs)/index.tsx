@@ -548,7 +548,7 @@ export default function DashboardScreen() {
 
                 {waterReminderEnabled && (
                   <View style={styles.reminderTimes}>
-                    <Text style={styles.reminderSubtitle}>Hatırlatma Saatleri ({waterReminderTimes.length})</Text>
+                    <Text style={styles.reminderSubtitle}>{t('reminderTimes')} ({waterReminderTimes.length})</Text>
                     <View style={styles.timeChips}>
                       {waterReminderTimes.map((time) => (
                         <View key={time} style={[styles.timeChip, { backgroundColor: Colors.teal + '20' }]}>
