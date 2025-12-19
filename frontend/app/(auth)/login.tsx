@@ -52,7 +52,7 @@ export default function LoginScreen() {
       await AsyncStorage.setItem('session_token', data.session_token);
       setUser(data);
     } catch (error: any) {
-      Alert.alert('Hata', error.message || 'Kayıt başarısız');
+      Alert.alert(t('error'), error.message || t('registerFailed'));
     } finally {
       setLoading(false);
     }
@@ -66,7 +66,7 @@ export default function LoginScreen() {
       await AsyncStorage.setItem('session_token', data.session_token);
       setUser(data);
     } catch (error: any) {
-      Alert.alert('Hata', 'Misafir girişi başarısız');
+      Alert.alert(t('error'), t('guestLoginFailed'));
     } finally {
       setLoading(false);
     }
