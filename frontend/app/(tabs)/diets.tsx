@@ -88,11 +88,12 @@ export default function DietsScreen() {
       // TODO: Real Google Play Billing integration
       
       // For now, directly activate premium via API
+      const token = await AsyncStorage.getItem('session_token');
       const response = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_URL}/api/premium/activate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${user?.session_token}` // You'll need to pass this
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           purchase_token: 'mock_token_' + Date.now()
