@@ -74,6 +74,7 @@ export default function VitaminsScreen() {
   }, [refreshData]);
 
   const requestPermissions = async () => {
+    const Notifications = getNotifications();
     if (!Notifications) return; // Expo Go'da çalışmaz
     try {
       const { status } = await Notifications.requestPermissionsAsync();
