@@ -90,6 +90,36 @@ class AnalyzeFoodResponse(BaseModel):
     fat: float
     description: str
 
+# Vision API Models (Cost-optimized with gpt-5-nano)
+class PortionEstimate(BaseModel):
+    estimate_g: int
+    range_g: List[int]
+    basis: str = "visual_estimate"
+
+class DetectedFoodItem(BaseModel):
+    label: str
+    aliases: List[str] = []
+    portion: PortionEstimate
+    confidence: float
+    food_id: Optional[str] = None  # Mapped from DB
+    calories: Optional[int] = None
+    protein: Optional[float] = None
+    carbs: Optional[float] = None
+    fat: Optional[float] = None
+
+class VisionAnalyzeRequest(BaseModel):
+    image_base64: str
+    locale: str = "tr-TR"
+
+class VisionAnalyzeResponse(BaseModel):
+    items: List[DetectedFoodItem]
+    notes: List[str] = []
+    needs_user_confirmation: bool = False
+    total_calories: int = 0
+    total_protein: float = 0
+    total_carbs: float = 0
+    total_fat: float = 0
+
 class AddMealRequest(BaseModel):
     name: str
     calories: int
