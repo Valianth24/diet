@@ -1093,6 +1093,8 @@ const ProfilePage = () => {
   const [editing, setEditing] = useState(false);
   const [formData, setFormData] = useState({ height: user?.height || '', weight: user?.weight || '', age: user?.age || '', water_goal: user?.water_goal || 2500, step_goal: user?.step_goal || 10000 });
   const [loading, setLoading] = useState(false);
+  const [showLanguageModal, setShowLanguageModal] = useState(false);
+  const [currentLang, setCurrentLang] = useState(localStorage.getItem('app_language') || 'tr');
 
   const handleSave = async () => {
     setLoading(true);
@@ -1103,6 +1105,15 @@ const ProfilePage = () => {
       setEditing(false);
     } catch (error) { alert('Kaydedilemedi.'); } finally { setLoading(false); }
   };
+
+  const handleLanguageChange = (langCode) => {
+    setCurrentLang(langCode);
+    localStorage.setItem('app_language', langCode);
+    setShowLanguageModal(false);
+    window.location.reload(); // Dili yeniden yükle
+  };
+
+  const getLangInfo = () => languageList.find(l => l.code === currentLang) || languageList[0];
 
   return (
     <div className="min-h-screen pb-24" style={{ backgroundColor: colors.background }}>
