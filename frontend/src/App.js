@@ -584,24 +584,95 @@ const LoginPage = () => {
     );
   }
 
+  // Email Login Form
+  if (mode === 'login') {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: colors.background }}>
+        <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl">
+          <button onClick={() => setMode('main')} className="mb-4 text-gray-500 hover:text-gray-700">← Geri</button>
+          <div className="text-center mb-6">
+            <span className="text-5xl">📧</span>
+            <h2 className="text-2xl font-bold mt-4" style={{ color: colors.text }}>Giriş Yap</h2>
+          </div>
+          {error && <div className="bg-red-100 text-red-600 p-3 rounded-xl mb-4 text-center">{error}</div>}
+          <form onSubmit={handleEmailLogin} className="space-y-4">
+            <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} className="input-field" required />
+            <input type="password" placeholder="Şifre" value={password} onChange={e => setPassword(e.target.value)} className="input-field" required />
+            <button type="submit" disabled={loading} className="w-full py-4 rounded-xl font-bold text-white transition-all" style={{ backgroundColor: colors.primary }}>{loading ? 'Giriş yapılıyor...' : 'Giriş Yap'}</button>
+          </form>
+          <p className="text-center mt-4" style={{ color: colors.textLight }}>Hesabınız yok mu? <button onClick={() => setMode('register')} className="font-bold" style={{ color: colors.primary }}>Kayıt Ol</button></p>
+        </div>
+      </div>
+    );
+  }
+
+  // Register Form
+  if (mode === 'register') {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: colors.background }}>
+        <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl">
+          <button onClick={() => setMode('main')} className="mb-4 text-gray-500 hover:text-gray-700">← Geri</button>
+          <div className="text-center mb-6">
+            <span className="text-5xl">📝</span>
+            <h2 className="text-2xl font-bold mt-4" style={{ color: colors.text }}>Hesap Oluştur</h2>
+          </div>
+          {error && <div className="bg-red-100 text-red-600 p-3 rounded-xl mb-4 text-center">{error}</div>}
+          <form onSubmit={handleRegister} className="space-y-4">
+            <input type="text" placeholder="Ad Soyad" value={name} onChange={e => setName(e.target.value)} className="input-field" required />
+            <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} className="input-field" required />
+            <input type="password" placeholder="Şifre (min 6 karakter)" value={password} onChange={e => setPassword(e.target.value)} className="input-field" required />
+            <button type="submit" disabled={loading} className="w-full py-4 rounded-xl font-bold text-white transition-all" style={{ backgroundColor: colors.primary }}>{loading ? 'Kayıt olunuyor...' : 'Kayıt Ol'}</button>
+          </form>
+          <p className="text-center mt-4" style={{ color: colors.textLight }}>Zaten hesabınız var mı? <button onClick={() => setMode('login')} className="font-bold" style={{ color: colors.primary }}>Giriş Yap</button></p>
+        </div>
+      </div>
+    );
+  }
+
+  // Main Login Screen
   return (
     <div className="min-h-screen flex items-center justify-center p-4" style={{ background: `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})` }}>
       <div className="bg-white rounded-3xl p-8 max-w-md w-full text-center shadow-2xl">
-        <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6" style={{ backgroundColor: colors.primary }}>
-          <span className="text-4xl">💚</span>
+        <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6" style={{ backgroundColor: colors.primary + '20' }}>
+          <span className="text-4xl">🍎</span>
         </div>
         <h1 className="text-3xl font-bold mb-2" style={{ color: colors.text }}>CalorieDiet</h1>
         <p className="mb-8" style={{ color: colors.textLight }}>Sağlıklı Yaşam için Diyet Takibi</p>
         
-        <button onClick={login} className="w-full bg-white border-2 border-gray-200 py-4 px-6 rounded-xl font-semibold flex items-center justify-center gap-3 hover:bg-gray-50 transition-all" style={{ color: colors.text }}>
-          <svg className="w-6 h-6" viewBox="0 0 24 24">
-            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-          </svg>
-          Google ile Giriş Yap
-        </button>
+        <div className="space-y-3">
+          {/* Google Login */}
+          <button onClick={login} className="w-full py-4 px-6 rounded-xl font-semibold flex items-center justify-center gap-3 text-white" style={{ backgroundColor: '#4285F4' }}>
+            <svg className="w-6 h-6" viewBox="0 0 24 24">
+              <path fill="#FFF" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#FFF" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#FFF" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+              <path fill="#FFF" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+            </svg>
+            Google ile Giriş
+          </button>
+          
+          {/* Email Login */}
+          <button onClick={() => setMode('login')} className="w-full py-4 px-6 rounded-xl font-semibold flex items-center justify-center gap-3 border-2" style={{ borderColor: colors.primary, color: colors.primary }}>
+            📧 Email ile Giriş
+          </button>
+          
+          {/* Register */}
+          <button onClick={() => setMode('register')} className="w-full py-4 px-6 rounded-xl font-semibold flex items-center justify-center gap-3 border-2 border-gray-300" style={{ color: colors.text }}>
+            📝 Hesap Oluştur
+          </button>
+          
+          {/* Divider */}
+          <div className="flex items-center gap-4 my-4">
+            <div className="flex-1 h-px bg-gray-200"></div>
+            <span className="text-gray-400">veya</span>
+            <div className="flex-1 h-px bg-gray-200"></div>
+          </div>
+          
+          {/* Guest Login */}
+          <button onClick={handleGuestLogin} disabled={loading} className="w-full py-4 px-6 rounded-xl font-semibold flex items-center justify-center gap-3 bg-gray-100" style={{ color: colors.textLight }}>
+            👤 {loading ? 'Giriş yapılıyor...' : 'Misafir Olarak Devam Et'}
+          </button>
+        </div>
       </div>
     </div>
   );
