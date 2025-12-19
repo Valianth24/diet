@@ -1616,6 +1616,7 @@ function App() {
             <Route path="/diets" element={<ProtectedRoute><DietsPage /></ProtectedRoute>} />
             <Route path="/vitamins" element={<ProtectedRoute><VitaminsPage /></ProtectedRoute>} />
             <Route path="/water" element={<ProtectedRoute><WaterDetailPage /></ProtectedRoute>} />
+            <Route path="/meals" element={<ProtectedRoute><MealsPage /></ProtectedRoute>} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </Router>
