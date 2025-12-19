@@ -53,20 +53,38 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const userData = await getMe();
         setUser(userData);
         setIsAuthenticated(true);
-        
-        // Check if needs onboarding
-        if (!userData.height || !userData.weight || !userData.age || !userData.gender) {
-          setNeedsOnboarding(true);
-        } else {
-          setNeedsOnboarding(false);
-        }
+        setNeedsOnboarding(false); // Skip onboarding
+      } else {
+        // Auto guest login - no login screen
+        await autoGuestLogin();
       }
     } catch (error) {
       console.error('Error checking session:', error);
       await AsyncStorage.removeItem('session_token');
       setAuthToken(null);
+      // Try auto guest login on error
+      await autoGuestLogin();
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const autoGuestLogin = async () => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/auth/guest`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setAuthToken(data.session_token);
+        await AsyncStorage.setItem('session_token', data.session_token);
+        setUser(data);
+        setIsAuthenticated(true);
+        setNeedsOnboarding(false); // Skip onboarding
+      }
+    } catch (error) {
+      console.error('Auto guest login error:', error);
     }
   };
 
