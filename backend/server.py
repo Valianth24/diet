@@ -212,7 +212,26 @@ class AddVitaminRequest(BaseModel):
 class ToggleVitaminRequest(BaseModel):
     vitamin_id: str
 
+class RegisterRequest(BaseModel):
+    email: str
+    password: str
+    name: str
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
 # ==================== HELPER FUNCTIONS ====================
+
+import hashlib
+
+def hash_password(password: str) -> str:
+    """Simple password hashing"""
+    return hashlib.sha256(password.encode()).hexdigest()
+
+def verify_password(password: str, hashed: str) -> bool:
+    """Verify password against hash"""
+    return hash_password(password) == hashed
 
 def calculate_calorie_goal(height: float, weight: float, age: int, gender: str, activity_level: str) -> int:
     """Calculate daily calorie goal using Harris-Benedict formula"""
