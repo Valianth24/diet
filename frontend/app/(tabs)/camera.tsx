@@ -8,30 +8,69 @@ import {
   ActivityIndicator,
   ScrollView,
   TextInput,
+  Alert,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
-import { analyzeFood, addMeal } from '../../utils/api';
 import { useStore } from '../../store/useStore';
 import { Colors } from '../../constants/Colors';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const { width: screenWidth } = Dimensions.get('window');
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || '';
+
+interface DetectedItem {
+  label: string;
+  aliases: string[];
+  portion: {
+    estimate_g: number;
+    range_g: number[];
+    basis: string;
+  };
+  confidence: number;
+  food_id: string | null;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+}
+
+interface VisionResult {
+  items: DetectedItem[];
+  notes: string[];
+  needs_user_confirmation: boolean;
+  total_calories: number;
+  total_protein: number;
+  total_carbs: number;
+  total_fat: number;
+}
 
 export default function CameraScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { triggerRefresh } = useStore();
   const [image, setImage] = useState<string | null>(null);
+  const [imageBase64, setImageBase64] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
-  const [result, setResult] = useState<any>(null);
-  const [mealName, setMealName] = useState('');
-  const [mealType, setMealType] = useState('lunch');
+  const [result, setResult] = useState<VisionResult | null>(null);
+  const [editedItems, setEditedItems] = useState<DetectedItem[]>([]);
+  const [saving, setSaving] = useState(false);
+
+  const resizeImage = async (base64: string): Promise<string> => {
+    // Frontend preprocessing - just return as is for now
+    // In production: resize to max 1280px, compress to ~70% quality
+    return base64;
+  };
 
   const pickImage = async () => {
     const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
     if (!permissionResult.granted) {
-      alert('Kamera izni gerekli!');
+      Alert.alert('İzin Gerekli', 'Kamera izni gerekli!');
       return;
     }
 
@@ -39,22 +78,24 @@ export default function CameraScreen() {
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [4, 3],
-      quality: 0.8,
+      quality: 0.7, // Cost optimization: lower quality
       base64: true,
     });
 
     if (!result.canceled && result.assets[0].base64) {
-      const base64Image = `data:image/jpeg;base64,${result.assets[0].base64}`;
-      setImage(base64Image);
+      const base64 = result.assets[0].base64;
+      setImage(`data:image/jpeg;base64,${base64}`);
+      setImageBase64(base64);
       setResult(null);
-      analyzeImage(base64Image);
+      setEditedItems([]);
+      analyzeImage(base64);
     }
   };
 
   const pickFromGallery = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permissionResult.granted) {
-      alert('Galeri izni gerekli!');
+      Alert.alert('İzin Gerekli', 'Galeri izni gerekli!');
       return;
     }
 
@@ -62,149 +103,368 @@ export default function CameraScreen() {
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [4, 3],
-      quality: 0.8,
+      quality: 0.7,
       base64: true,
     });
 
     if (!result.canceled && result.assets[0].base64) {
-      const base64Image = `data:image/jpeg;base64,${result.assets[0].base64}`;
-      setImage(base64Image);
+      const base64 = result.assets[0].base64;
+      setImage(`data:image/jpeg;base64,${base64}`);
+      setImageBase64(base64);
       setResult(null);
-      analyzeImage(base64Image);
+      setEditedItems([]);
+      analyzeImage(base64);
     }
   };
 
-  const analyzeImage = async (base64Image: string) => {
+  const analyzeImage = async (base64: string) => {
     try {
       setAnalyzing(true);
-      const analysis = await analyzeFood(base64Image);
-      setResult(analysis);
-      setMealName(analysis.description);
+      const token = await AsyncStorage.getItem('session_token');
+      
+      // Use new Vision API
+      const response = await fetch(`${API_BASE_URL}/api/meal/vision`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          image_base64: base64,
+          locale: 'tr-TR',
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Vision API error:', errorText);
+        throw new Error('Analiz başarısız');
+      }
+
+      const data: VisionResult = await response.json();
+      setResult(data);
+      setEditedItems(data.items);
     } catch (error) {
       console.error('Error analyzing image:', error);
-      alert('AI analiz şu an kullanılamıyor. Ana sayfadan manuel ekleme yapabilirsiniz.');
+      Alert.alert('Hata', 'AI analiz şu an kullanılamıyor. Lütfen tekrar deneyin.');
     } finally {
       setAnalyzing(false);
     }
   };
 
+  const updateItemGrams = (index: number, grams: number) => {
+    const newItems = [...editedItems];
+    const item = newItems[index];
+    const originalItem = result?.items[index];
+    if (!originalItem) return;
+
+    const scale = grams / originalItem.portion.estimate_g;
+    
+    newItems[index] = {
+      ...item,
+      portion: { ...item.portion, estimate_g: grams },
+      calories: Math.round(originalItem.calories * scale),
+      protein: Math.round(originalItem.protein * scale * 10) / 10,
+      carbs: Math.round(originalItem.carbs * scale * 10) / 10,
+      fat: Math.round(originalItem.fat * scale * 10) / 10,
+    };
+    
+    setEditedItems(newItems);
+  };
+
+  const getTotals = () => {
+    return editedItems.reduce(
+      (acc, item) => ({
+        calories: acc.calories + item.calories,
+        protein: acc.protein + item.protein,
+        carbs: acc.carbs + item.carbs,
+        fat: acc.fat + item.fat,
+      }),
+      { calories: 0, protein: 0, carbs: 0, fat: 0 }
+    );
+  };
+
   const handleAddMeal = async () => {
-    if (!result || !image) return;
+    if (!result || !imageBase64 || editedItems.length === 0) return;
 
     try {
-      await addMeal({
-        name: mealName,
-        calories: result.calories,
-        protein: result.protein,
-        carbs: result.carbs,
-        fat: result.fat,
-        image_base64: image,
-        meal_type: mealType,
+      setSaving(true);
+      const token = await AsyncStorage.getItem('session_token');
+      const totals = getTotals();
+      
+      const mealName = editedItems.map(item => item.label).join(', ');
+      
+      const response = await fetch(`${API_BASE_URL}/api/food/add-meal`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name: mealName,
+          calories: totals.calories,
+          protein: totals.protein,
+          carbs: totals.carbs,
+          fat: totals.fat,
+          image_base64: imageBase64,
+          meal_type: 'snack',
+        }),
       });
+
+      if (!response.ok) {
+        throw new Error('Kaydetme başarısız');
+      }
+
       triggerRefresh();
-      alert('Yemek eklendi!');
-      router.push('/(tabs)');
-      setImage(null);
-      setResult(null);
-      setMealName('');
+      Alert.alert('Başarılı', 'Yemek kaydedildi!', [
+        { text: 'Tamam', onPress: () => {
+          router.replace('/(tabs)');
+          setImage(null);
+          setImageBase64(null);
+          setResult(null);
+          setEditedItems([]);
+        }},
+      ]);
     } catch (error) {
       console.error('Error adding meal:', error);
-      alert('Hata: Yemek eklenemedi.');
+      Alert.alert('Hata', 'Yemek eklenemedi. Tekrar deneyin.');
+    } finally {
+      setSaving(false);
     }
   };
 
+  const resetScreen = () => {
+    setImage(null);
+    setImageBase64(null);
+    setResult(null);
+    setEditedItems([]);
+  };
+
+  const getConfidenceColor = (confidence: number) => {
+    if (confidence >= 0.8) return Colors.success;
+    if (confidence >= 0.6) return '#FFA500';
+    return Colors.error;
+  };
+
+  const totals = getTotals();
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.title}>Fotoğraf ile Ekle</Text>
-        <Text style={styles.subtitle}>Yemeğinizin fotoğrafını çekin veya galeriden seçin</Text>
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.headerButton}>
+          <Ionicons name="arrow-back" size={24} color={Colors.darkText} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Fotoğraf ile Analiz</Text>
+        {image && (
+          <TouchableOpacity onPress={resetScreen} style={styles.headerButton}>
+            <Ionicons name="refresh" size={24} color={Colors.primary} />
+          </TouchableOpacity>
+        )}
+        {!image && <View style={{ width: 40 }} />}
+      </View>
 
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {!image ? (
+          /* Empty State */
           <View style={styles.emptyState}>
-            <Ionicons name="camera" size={80} color={Colors.lightText} />
-            <Text style={styles.emptyText}>Fotoğraf çek veya galeriden seç</Text>
+            <LinearGradient
+              colors={['#667eea', '#764ba2']}
+              style={styles.emptyGradient}
+            >
+              <Ionicons name="camera" size={64} color="#FFF" />
+              <Text style={styles.emptyTitle}>Yemek Fotoğrafı</Text>
+              <Text style={styles.emptySubtitle}>AI kalorileri otomatik hesaplasın</Text>
+            </LinearGradient>
+            
             <View style={styles.buttonContainer}>
-              <TouchableOpacity style={styles.button} onPress={pickImage}>
-                <Ionicons name="camera" size={24} color={Colors.white} />
-                <Text style={styles.buttonText}>Fotoğraf Çek</Text>
+              <TouchableOpacity style={styles.primaryButton} onPress={pickImage}>
+                <Ionicons name="camera" size={24} color="#FFF" />
+                <Text style={styles.primaryButtonText}>Fotoğraf Çek</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.button, styles.buttonSecondary]} onPress={pickFromGallery}>
+              <TouchableOpacity style={styles.secondaryButton} onPress={pickFromGallery}>
                 <Ionicons name="images" size={24} color={Colors.primary} />
-                <Text style={[styles.buttonText, styles.buttonTextSecondary]}>Galeri</Text>
+                <Text style={styles.secondaryButtonText}>Galeriden Seç</Text>
               </TouchableOpacity>
+            </View>
+
+            {/* Tips */}
+            <View style={styles.tips}>
+              <Text style={styles.tipsTitle}>İpuçları</Text>
+              {[
+                'Yemeği üstten ve net çekin',
+                'İyi aydınlatma kullanın',
+                'Porsiyonu tam gösterin',
+              ].map((tip, index) => (
+                <View key={index} style={styles.tipItem}>
+                  <Ionicons name="checkmark-circle" size={18} color={Colors.success} />
+                  <Text style={styles.tipText}>{tip}</Text>
+                </View>
+              ))}
             </View>
           </View>
         ) : (
+          /* Result State */
           <View>
-            <Image source={{ uri: image }} style={styles.image} />
-            {analyzing ? (
-              <View style={styles.analyzing}>
-                <ActivityIndicator size="large" color={Colors.primary} />
-                <Text style={styles.analyzingText}>Analiz ediliyor...</Text>
+            {/* Image Preview */}
+            <View style={styles.imageContainer}>
+              <Image source={{ uri: image }} style={styles.image} resizeMode="cover" />
+              <View style={styles.aiLabel}>
+                <Ionicons name="sparkles" size={14} color="#FFD700" />
+                <Text style={styles.aiLabelText}>AI Tahmini</Text>
               </View>
-            ) : result ? (
-              <View style={styles.result}>
-                <View style={styles.resultCard}>
-                  <Text style={styles.calories}>{result.calories} kcal</Text>
-                  <View style={styles.macros}>
-                    <View style={styles.macroItem}>
-                      <Text style={styles.macroLabel}>Protein</Text>
-                      <Text style={styles.macroValue}>{result.protein}g</Text>
-                    </View>
-                    <View style={styles.macroItem}>
-                      <Text style={styles.macroLabel}>Karb</Text>
-                      <Text style={styles.macroValue}>{result.carbs}g</Text>
-                    </View>
-                    <View style={styles.macroItem}>
-                      <Text style={styles.macroLabel}>Yağ</Text>
-                      <Text style={styles.macroValue}>{result.fat}g</Text>
-                    </View>
-                  </View>
-                </View>
+            </View>
 
-                <View style={styles.form}>
-                  <TextInput
-                    style={styles.input}
-                    value={mealName}
-                    onChangeText={setMealName}
-                    placeholder="Yemek adı"
-                  />
-
-                  <View style={styles.mealTypes}>
-                    {['breakfast', 'lunch', 'dinner', 'snack'].map((type) => (
-                      <TouchableOpacity
-                        key={type}
-                        style={[
-                          styles.mealTypeButton,
-                          mealType === type && styles.mealTypeButtonActive,
-                        ]}
-                        onPress={() => setMealType(type)}
-                      >
-                        <Text
-                          style={[
-                            styles.mealTypeText,
-                            mealType === type && styles.mealTypeTextActive,
-                          ]}
-                        >
-                          {t(type)}
+            {analyzing ? (
+              <View style={styles.loadingCard}>
+                <ActivityIndicator size="large" color={Colors.primary} />
+                <Text style={styles.loadingText}>Yemek analiz ediliyor...</Text>
+                <Text style={styles.loadingSubtext}>AI görüntüyü inceliyor</Text>
+              </View>
+            ) : result && editedItems.length > 0 ? (
+              <>
+                {/* Detected Items */}
+                <Text style={styles.sectionTitle}>Tespit Edilen Yemekler</Text>
+                {editedItems.map((item, index) => (
+                  <View key={index} style={styles.itemCard}>
+                    <View style={styles.itemHeader}>
+                      <View style={styles.itemNameRow}>
+                        <Ionicons name="restaurant" size={20} color={Colors.primary} />
+                        <Text style={styles.itemName}>{item.label}</Text>
+                      </View>
+                      <View style={[styles.confidenceBadge, { backgroundColor: getConfidenceColor(item.confidence) + '20' }]}>
+                        <Text style={[styles.confidenceText, { color: getConfidenceColor(item.confidence) }]}>
+                          %{Math.round(item.confidence * 100)}
                         </Text>
-                      </TouchableOpacity>
-                    ))}
+                      </View>
+                    </View>
+
+                    {/* Gram Input */}
+                    <View style={styles.gramRow}>
+                      <Text style={styles.gramLabel}>Porsiyon:</Text>
+                      <View style={styles.gramInputContainer}>
+                        <TouchableOpacity 
+                          style={styles.gramButton}
+                          onPress={() => updateItemGrams(index, Math.max(10, item.portion.estimate_g - 10))}
+                        >
+                          <Ionicons name="remove" size={20} color={Colors.primary} />
+                        </TouchableOpacity>
+                        <TextInput
+                          style={styles.gramInput}
+                          value={String(item.portion.estimate_g)}
+                          onChangeText={(text) => {
+                            const num = parseInt(text) || 0;
+                            updateItemGrams(index, num);
+                          }}
+                          keyboardType="numeric"
+                        />
+                        <Text style={styles.gramUnit}>g</Text>
+                        <TouchableOpacity 
+                          style={styles.gramButton}
+                          onPress={() => updateItemGrams(index, item.portion.estimate_g + 10)}
+                        >
+                          <Ionicons name="add" size={20} color={Colors.primary} />
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+
+                    {/* Nutrition Row */}
+                    <View style={styles.nutritionRow}>
+                      <View style={styles.nutritionItem}>
+                        <Text style={styles.nutritionValue}>{item.calories}</Text>
+                        <Text style={styles.nutritionLabel}>kcal</Text>
+                      </View>
+                      <View style={styles.nutritionItem}>
+                        <Text style={styles.nutritionValue}>{item.protein}g</Text>
+                        <Text style={styles.nutritionLabel}>Protein</Text>
+                      </View>
+                      <View style={styles.nutritionItem}>
+                        <Text style={styles.nutritionValue}>{item.carbs}g</Text>
+                        <Text style={styles.nutritionLabel}>Karb</Text>
+                      </View>
+                      <View style={styles.nutritionItem}>
+                        <Text style={styles.nutritionValue}>{item.fat}g</Text>
+                        <Text style={styles.nutritionLabel}>Yağ</Text>
+                      </View>
+                    </View>
+
+                    {!item.food_id && (
+                      <View style={styles.warningBanner}>
+                        <Ionicons name="warning" size={14} color="#996600" />
+                        <Text style={styles.warningText}>Tahmini değerler</Text>
+                      </View>
+                    )}
+                  </View>
+                ))}
+
+                {/* Totals */}
+                <View style={styles.totalsCard}>
+                  <Text style={styles.totalsTitle}>Toplam</Text>
+                  <View style={styles.totalsRow}>
+                    <View style={styles.totalItem}>
+                      <Text style={styles.totalValue}>{totals.calories}</Text>
+                      <Text style={styles.totalLabel}>kcal</Text>
+                    </View>
+                    <View style={styles.totalItem}>
+                      <Text style={styles.totalValue}>{totals.protein.toFixed(1)}g</Text>
+                      <Text style={styles.totalLabel}>Protein</Text>
+                    </View>
+                    <View style={styles.totalItem}>
+                      <Text style={styles.totalValue}>{totals.carbs.toFixed(1)}g</Text>
+                      <Text style={styles.totalLabel}>Karb</Text>
+                    </View>
+                    <View style={styles.totalItem}>
+                      <Text style={styles.totalValue}>{totals.fat.toFixed(1)}g</Text>
+                      <Text style={styles.totalLabel}>Yağ</Text>
+                    </View>
                   </View>
                 </View>
 
-                <View style={styles.actions}>
-                  <TouchableOpacity style={styles.addButton} onPress={handleAddMeal}>
-                    <Text style={styles.addButtonText}>Öğüne Ekle</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.retakeButton} onPress={() => setImage(null)}>
-                    <Text style={styles.retakeButtonText}>Yeniden Çek</Text>
-                  </TouchableOpacity>
+                {/* Disclaimer */}
+                <View style={styles.disclaimer}>
+                  <Ionicons name="information-circle" size={16} color={Colors.lightText} />
+                  <Text style={styles.disclaimerText}>
+                    AI tahminidir. Gram değerlerini düzenleyebilirsiniz.
+                  </Text>
                 </View>
+
+                {/* Save Button */}
+                <TouchableOpacity
+                  style={styles.saveButton}
+                  onPress={handleAddMeal}
+                  disabled={saving}
+                >
+                  <LinearGradient
+                    colors={['#667eea', '#764ba2']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.saveGradient}
+                  >
+                    {saving ? (
+                      <ActivityIndicator color="#FFF" />
+                    ) : (
+                      <>
+                        <Ionicons name="checkmark-circle" size={24} color="#FFF" />
+                        <Text style={styles.saveButtonText}>Yemeği Kaydet</Text>
+                      </>
+                    )}
+                  </LinearGradient>
+                </TouchableOpacity>
+              </>
+            ) : result && editedItems.length === 0 ? (
+              <View style={styles.noResultCard}>
+                <Ionicons name="alert-circle" size={48} color={Colors.lightText} />
+                <Text style={styles.noResultText}>Yemek tespit edilemedi</Text>
+                <Text style={styles.noResultSubtext}>Farklı bir açıdan tekrar deneyin</Text>
+                <TouchableOpacity style={styles.retryButton} onPress={resetScreen}>
+                  <Text style={styles.retryButtonText}>Tekrar Dene</Text>
+                </TouchableOpacity>
               </View>
             ) : null}
           </View>
         )}
+
+        <View style={{ height: 40 }} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -215,159 +475,347 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
-  content: {
-    padding: 16,
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: Colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
   },
-  title: {
-    fontSize: 28,
+  headerButton: {
+    padding: 8,
+  },
+  headerTitle: {
+    fontSize: 18,
     fontWeight: 'bold',
     color: Colors.darkText,
-    marginBottom: 8,
   },
-  subtitle: {
-    fontSize: 16,
-    color: Colors.lightText,
-    marginBottom: 24,
+  content: {
+    padding: 16,
+    paddingBottom: 100,
   },
   emptyState: {
     alignItems: 'center',
-    paddingVertical: 60,
   },
-  emptyText: {
-    fontSize: 16,
-    color: Colors.lightText,
+  emptyGradient: {
+    width: '100%',
+    padding: 40,
+    borderRadius: 24,
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  emptyTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FFF',
     marginTop: 16,
-    marginBottom: 32,
+  },
+  emptySubtitle: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.8)',
+    marginTop: 8,
   },
   buttonContainer: {
-    gap: 12,
-  },
-  button: {
     flexDirection: 'row',
-    backgroundColor: Colors.primary,
-    paddingHorizontal: 32,
-    paddingVertical: 16,
-    borderRadius: 30,
-    alignItems: 'center',
     gap: 12,
+    marginBottom: 24,
   },
-  buttonSecondary: {
-    backgroundColor: Colors.white,
+  primaryButton: {
+    flex: 1,
+    backgroundColor: Colors.primary,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 16,
+    borderRadius: 16,
+  },
+  primaryButtonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#FFF',
+  },
+  secondaryButton: {
+    flex: 1,
     borderWidth: 2,
     borderColor: Colors.primary,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 14,
+    borderRadius: 16,
   },
-  buttonText: {
-    color: Colors.white,
+  secondaryButtonText: {
     fontSize: 16,
-    fontWeight: '600',
-  },
-  buttonTextSecondary: {
+    fontWeight: 'bold',
     color: Colors.primary,
+  },
+  tips: {
+    width: '100%',
+    backgroundColor: Colors.white,
+    borderRadius: 16,
+    padding: 16,
+  },
+  tipsTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: Colors.darkText,
+    marginBottom: 12,
+  },
+  tipItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  tipText: {
+    fontSize: 14,
+    color: Colors.darkText,
+  },
+  imageContainer: {
+    position: 'relative',
+    borderRadius: 16,
+    overflow: 'hidden',
+    marginBottom: 16,
   },
   image: {
     width: '100%',
-    height: 300,
-    borderRadius: 20,
-    marginBottom: 20,
+    height: 220,
+    borderRadius: 16,
   },
-  analyzing: {
+  aiLabel: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    flexDirection: 'row',
     alignItems: 'center',
-    padding: 40,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    gap: 4,
   },
-  analyzingText: {
-    fontSize: 16,
-    color: Colors.lightText,
-    marginTop: 16,
+  aiLabelText: {
+    color: '#FFF',
+    fontSize: 12,
+    fontWeight: '600',
   },
-  result: {
-    gap: 20,
-  },
-  resultCard: {
+  loadingCard: {
     backgroundColor: Colors.white,
-    borderRadius: 20,
-    padding: 24,
+    borderRadius: 16,
+    padding: 32,
     alignItems: 'center',
   },
-  calories: {
-    fontSize: 48,
+  loadingText: {
+    fontSize: 18,
     fontWeight: 'bold',
     color: Colors.darkText,
-    marginBottom: 20,
+    marginTop: 16,
   },
-  macros: {
-    flexDirection: 'row',
-    gap: 32,
-  },
-  macroItem: {
-    alignItems: 'center',
-  },
-  macroLabel: {
-    fontSize: 12,
+  loadingSubtext: {
+    fontSize: 14,
     color: Colors.lightText,
-    marginBottom: 4,
+    marginTop: 4,
   },
-  macroValue: {
+  sectionTitle: {
     fontSize: 18,
+    fontWeight: 'bold',
+    color: Colors.darkText,
+    marginBottom: 12,
+  },
+  itemCard: {
+    backgroundColor: Colors.white,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  itemHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  itemNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flex: 1,
+  },
+  itemName: {
+    fontSize: 17,
     fontWeight: '600',
     color: Colors.darkText,
   },
-  form: {
-    gap: 12,
-  },
-  input: {
-    backgroundColor: Colors.white,
+  confidenceBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
     borderRadius: 12,
-    padding: 16,
-    fontSize: 16,
   },
-  mealTypes: {
+  confidenceText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  gramRow: {
     flexDirection: 'row',
-    gap: 8,
-    flexWrap: 'wrap',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
   },
-  mealTypeButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: Colors.primary,
-    backgroundColor: Colors.white,
-  },
-  mealTypeButtonActive: {
-    backgroundColor: Colors.primary,
-  },
-  mealTypeText: {
+  gramLabel: {
     fontSize: 14,
-    color: Colors.primary,
+    color: Colors.darkText,
+    fontWeight: '500',
   },
-  mealTypeTextActive: {
-    color: Colors.white,
-  },
-  actions: {
-    gap: 12,
-  },
-  addButton: {
-    backgroundColor: Colors.primary,
-    paddingVertical: 16,
+  gramInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.background,
     borderRadius: 12,
+    paddingHorizontal: 4,
+  },
+  gramButton: {
+    padding: 8,
+  },
+  gramInput: {
+    width: 50,
+    textAlign: 'center',
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.darkText,
+  },
+  gramUnit: {
+    fontSize: 14,
+    color: Colors.lightText,
+    marginRight: 4,
+  },
+  nutritionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  nutritionItem: {
     alignItems: 'center',
   },
-  addButtonText: {
-    color: Colors.white,
-    fontSize: 18,
-    fontWeight: '600',
+  nutritionValue: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: Colors.darkText,
   },
-  retakeButton: {
+  nutritionLabel: {
+    fontSize: 11,
+    color: Colors.lightText,
+    marginTop: 2,
+  },
+  warningBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFA50015',
+    padding: 8,
+    borderRadius: 8,
+    marginTop: 12,
+    gap: 6,
+  },
+  warningText: {
+    fontSize: 12,
+    color: '#996600',
+  },
+  totalsCard: {
     backgroundColor: Colors.white,
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Colors.primary,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
   },
-  retakeButtonText: {
-    color: Colors.primary,
+  totalsTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: Colors.darkText,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  totalsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  totalItem: {
+    alignItems: 'center',
+  },
+  totalValue: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: 'bold',
+    color: Colors.primary,
+  },
+  totalLabel: {
+    fontSize: 11,
+    color: Colors.lightText,
+    marginTop: 2,
+  },
+  disclaimer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    padding: 12,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 12,
+    marginBottom: 16,
+  },
+  disclaimerText: {
+    fontSize: 12,
+    color: Colors.lightText,
+    flex: 1,
+  },
+  saveButton: {
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  saveGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 16,
+  },
+  saveButtonText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#FFF',
+  },
+  noResultCard: {
+    backgroundColor: Colors.white,
+    borderRadius: 16,
+    padding: 32,
+    alignItems: 'center',
+  },
+  noResultText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: Colors.darkText,
+    marginTop: 16,
+  },
+  noResultSubtext: {
+    fontSize: 14,
+    color: Colors.lightText,
+    marginTop: 4,
+  },
+  retryButton: {
+    marginTop: 16,
+    backgroundColor: Colors.primary,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  retryButtonText: {
+    color: '#FFF',
+    fontWeight: 'bold',
   },
 });
