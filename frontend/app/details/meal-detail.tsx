@@ -73,11 +73,16 @@ export default function MealDetailScreen() {
         style={{ flex: 1 }}
       >
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <TouchableOpacity 
+            onPress={() => router.back()} 
+            style={styles.backButton}
+            hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+            activeOpacity={0.7}
+          >
             <Ionicons name="chevron-back" size={28} color={Colors.darkText} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>{baseName}</Text>
-          <View style={{ width: 40 }} />
+          <Text style={styles.headerTitle} numberOfLines={1}>{baseName}</Text>
+          <View style={{ width: 44 }} />
         </View>
 
         <ScrollView contentContainerStyle={styles.content}>
