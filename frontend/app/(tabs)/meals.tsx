@@ -8,7 +8,8 @@ import {
   FlatList,
   ScrollView,
   Dimensions,
-  Platform,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getFoodDatabase } from '../../utils/api';
@@ -16,33 +17,115 @@ import { Colors } from '../../constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import i18n from '../../utils/i18n';
 import { useTranslation } from 'react-i18next';
 
 const { width: screenWidth } = Dimensions.get('window');
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || '';
+
+type FoodItem = {
+  food_id: string;
+  name: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+};
+
+type RecentScan = {
+  id: string;
+  name: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  timestamp: number;
+  imagePreview?: string;
+};
 
 export default function MealsScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const [foodDatabase, setFoodDatabase] = useState([]);
+  const [foodDatabase, setFoodDatabase] = useState<FoodItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState<'add' | 'photo' | 'text'>('add');
+  const [activeTab, setActiveTab] = useState<'main' | 'search' | 'recent'>('main');
+  const [recentScans, setRecentScans] = useState<RecentScan[]>([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     loadFoodDatabase();
+    loadRecentScans();
   }, []);
 
   const loadFoodDatabase = async () => {
     try {
       const lang = i18n.language;
       const foods = await getFoodDatabase(lang);
-      setFoodDatabase(foods);
+      setFoodDatabase(foods || []);
     } catch (error) {
       console.error('Error loading food database:', error);
     }
   };
 
-  const filteredFoods = foodDatabase.filter(food =>
+  const loadRecentScans = async () => {
+    try {
+      const stored = await AsyncStorage.getItem('recent_food_scans');
+      if (stored) {
+        setRecentScans(JSON.parse(stored));
+      }
+    } catch (error) {
+      console.error('Error loading recent scans:', error);
+    }
+  };
+
+  const addToRecentScans = async (scan: RecentScan) => {
+    try {
+      const updated = [scan, ...recentScans.filter(s => s.id !== scan.id)].slice(0, 20);
+      setRecentScans(updated);
+      await AsyncStorage.setItem('recent_food_scans', JSON.stringify(updated));
+    } catch (error) {
+      console.error('Error saving recent scan:', error);
+    }
+  };
+
+  const addMealFromRecent = async (scan: RecentScan) => {
+    try {
+      setLoading(true);
+      const token = await AsyncStorage.getItem('session_token');
+      
+      const response = await fetch(`${API_BASE_URL}/api/food/add-meal`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name: scan.name,
+          calories: scan.calories,
+          protein: scan.protein,
+          carbs: scan.carbs,
+          fat: scan.fat,
+          image_base64: scan.imagePreview || '',
+          meal_type: 'snack',
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Kaydetme başarısız');
+      }
+
+      Alert.alert('Başarılı', `${scan.name} eklendi!`);
+      router.replace('/(tabs)');
+    } catch (error) {
+      console.error('Error adding meal:', error);
+      Alert.alert('Hata', 'Yemek eklenemedi');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredFoods = foodDatabase.filter((food: FoodItem) =>
     food.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -63,7 +146,7 @@ export default function MealsScreen() {
         {/* Fotoğraf ile Hesapla */}
         <TouchableOpacity 
           style={styles.optionCard}
-          onPress={() => setActiveTab('photo')}
+          onPress={() => router.push('/(tabs)/camera')}
           activeOpacity={0.85}
         >
           <LinearGradient
@@ -86,10 +169,10 @@ export default function MealsScreen() {
           </LinearGradient>
         </TouchableOpacity>
 
-        {/* Metin ile Hesapla */}
+        {/* Daha Önce Hesaplananlar */}
         <TouchableOpacity 
           style={styles.optionCard}
-          onPress={() => setActiveTab('text')}
+          onPress={() => setActiveTab('recent')}
           activeOpacity={0.85}
         >
           <LinearGradient
@@ -99,15 +182,15 @@ export default function MealsScreen() {
             style={styles.optionGradient}
           >
             <View style={styles.optionIconContainer}>
-              <Ionicons name="chatbubble-ellipses" size={36} color="#FFFFFF" />
+              <Ionicons name="time" size={36} color="#FFFFFF" />
             </View>
-            <Text style={styles.optionTitle}>Metin ile Hesapla</Text>
+            <Text style={styles.optionTitle}>Son Hesaplananlar</Text>
             <Text style={styles.optionDescription}>
-              Yediğinizi yazın, AI besin değerlerini hesaplasın
+              Daha önce hesapladığınız yemeklerden seçin
             </Text>
             <View style={styles.optionBadge}>
-              <Ionicons name="sparkles" size={14} color="#FFD700" />
-              <Text style={styles.optionBadgeText}>AI Destekli</Text>
+              <Ionicons name="flash" size={14} color="#FFFFFF" />
+              <Text style={styles.optionBadgeText}>{recentScans.length} Kayıt</Text>
             </View>
           </LinearGradient>
         </TouchableOpacity>
@@ -115,7 +198,7 @@ export default function MealsScreen() {
         {/* Manuel Seçim */}
         <TouchableOpacity 
           style={styles.optionCard}
-          onPress={() => setActiveTab('add')}
+          onPress={() => setActiveTab('search')}
           activeOpacity={0.85}
         >
           <LinearGradient
@@ -125,11 +208,11 @@ export default function MealsScreen() {
             style={styles.optionGradient}
           >
             <View style={styles.optionIconContainer}>
-              <Ionicons name="list" size={36} color="#FFFFFF" />
+              <Ionicons name="search" size={36} color="#FFFFFF" />
             </View>
             <Text style={styles.optionTitle}>Listeden Seç</Text>
             <Text style={styles.optionDescription}>
-              Yemek veritabanından seçim yapın
+              Yemek veritabanından arama yapın
             </Text>
             <View style={styles.optionBadge}>
               <Ionicons name="restaurant" size={14} color="#FFFFFF" />
@@ -144,12 +227,33 @@ export default function MealsScreen() {
         <Text style={styles.quickAddTitle}>Hızlı Ekle</Text>
         <View style={styles.quickAddButtons}>
           {[
-            { icon: 'water', label: 'Su', color: Colors.teal },
-            { icon: 'cafe', label: 'Kahve', color: '#8B4513' },
-            { icon: 'nutrition', label: 'Meyve', color: '#FF6B6B' },
-            { icon: 'pizza', label: 'Atıştırma', color: '#FFA500' },
+            { icon: 'water', label: 'Su', color: Colors.teal, cal: 0 },
+            { icon: 'cafe', label: 'Kahve', color: '#8B4513', cal: 5 },
+            { icon: 'nutrition', label: 'Elma', color: '#FF6B6B', cal: 52 },
+            { icon: 'pizza', label: 'Atıştırma', color: '#FFA500', cal: 150 },
           ].map((item, index) => (
-            <TouchableOpacity key={index} style={styles.quickAddButton}>
+            <TouchableOpacity 
+              key={index} 
+              style={styles.quickAddButton}
+              onPress={() => {
+                Alert.alert(
+                  item.label,
+                  `${item.cal} kcal eklensin mi?`,
+                  [
+                    { text: 'İptal', style: 'cancel' },
+                    { text: 'Ekle', onPress: () => addMealFromRecent({
+                      id: `quick_${Date.now()}`,
+                      name: item.label,
+                      calories: item.cal,
+                      protein: 0,
+                      carbs: 0,
+                      fat: 0,
+                      timestamp: Date.now(),
+                    })}
+                  ]
+                );
+              }}
+            >
               <View style={[styles.quickAddIcon, { backgroundColor: item.color + '20' }]}>
                 <Ionicons name={item.icon as any} size={24} color={item.color} />
               </View>
@@ -158,122 +262,72 @@ export default function MealsScreen() {
           ))}
         </View>
       </View>
+
+      <View style={{ height: 100 }} />
     </ScrollView>
   );
 
-  // Fotoğraf ile Hesaplama UI
-  const renderPhotoTab = () => (
+  // Son Hesaplananlar
+  const renderRecentScans = () => (
     <View style={styles.tabContent}>
-      <TouchableOpacity style={styles.backArrow} onPress={() => setActiveTab('add')}>
+      <TouchableOpacity style={styles.backArrow} onPress={() => setActiveTab('main')}>
         <Ionicons name="arrow-back" size={24} color={Colors.darkText} />
-      </TouchableOpacity>
-      
-      <View style={styles.photoContainer}>
-        <LinearGradient
-          colors={['#667eea', '#764ba2']}
-          style={styles.photoPlaceholder}
-        >
-          <Ionicons name="camera" size={64} color="#FFFFFF" />
-          <Text style={styles.photoPlaceholderText}>Yemek Fotoğrafı Çek</Text>
-          <Text style={styles.photoPlaceholderSubtext}>AI kalorileri otomatik hesaplayacak</Text>
-        </LinearGradient>
-
-        <View style={styles.photoActions}>
-          <TouchableOpacity 
-            style={styles.photoButton}
-            onPress={() => router.push('/(tabs)/camera')}
-          >
-            <Ionicons name="camera" size={28} color={Colors.white} />
-            <Text style={styles.photoButtonText}>Fotoğraf Çek</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.photoButtonOutline}>
-            <Ionicons name="images" size={28} color={Colors.primary} />
-            <Text style={styles.photoButtonOutlineText}>Galeriden Seç</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.photoTips}>
-          <Text style={styles.photoTipsTitle}>İpuçları</Text>
-          <View style={styles.photoTipItem}>
-            <Ionicons name="checkmark-circle" size={20} color={Colors.success} />
-            <Text style={styles.photoTipText}>Yemeği net bir şekilde çekin</Text>
-          </View>
-          <View style={styles.photoTipItem}>
-            <Ionicons name="checkmark-circle" size={20} color={Colors.success} />
-            <Text style={styles.photoTipText}>İyi aydınlatma kullanın</Text>
-          </View>
-          <View style={styles.photoTipItem}>
-            <Ionicons name="checkmark-circle" size={20} color={Colors.success} />
-            <Text style={styles.photoTipText}>Porsiyon boyutunu gösterin</Text>
-          </View>
-        </View>
-      </View>
-    </View>
-  );
-
-  // Metin ile Hesaplama UI
-  const renderTextTab = () => (
-    <View style={styles.tabContent}>
-      <TouchableOpacity style={styles.backArrow} onPress={() => setActiveTab('add')}>
-        <Ionicons name="arrow-back" size={24} color={Colors.darkText} />
+        <Text style={styles.backText}>Geri</Text>
       </TouchableOpacity>
 
-      <View style={styles.textContainer}>
-        <LinearGradient
-          colors={['#11998e', '#38ef7d']}
-          style={styles.textHeader}
-        >
-          <Ionicons name="chatbubble-ellipses" size={48} color="#FFFFFF" />
-          <Text style={styles.textHeaderTitle}>AI ile Kalori Hesapla</Text>
-          <Text style={styles.textHeaderSubtitle}>Yediğinizi yazın, besin değerlerini öğrenin</Text>
-        </LinearGradient>
+      <Text style={styles.sectionTitle}>Son Hesaplanan Yemekler</Text>
 
-        <View style={styles.textInputContainer}>
-          <TextInput
-            style={styles.textInputMulti}
-            placeholder="Örn: 1 porsiyon tavuklu makarna, yanında salata ve 1 bardak ayran içtim..."
-            placeholderTextColor={Colors.lightText}
-            multiline
-            numberOfLines={4}
-            textAlignVertical="top"
-          />
-          
-          <TouchableOpacity style={styles.textSubmitButton}>
-            <LinearGradient
-              colors={['#11998e', '#38ef7d']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.textSubmitGradient}
+      {recentScans.length === 0 ? (
+        <View style={styles.emptyState}>
+          <Ionicons name="time-outline" size={64} color={Colors.lightText} />
+          <Text style={styles.emptyText}>Henüz hesaplama yapılmadı</Text>
+          <Text style={styles.emptySubtext}>Fotoğrafla kalori hesapladığınızda burada görünecek</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={recentScans}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.listContent}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              style={styles.recentCard}
+              onPress={() => addMealFromRecent(item)}
+              disabled={loading}
             >
-              <Ionicons name="sparkles" size={24} color="#FFFFFF" />
-              <Text style={styles.textSubmitText}>Hesapla</Text>
-            </LinearGradient>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.textExamples}>
-          <Text style={styles.textExamplesTitle}>Örnek Girişler</Text>
-          {[
-            '2 dilim ekmek arası peynir',
-            '1 kase mercimek çorbası',
-            'Izgara tavuk ve pilav',
-          ].map((example, index) => (
-            <TouchableOpacity key={index} style={styles.textExampleChip}>
-              <Text style={styles.textExampleText}>{example}</Text>
-              <Ionicons name="add-circle" size={18} color={Colors.primary} />
+              <View style={styles.recentIcon}>
+                <Ionicons name="restaurant" size={24} color={Colors.primary} />
+              </View>
+              <View style={styles.recentInfo}>
+                <Text style={styles.recentName} numberOfLines={1}>{item.name}</Text>
+                <View style={styles.recentMacros}>
+                  <Text style={styles.recentCalories}>{item.calories} kcal</Text>
+                  <Text style={styles.recentMacroText}>
+                    P:{item.protein}g K:{item.carbs}g Y:{item.fat}g
+                  </Text>
+                </View>
+                <Text style={styles.recentTime}>
+                  {new Date(item.timestamp).toLocaleDateString('tr-TR')}
+                </Text>
+              </View>
+              <View style={styles.addIconContainer}>
+                <Ionicons name="add-circle" size={28} color={Colors.primary} />
+              </View>
             </TouchableOpacity>
-          ))}
-        </View>
-      </View>
+          )}
+        />
+      )}
     </View>
   );
 
-  // Listeden Seçim UI
-  const renderAddTab = () => (
+  // Listeden Seçim
+  const renderSearchTab = () => (
     <View style={styles.tabContent}>
-      <TouchableOpacity style={styles.backArrow} onPress={() => setActiveTab('add')}>
+      <TouchableOpacity style={styles.backArrow} onPress={() => {
+        setActiveTab('main');
+        setSearchQuery('');
+      }}>
         <Ionicons name="arrow-back" size={24} color={Colors.darkText} />
+        <Text style={styles.backText}>Geri</Text>
       </TouchableOpacity>
       
       {/* Search */}
@@ -284,15 +338,29 @@ export default function MealsScreen() {
           placeholder="Yemek ara..."
           value={searchQuery}
           onChangeText={setSearchQuery}
+          autoFocus
         />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity onPress={() => setSearchQuery('')}>
+            <Ionicons name="close-circle" size={20} color={Colors.lightText} />
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Food List */}
       <FlatList
         data={filteredFoods}
-        keyExtractor={(item) => item.food_id}
+        keyExtractor={(item: FoodItem) => item.food_id}
         contentContainerStyle={styles.listContent}
-        renderItem={({ item }) => (
+        ListEmptyComponent={
+          <View style={styles.emptyState}>
+            <Ionicons name="search-outline" size={48} color={Colors.lightText} />
+            <Text style={styles.emptyText}>
+              {searchQuery ? 'Sonuç bulunamadı' : 'Aramak için yazın'}
+            </Text>
+          </View>
+        }
+        renderItem={({ item }: { item: FoodItem }) => (
           <TouchableOpacity
             style={styles.foodCard}
             onPress={() => router.push({
@@ -333,18 +401,23 @@ export default function MealsScreen() {
           <Ionicons name="close" size={28} color={Colors.darkText} />
         </TouchableOpacity>
         <Text style={styles.title}>
-          {activeTab === 'photo' ? 'Fotoğrafla Hesapla' : 
-           activeTab === 'text' ? 'Metin ile Hesapla' : 
-           activeTab === 'add' && searchQuery ? 'Yemek Seç' : 'Kalori Ekle'}
+          {activeTab === 'recent' ? 'Son Hesaplananlar' : 
+           activeTab === 'search' ? 'Yemek Ara' : 'Kalori Ekle'}
         </Text>
         <View style={{ width: 40 }} />
       </View>
 
+      {/* Loading Overlay */}
+      {loading && (
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color={Colors.primary} />
+        </View>
+      )}
+
       {/* Content */}
-      {activeTab === 'add' && !searchQuery ? renderMainOptions() : null}
-      {activeTab === 'photo' ? renderPhotoTab() : null}
-      {activeTab === 'text' ? renderTextTab() : null}
-      {activeTab === 'add' && searchQuery ? renderAddTab() : null}
+      {activeTab === 'main' && renderMainOptions()}
+      {activeTab === 'recent' && renderRecentScans()}
+      {activeTab === 'search' && renderSearchTab()}
     </SafeAreaView>
   );
 }
@@ -371,13 +444,20 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: Colors.darkText,
   },
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255,255,255,0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 100,
+  },
   optionsContainer: {
     flex: 1,
     paddingHorizontal: 16,
   },
   headerSection: {
     alignItems: 'center',
-    paddingVertical: 24,
+    paddingVertical: 20,
   },
   headerIcon: {
     marginBottom: 12,
@@ -408,7 +488,7 @@ const styles = StyleSheet.create({
   },
   optionGradient: {
     padding: 20,
-    minHeight: 140,
+    minHeight: 130,
   },
   optionIconContainer: {
     width: 56,
@@ -480,157 +560,92 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   backArrow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
     marginBottom: 16,
   },
-  photoContainer: {
-    flex: 1,
-  },
-  photoPlaceholder: {
-    height: 200,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  photoPlaceholderText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginTop: 12,
-  },
-  photoPlaceholderSubtext: {
-    fontSize: 14,
-    color: 'rgba(255,255,255,0.8)',
-    marginTop: 4,
-  },
-  photoActions: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 24,
-  },
-  photoButton: {
-    flex: 1,
-    backgroundColor: Colors.primary,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 16,
-    borderRadius: 16,
-  },
-  photoButtonText: {
+  backText: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-  },
-  photoButtonOutline: {
-    flex: 1,
-    borderWidth: 2,
-    borderColor: Colors.primary,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 14,
-    borderRadius: 16,
-  },
-  photoButtonOutlineText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: Colors.primary,
-  },
-  photoTips: {
-    backgroundColor: Colors.background,
-    borderRadius: 16,
-    padding: 16,
-  },
-  photoTipsTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: Colors.darkText,
-    marginBottom: 12,
-  },
-  photoTipItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 8,
-  },
-  photoTipText: {
-    fontSize: 14,
     color: Colors.darkText,
   },
-  textContainer: {
-    flex: 1,
-  },
-  textHeader: {
-    borderRadius: 20,
-    padding: 24,
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  textHeaderTitle: {
-    fontSize: 22,
+  sectionTitle: {
+    fontSize: 18,
     fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginTop: 12,
+    color: Colors.darkText,
+    marginBottom: 16,
   },
-  textHeaderSubtitle: {
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: Colors.lightText,
+    marginTop: 16,
+  },
+  emptySubtext: {
     fontSize: 14,
-    color: 'rgba(255,255,255,0.9)',
+    color: Colors.lightText,
     marginTop: 4,
     textAlign: 'center',
   },
-  textInputContainer: {
-    marginBottom: 24,
+  listContent: {
+    paddingBottom: 100,
   },
-  textInputMulti: {
-    backgroundColor: Colors.background,
+  recentCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.white,
     borderRadius: 16,
     padding: 16,
-    fontSize: 16,
-    minHeight: 120,
-    marginBottom: 16,
-    color: Colors.darkText,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  textSubmitButton: {
-    borderRadius: 16,
-    overflow: 'hidden',
-  },
-  textSubmitGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  recentIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: Colors.background,
     justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 16,
+    alignItems: 'center',
+    marginRight: 12,
   },
-  textSubmitText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-  },
-  textExamples: {
+  recentInfo: {
     flex: 1,
   },
-  textExamplesTitle: {
+  recentName: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '600',
     color: Colors.darkText,
-    marginBottom: 12,
+    marginBottom: 4,
   },
-  textExampleChip: {
+  recentMacros: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: Colors.background,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 12,
-    marginBottom: 8,
+    gap: 8,
   },
-  textExampleText: {
+  recentCalories: {
     fontSize: 14,
-    color: Colors.darkText,
+    fontWeight: '600',
+    color: Colors.primary,
+  },
+  recentMacroText: {
+    fontSize: 12,
+    color: Colors.lightText,
+  },
+  recentTime: {
+    fontSize: 11,
+    color: Colors.lightText,
+    marginTop: 4,
+  },
+  addIconContainer: {
+    padding: 4,
   },
   searchContainer: {
     flexDirection: 'row',
@@ -647,9 +662,6 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 12,
     fontSize: 16,
-  },
-  listContent: {
-    paddingBottom: 100,
   },
   foodCard: {
     flexDirection: 'row',
