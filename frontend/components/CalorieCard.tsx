@@ -20,8 +20,9 @@ export default function CalorieCard({ current, goal, protein, carbs, fat }: Calo
   const percentage = goal > 0 ? Math.min((current / goal) * 100, 100) : 0;
   const remaining = Math.max(goal - current, 0);
 
-  const radius = 60;
-  const strokeWidth = 10;
+  // Daha küçük radius - mobil uyumlu
+  const radius = 45;
+  const strokeWidth = 8;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (percentage / 100) * circumference;
 
@@ -108,12 +109,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   currentCalories: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
     color: Colors.darkText,
   },
   goalCalories: {
-    fontSize: 12,
+    fontSize: 11,
     color: Colors.lightText,
   },
   macros: {
