@@ -1186,6 +1186,30 @@ const ProfilePage = () => {
         <button onClick={logout} className="w-full mt-4 p-4 bg-red-50 text-red-600 rounded-2xl font-medium hover:bg-red-100">Çıkış Yap</button>
       </div>
 
+      {/* Language Selection Modal */}
+      {showLanguageModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50" onClick={() => setShowLanguageModal(false)}>
+          <div className="bg-white rounded-t-3xl w-full max-w-lg p-6 max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold" style={{ color: colors.text }}>Dil Seçin</h2>
+              <button onClick={() => setShowLanguageModal(false)} className="text-2xl">✕</button>
+            </div>
+            <p className="text-sm mb-4" style={{ color: colors.textLight }}>Uygulama dilini değiştirin</p>
+            <div className="space-y-3">
+              {languageList.map(lang => (
+                <button key={lang.code} onClick={() => handleLanguageChange(lang.code)} className="w-full flex items-center gap-4 p-4 rounded-2xl transition-all" style={{ backgroundColor: currentLang === lang.code ? colors.primary + '15' : colors.background, borderWidth: 2, borderColor: currentLang === lang.code ? colors.primary : 'transparent' }}>
+                  <span className="text-3xl">{lang.flag}</span>
+                  <div className="flex-1 text-left">
+                    <p className="font-semibold" style={{ color: currentLang === lang.code ? colors.primary : colors.text }}>{lang.name}</p>
+                  </div>
+                  {currentLang === lang.code && <span className="w-6 h-6 rounded-full flex items-center justify-center text-white text-sm" style={{ backgroundColor: colors.primary }}>✓</span>}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       <BottomNav />
     </div>
   );
