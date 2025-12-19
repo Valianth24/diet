@@ -88,7 +88,7 @@ export default function MealDetailScreen() {
 
           {/* Gram Input */}
           <View style={styles.gramSection}>
-            <Text style={styles.sectionTitle}>Miktar (Gram)</Text>
+            <Text style={styles.sectionTitle}>{t('amountGrams')}</Text>
             <TextInput
               style={styles.gramInput}
               value={grams}
