@@ -24,7 +24,7 @@ const { width: screenWidth } = Dimensions.get('window');
 export default function MealsScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const [foodDatabase, setFoodDatabase] = useState<any[]>([]);
+  const [foodDatabase, setFoodDatabase] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'add' | 'photo' | 'text'>('add');
 
