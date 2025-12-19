@@ -248,13 +248,15 @@ export default function ProfileScreen() {
           <View style={styles.card}>
             <TouchableOpacity style={styles.settingItem} onPress={() => setShowLanguageModal(true)}>
               <View style={styles.settingLeft}>
-                <Ionicons name="language" size={24} color={Colors.primary} />
-                <Text style={styles.settingText}>{t('selectLanguage') || 'Language'}</Text>
+                <View style={styles.settingIconBg}>
+                  <Ionicons name="language" size={22} color={Colors.white} />
+                </View>
+                <View>
+                  <Text style={styles.settingText}>{t('languageSettings')}</Text>
+                  <Text style={styles.settingSubtext}>{getCurrentLanguageInfo().flag} {getCurrentLanguageInfo().name}</Text>
+                </View>
               </View>
-              <View style={styles.settingRight}>
-                <Text style={styles.settingValue}>{getCurrentLanguageName()}</Text>
-                <Ionicons name="chevron-forward" size={20} color={Colors.lightText} />
-              </View>
+              <Ionicons name="chevron-forward" size={22} color={Colors.lightText} />
             </TouchableOpacity>
           </View>
         </View>
@@ -270,39 +272,47 @@ export default function ProfileScreen() {
       </ScrollView>
 
       {/* Language Selection Modal */}
-      {showLanguageModal && (
+      <Modal visible={showLanguageModal} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>{t('selectLanguage')}</Text>
-              <TouchableOpacity onPress={() => setShowLanguageModal(false)}>
+              <TouchableOpacity onPress={() => setShowLanguageModal(false)} style={styles.closeButton}>
                 <Ionicons name="close" size={28} color={Colors.darkText} />
               </TouchableOpacity>
             </View>
-            <ScrollView style={styles.languageList}>
+            
+            <Text style={styles.modalSubtitle}>{t('languageSettings')}</Text>
+            
+            <ScrollView style={styles.languageList} showsVerticalScrollIndicator={false}>
               {languageList.map((lang) => (
                 <TouchableOpacity
                   key={lang.code}
                   style={[
                     styles.languageItem,
-                    i18n.language === lang.code && styles.languageItemActive
+                    currentLang === lang.code && styles.languageItemActive
                   ]}
                   onPress={() => handleLanguageChange(lang.code)}
                 >
                   <Text style={styles.languageFlag}>{lang.flag}</Text>
-                  <Text style={[
-                    styles.languageName,
-                    i18n.language === lang.code && styles.languageNameActive
-                  ]}>{lang.name}</Text>
-                  {i18n.language === lang.code && (
-                    <Ionicons name="checkmark-circle" size={24} color={Colors.primary} />
+                  <View style={styles.languageTextContainer}>
+                    <Text style={[
+                      styles.languageName,
+                      currentLang === lang.code && styles.languageNameActive
+                    ]}>{lang.name}</Text>
+                    <Text style={styles.languageNative}>{lang.nativeName}</Text>
+                  </View>
+                  {currentLang === lang.code && (
+                    <View style={styles.checkCircle}>
+                      <Ionicons name="checkmark" size={18} color={Colors.white} />
+                    </View>
                   )}
                 </TouchableOpacity>
               ))}
             </ScrollView>
           </View>
         </View>
-      )}
+      </Modal>
     </SafeAreaView>
   );
 }
