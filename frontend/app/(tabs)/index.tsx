@@ -434,20 +434,20 @@ export default function DashboardScreen() {
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Hızlı Ekle</Text>
+              <Text style={styles.modalTitle}>{t('quickAdd')}</Text>
               <TouchableOpacity onPress={() => setShowAddModal(false)}>
                 <Ionicons name="close" size={28} color={Colors.darkText} />
               </TouchableOpacity>
             </View>
 
             {/* Meal Type Selection */}
-            <Text style={styles.sectionLabel}>Öğün Seç</Text>
+            <Text style={styles.sectionLabel}>{t('selectMeal')}</Text>
             <View style={styles.mealTypeRow}>
               {[
-                { key: 'breakfast', icon: 'sunny', label: 'Kahvaltı' },
-                { key: 'lunch', icon: 'restaurant', label: 'Öğle' },
-                { key: 'dinner', icon: 'moon', label: 'Akşam' },
-                { key: 'snack', icon: 'cafe', label: 'Ara Öğün' },
+                { key: 'breakfast', icon: 'sunny', label: t('breakfast') },
+                { key: 'lunch', icon: 'restaurant', label: t('lunch') },
+                { key: 'dinner', icon: 'moon', label: t('dinner') },
+                { key: 'snack', icon: 'cafe', label: t('snack') },
               ].map((type) => (
                 <TouchableOpacity
                   key={type.key}
