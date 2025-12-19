@@ -484,21 +484,16 @@ const ThemeSelector = () => {
 
 // Login Page
 const LoginPage = () => {
-  const { login, isLoading, isAuthenticated } = useAuth();
+  const { login, isLoading, isAuthenticated, setUser } = useAuth();
   const { colors } = useTheme();
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})` }}>
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-white border-t-transparent"></div>
-      </div>
-    );
-  }
-
-  // İlk giriş için dil seçimi kontrolü
+  const [mode, setMode] = useState('main'); // main, login, register
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [showLanguageSelector, setShowLanguageSelector] = useState(false);
   const [selectedLang, setSelectedLang] = useState('en');
-  const [langChecked, setLangChecked] = useState(false);
 
   useEffect(() => {
     const hasLaunched = localStorage.getItem('has_launched');
@@ -507,7 +502,6 @@ const LoginPage = () => {
       setShowLanguageSelector(true);
     }
     if (savedLang) setSelectedLang(savedLang);
-    setLangChecked(true);
   }, []);
 
   const handleLanguageSelect = () => {
@@ -515,6 +509,49 @@ const LoginPage = () => {
     localStorage.setItem('has_launched', 'true');
     setShowLanguageSelector(false);
   };
+
+  const handleEmailLogin = async (e) => {
+    e.preventDefault();
+    if (!email || !password) { setError('Email ve şifre gerekli'); return; }
+    setLoading(true);
+    setError('');
+    try {
+      const data = await api.loginUser(email, password);
+      api.setAuthToken(data.session_token);
+      setUser(data);
+    } catch (err) { setError(err.message); } finally { setLoading(false); }
+  };
+
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    if (!email || !password || !name) { setError('Tüm alanları doldurun'); return; }
+    if (password.length < 6) { setError('Şifre en az 6 karakter olmalı'); return; }
+    setLoading(true);
+    setError('');
+    try {
+      const data = await api.registerUser(email, password, name);
+      api.setAuthToken(data.session_token);
+      setUser(data);
+    } catch (err) { setError(err.message); } finally { setLoading(false); }
+  };
+
+  const handleGuestLogin = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await api.guestLogin();
+      api.setAuthToken(data.session_token);
+      setUser(data);
+    } catch (err) { setError('Misafir girişi başarısız'); } finally { setLoading(false); }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})` }}>
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-white border-t-transparent"></div>
+      </div>
+    );
+  }
 
   if (isAuthenticated) return null;
 
