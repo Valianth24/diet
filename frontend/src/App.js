@@ -681,31 +681,54 @@ const DashboardPage = () => {
           <div className="flex items-center gap-2"><span className="text-xl">👣</span><span className="font-semibold" style={{ color: colors.text }}>{stepData.steps.toLocaleString()}</span></div>
         </div>
 
-        {/* Calorie Card */}
-        <div className="rounded-2xl p-4 shadow-sm" style={{ backgroundColor: colors.cardBg }}>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-bold" style={{ color: colors.text }}>Günlük Kalori</h2>
-            <span className="text-sm" style={{ color: colors.textLight }}>{calorieGoal - dailySummary.total_calories} kalan</span>
-          </div>
-          <div className="flex items-center gap-6">
-            <div className="relative">
-              <ProgressRing progress={Math.min((dailySummary.total_calories / calorieGoal) * 100, 100)} size={100} strokeWidth={10} color={colors.primary} />
+        {/* Kalori ve Vitamin - Yan Yana */}
+        <div className="grid grid-cols-2 gap-4">
+          {/* Calorie Card */}
+          <div className="rounded-2xl p-4 shadow-sm" style={{ backgroundColor: colors.cardBg }}>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2"><span className="text-xl">🔥</span><h3 className="font-bold" style={{ color: colors.text }}>Kalori</h3></div>
+              <span className="text-xs" style={{ color: colors.textLight }}>{calorieGoal - dailySummary.total_calories} kalan</span>
+            </div>
+            <div className="relative mb-3 flex justify-center">
+              <ProgressRing progress={Math.min((dailySummary.total_calories / calorieGoal) * 100, 100)} size={80} strokeWidth={8} color={colors.primary} />
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-lg font-bold" style={{ color: colors.text }}>{Math.round((dailySummary.total_calories / calorieGoal) * 100)}%</span>
+                <span className="text-sm font-bold" style={{ color: colors.text }}>{Math.round((dailySummary.total_calories / calorieGoal) * 100)}%</span>
               </div>
             </div>
-            <div className="flex-1 space-y-2">
-              <div className="flex justify-between text-sm"><span style={{ color: colors.textLight }}>Protein</span><span className="font-medium" style={{ color: colors.text }}>{dailySummary.total_protein.toFixed(1)}g</span></div>
-              <div className="flex justify-between text-sm"><span style={{ color: colors.textLight }}>Karbonhidrat</span><span className="font-medium" style={{ color: colors.text }}>{dailySummary.total_carbs.toFixed(1)}g</span></div>
-              <div className="flex justify-between text-sm"><span style={{ color: colors.textLight }}>Yağ</span><span className="font-medium" style={{ color: colors.text }}>{dailySummary.total_fat.toFixed(1)}g</span></div>
+            <div className="space-y-1 text-xs">
+              <div className="flex justify-between"><span style={{ color: colors.textLight }}>Protein</span><span className="font-medium" style={{ color: colors.text }}>{dailySummary.total_protein.toFixed(1)}g</span></div>
+              <div className="flex justify-between"><span style={{ color: colors.textLight }}>Karb</span><span className="font-medium" style={{ color: colors.text }}>{dailySummary.total_carbs.toFixed(1)}g</span></div>
+              <div className="flex justify-between"><span style={{ color: colors.textLight }}>Yağ</span><span className="font-medium" style={{ color: colors.text }}>{dailySummary.total_fat.toFixed(1)}g</span></div>
             </div>
+          </div>
+
+          {/* Vitamin Card */}
+          <div className="rounded-2xl p-4 shadow-sm cursor-pointer hover:shadow-md transition-all" style={{ backgroundColor: colors.cardBg }} onClick={() => navigate('/vitamins')}>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2"><span className="text-xl">💊</span><h3 className="font-bold" style={{ color: colors.text }}>Vitamin</h3></div>
+              <span className="text-xs" style={{ color: colors.textLight }}>{vitamins.filter(v => v.is_taken).length}/{vitamins.length}</span>
+            </div>
+            <div className="space-y-2 max-h-28 overflow-hidden">
+              {vitamins.slice(0, 3).map(vitamin => (
+                <div key={vitamin.vitamin_id} className="flex items-center justify-between p-2 rounded-lg" style={{ backgroundColor: vitamin.is_taken ? colors.primary + '15' : '#F3F4F6' }}>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm truncate" style={{ color: colors.text }}>{vitamin.name}</p>
+                    <p className="text-xs truncate" style={{ color: colors.textLight }}>{vitamin.time}</p>
+                  </div>
+                  <button onClick={(e) => { e.stopPropagation(); handleToggleVitamin(vitamin.vitamin_id); }} className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs flex-shrink-0 ml-2" style={{ backgroundColor: vitamin.is_taken ? colors.primary : '#D1D5DB' }}>
+                    {vitamin.is_taken && '✓'}
+                  </button>
+                </div>
+              ))}
+            </div>
+            <p className="text-center text-xs mt-2 font-medium" style={{ color: colors.primary }}>Detaylar →</p>
           </div>
         </div>
 
-        {/* Water & Steps */}
+        {/* Su ve Adım - Yan Yana */}
         <div className="grid grid-cols-2 gap-4">
           <div className="rounded-2xl p-4 shadow-sm cursor-pointer hover:shadow-md transition-all" style={{ backgroundColor: colors.cardBg }} onClick={() => navigate('/water')}>
-            <div className="flex items-center gap-2 mb-3"><span className="text-2xl">💧</span><h3 className="font-bold" style={{ color: colors.text }}>Su</h3></div>
+            <div className="flex items-center gap-2 mb-3"><span className="text-xl">💧</span><h3 className="font-bold" style={{ color: colors.text }}>Su</h3></div>
             <div className="relative mb-3 flex justify-center">
               <ProgressRing progress={Math.min((waterData.total_amount / waterGoal) * 100, 100)} size={80} color={colors.secondary} />
               <div className="absolute inset-0 flex items-center justify-center"><span className="text-sm font-bold" style={{ color: colors.text }}>{Math.round((waterData.total_amount / waterGoal) * 100)}%</span></div>
@@ -715,7 +738,7 @@ const DashboardPage = () => {
           </div>
 
           <div className="rounded-2xl p-4 shadow-sm cursor-pointer hover:shadow-md transition-all" style={{ backgroundColor: colors.cardBg }} onClick={() => navigate('/tracking')}>
-            <div className="flex items-center gap-2 mb-3"><span className="text-2xl">👣</span><h3 className="font-bold" style={{ color: colors.text }}>Adım</h3></div>
+            <div className="flex items-center gap-2 mb-3"><span className="text-xl">👣</span><h3 className="font-bold" style={{ color: colors.text }}>Adım</h3></div>
             <div className="relative mb-3 flex justify-center">
               <ProgressRing progress={Math.min((stepData.steps / stepGoal) * 100, 100)} size={80} color="#FF9800" />
               <div className="absolute inset-0 flex items-center justify-center"><span className="text-sm font-bold" style={{ color: colors.text }}>{Math.round((stepData.steps / stepGoal) * 100)}%</span></div>
@@ -724,27 +747,6 @@ const DashboardPage = () => {
             <button className="w-full py-2 rounded-xl font-medium bg-orange-50 text-orange-600">Detaylar</button>
           </div>
         </div>
-
-        {/* Vitamins */}
-        {vitamins.length > 0 && (
-          <div className="rounded-2xl p-4 shadow-sm cursor-pointer hover:shadow-md transition-all" style={{ backgroundColor: colors.cardBg }} onClick={() => navigate('/vitamins')}>
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2"><span className="text-2xl">💊</span><h3 className="font-bold" style={{ color: colors.text }}>Vitaminler</h3></div>
-              <span className="text-sm" style={{ color: colors.textLight }}>{vitamins.filter(v => v.is_taken).length}/{vitamins.length}</span>
-            </div>
-            <div className="space-y-2">
-              {vitamins.slice(0, 3).map(vitamin => (
-                <div key={vitamin.vitamin_id} className="flex items-center justify-between p-3 rounded-xl" style={{ backgroundColor: vitamin.is_taken ? colors.primary + '15' : '#F3F4F6' }}>
-                  <div><p className="font-medium" style={{ color: colors.text }}>{vitamin.name}</p><p className="text-xs" style={{ color: colors.textLight }}>{vitamin.time}</p></div>
-                  <button onClick={(e) => { e.stopPropagation(); handleToggleVitamin(vitamin.vitamin_id); }} className="w-8 h-8 rounded-full flex items-center justify-center text-white" style={{ backgroundColor: vitamin.is_taken ? colors.primary : '#D1D5DB' }}>
-                    {vitamin.is_taken && '✓'}
-                  </button>
-                </div>
-              ))}
-            </div>
-            <p className="text-center text-sm mt-3 font-medium" style={{ color: colors.primary }}>Detaylar için dokun →</p>
-          </div>
-        )}
 
         {/* Add Meal Card */}
         <div onClick={() => { setShowAddMealModal(true); loadFoodDatabase(); }} className="rounded-2xl p-4 cursor-pointer hover:shadow-lg transition-all text-white" style={{ background: `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})` }}>
